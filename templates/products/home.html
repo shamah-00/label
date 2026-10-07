@@ -1,0 +1,320 @@
+{% load static %}
+
+<title>The Label Group | Industrial Prints & Decals</title>
+<meta name="description" content="The Label Group provides professional industrial prints, safety decals, equipment identification labels and custom commercial printing.">
+
+<style>
+    :root {
+        --navy: #0b1f33;
+        --navy-dark: #071522;
+        --blue: #123f68;
+        --blue-light: #eaf3fa;
+        --orange: #f47b20;
+        --orange-dark: #d96512;
+        --white: #ffffff;
+        --off-white: #f7f8fa;
+        --light: #eef1f4;
+        --border: #dce2e8;
+        --text: #17212b;
+        --muted: #687581;
+        --success: #197a4b;
+        --shadow: 0 12px 35px rgba(11, 31, 51, 0.08);
+        --shadow-lg: 0 22px 60px rgba(11, 31, 51, 0.13);
+        --radius: 4px;
+        --container: 1240px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: Arial, Helvetica, sans-serif; color: var(--text); background: var(--white); line-height: 1.6; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button, input { font: inherit; }
+    .container { width: min(var(--container), calc(100% - 40px)); margin: 0 auto; }
+
+    header { background: var(--white); position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 15px rgba(0, 0, 0, 0.06); }
+    .header-main { min-height: 88px; display: grid; grid-template-columns: 1fr minmax(300px, 430px) 1fr; align-items: center; gap: 30px; }
+    .brand { display: inline-flex; align-items: center; gap: 14px; width: max-content; }
+    .brand-mark { width: 48px; height: 48px; background: var(--orange); color: var(--white); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; letter-spacing: 1px; transform: skew(-7deg); }
+    .brand-name { font-size: 19px; font-weight: 900; letter-spacing: 1.8px; color: var(--navy); line-height: 1.1; }
+    .brand-subtitle { color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: 2px; margin-top: 5px; }
+    .search { height: 44px; display: flex; border: 1px solid var(--border); background: var(--off-white); }
+    .search input { width: 100%; border: 0; outline: none; padding: 0 15px; background: transparent; color: var(--text); font-size: 13px; }
+    .search input:focus { background: var(--white); }
+    .search button { width: 50px; border: 0; background: var(--navy); color: var(--white); cursor: pointer; font-size: 22px; transition: background 0.2s ease; }
+    .search button:hover { background: var(--orange); }
+    .header-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+    .cart-link, .quote-link { min-height: 42px; display: inline-flex; align-items: center; justify-content: center; padding: 0 15px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; border: 1px solid var(--border); transition: all 0.2s ease; }
+    .cart-link { color: var(--navy); background: var(--white); }
+    .cart-link:hover { border-color: var(--navy); background: var(--navy); color: var(--white); }
+    .quote-link { background: var(--orange); border-color: var(--orange); color: var(--white); }
+    .quote-link:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+
+    .nav { background: var(--navy); color: var(--white); }
+    .nav-inner { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 0; }
+    .nav a { height: 50px; padding: 0 24px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; letter-spacing: 1px; border-left: 1px solid rgba(255, 255, 255, 0.08); transition: all 0.2s ease; }
+    .nav a:last-child { border-right: 1px solid rgba(255, 255, 255, 0.08); }
+    .nav a:hover { background: var(--blue); }
+    .nav a.staff { background: var(--orange); border-color: var(--orange); }
+
+    .hero { background: linear-gradient(105deg, rgba(7, 21, 34, 0.98) 0%, rgba(11, 31, 51, 0.96) 55%, rgba(18, 63, 104, 0.92) 100%); color: var(--white); position: relative; overflow: hidden; }
+    .hero-inner { min-height: 555px; display: grid; grid-template-columns: 1.15fr 0.85fr; align-items: center; gap: 70px; padding: 80px 0; position: relative; z-index: 2; }
+    .eyebrow { color: var(--orange); text-transform: uppercase; font-size: 11px; font-weight: 800; letter-spacing: 2px; margin-bottom: 18px; }
+    .hero h1 { max-width: 760px; font-size: clamp(42px, 5vw, 70px); line-height: 0.99; letter-spacing: -2px; font-weight: 900; }
+    .hero h1 span { color: var(--orange); }
+    .hero-text { max-width: 670px; margin-top: 26px; color: #d7e0e8; font-size: 16px; line-height: 1.8; }
+    .hero-buttons { margin-top: 34px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn { min-height: 48px; padding: 0 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; letter-spacing: 0.8px; transition: all 0.2s ease; }
+    .btn-primary { background: var(--orange); color: var(--white); border: 1px solid var(--orange); }
+    .btn-primary:hover { background: var(--orange-dark); border-color: var(--orange-dark); }
+    .btn-outline { color: var(--white); border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.03); }
+    .hero-panel { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12); padding: 28px; backdrop-filter: blur(5px); box-shadow: var(--shadow-lg); }
+    .hero-panel-title { color: var(--orange); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px; }
+    .hero-feature { display: grid; grid-template-columns: 42px 1fr; gap: 14px; padding: 18px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.09); }
+    .hero-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--orange); color: var(--white); font-size: 10px; font-weight: 900; }
+    .hero-feature strong { display: block; font-size: 13px; margin-bottom: 4px; }
+    .hero-feature small { display: block; color: #aebdca; font-size: 12px; line-height: 1.5; }
+
+    .quick-filter-bar { background: var(--white); border-bottom: 1px solid var(--border); }
+    .quick-filter-inner { min-height: 78px; display: flex; align-items: center; gap: 25px; }
+    .quick-filter-label { flex: 0 0 auto; color: var(--navy); font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; }
+    .filter-pills { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .filter-pill { border: 1px solid var(--border); padding: 8px 12px; font-size: 10px; font-weight: 800; color: var(--navy); background: var(--white); transition: all 0.2s ease; }
+    .filter-pill:hover, .filter-pill.active { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+    .trust-strip { background: var(--off-white); border-bottom: 1px solid var(--border); }
+    .trust-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .trust-item { min-height: 105px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; border-right: 1px solid var(--border); }
+    .trust-item:first-child { border-left: 1px solid var(--border); }
+    .trust-number { color: var(--navy); font-size: 25px; line-height: 1; font-weight: 900; }
+    .trust-item:nth-child(3) .trust-number { color: var(--orange); }
+    .trust-label { margin-top: 7px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+
+    .section { padding: 90px 0; background: var(--white); }
+    .section-light { background: var(--off-white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; margin-bottom: 38px; }
+    .section-kicker { color: var(--orange); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .section-title { color: var(--navy); font-size: clamp(30px, 4vw, 46px); line-height: 1.05; letter-spacing: -1.2px; font-weight: 900; }
+    .section-description { max-width: 490px; color: var(--muted); font-size: 13px; line-height: 1.8; }
+    .section-link { flex: 0 0 auto; color: var(--orange); font-size: 10px; font-weight: 900; letter-spacing: 0.8px; border-bottom: 2px solid var(--orange); padding-bottom: 5px; }
+
+    .industry-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    .industry-card { min-height: 245px; padding: 25px; background: var(--white); border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; transition: all 0.25s ease; }
+    .industry-card:hover { transform: translateY(-5px); box-shadow: var(--shadow); }
+    .industry-number { color: var(--orange); font-size: 10px; font-weight: 900; letter-spacing: 1px; margin-bottom: 45px; }
+    .industry-card h3 { color: var(--navy); font-size: 16px; line-height: 1.2; margin-bottom: 9px; font-weight: 900; }
+    .industry-card p { color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .industry-arrow { color: var(--orange); font-size: 20px; font-weight: 700; align-self: flex-end; }
+
+    #catalogue { scroll-margin-top: 190px; }
+    .product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+    .product-card { background: var(--white); border: 1px solid var(--border); overflow: hidden; transition: all 0.25s ease; }
+    .product-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
+    .product-image { height: 235px; background: #f1f3f5; position: relative; }
+    .product-image img { width: 100%; height: 100%; object-fit: cover; }
+    .image-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; color: #9ba6af; font-size: 11px; font-weight: 800; padding: 20px; }
+    .product-body { padding: 19px; }
+    .product-code { color: var(--orange); font-size: 9px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 8px; }
+    .product-name { color: var(--navy); font-size: 14px; line-height: 1.45; font-weight: 800; }
+    .product-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 16px; }
+    .product-button { min-height: 38px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; }
+    .details-button { border: 1px solid var(--border); color: var(--navy); background: var(--white); }
+    .quote-button { border: 1px solid var(--orange); background: var(--orange); color: var(--white); }
+
+    footer { background: var(--navy-dark); color: var(--white); }
+    .footer-main { padding: 65px 0 55px; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 55px; }
+    .footer-brand h3 { font-size: 18px; letter-spacing: 1.5px; margin-bottom: 14px; }
+    .footer-brand p { max-width: 360px; color: #9caebb; font-size: 12px; line-height: 1.8; margin-top: 17px; }
+    .footer-column h3 { color: var(--white); font-size: 11px; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 18px; }
+    .footer-column a { display: block; color: #9caebb; font-size: 11px; margin-bottom: 10px; }
+    .footer-bottom { border-top: 1px solid rgba(255, 255, 255, 0.1); min-height: 65px; display: flex; align-items: center; justify-content: space-between; color: #7f919f; font-size: 10px; }
+</style>
+
+<header>
+    <div class="container header-main">
+        <a href="{% url 'home' %}" class="brand">
+            <div class="brand-mark">TLG</div>
+            <div>
+                <div class="brand-name">THE LABEL GROUP</div>
+                <div class="brand-subtitle">INDUSTRIAL PRINTS &amp; DECALS</div>
+            </div>
+        </a>
+        <form class="search" method="get" action="{% url 'product_list' %}">
+            <input type="search" name="q" value="{{ search_query|default:'' }}" placeholder="Search decals, labels, stickers...">
+            <button type="submit">&#8981;</button>
+        </form>
+        <div class="header-actions">
+            <a href="{% url 'cart' %}" class="cart-link">VIEW CART</a>
+            <a href="{% url 'quote_cart' %}" class="quote-link">REQUEST A QUOTE</a>
+        </div>
+    </div>
+    <nav class="nav">
+        <div class="container nav-inner">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">SHOP PRINTS</a>
+            <a href="{% url 'quote_cart' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'staff_login' %}" class="staff">STAFF LOGIN</a>
+        </div>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="container hero-inner">
+        <div>
+            <div class="eyebrow">Industrial Identification Solutions</div>
+            <h1>Professional prints that make your <span>brand stick.</span></h1>
+            <p class="hero-text">Durable decals, labels and identification products built for trucks, businesses, contractors, government operations and demanding industrial environments.</p>
+            <div class="hero-buttons">
+                <a href="{% url 'product_list' %}" class="btn btn-primary">SHOP ALL PRODUCTS</a>
+                <a href="{% url 'quote_cart' %}" class="btn btn-outline">REQUEST A QUOTE</a>
+            </div>
+        </div>
+        <div class="hero-panel">
+            <div class="hero-panel-title">Built for demanding applications</div>
+            <div class="hero-feature"><div class="hero-icon">01</div><div><strong>Commercial Identification</strong><small>Clear labels for equipment, assets and operations.</small></div></div>
+            <div class="hero-feature"><div class="hero-icon">02</div><div><strong>Safety &amp; Compliance</strong><small>Professional warning, instruction and safety decals.</small></div></div>
+            <div class="hero-feature"><div class="hero-icon">03</div><div><strong>Fleet &amp; Equipment</strong><small>Identification solutions for trucks and machinery.</small></div></div>
+            <div class="hero-feature"><div class="hero-icon">04</div><div><strong>Custom Printing</strong><small>Tell us what you need and we will prepare a quote.</small></div></div>
+        </div>
+    </div>
+</section>
+
+<div class="quick-filter-bar">
+    <div class="container quick-filter-inner">
+        <div class="quick-filter-label">Quick Industry Jump:</div>
+        <div class="filter-pills">
+            <a href="{% url 'product_list' %}?industry=truck_motor_car#catalogue" class="filter-pill {% if selected_industry == 'truck_motor_car' %}active{% endif %}">Truck &amp; Fleet Decals</a>
+            <a href="{% url 'product_list' %}?industry=waste#catalogue" class="filter-pill {% if selected_industry == 'waste' %}active{% endif %}">Waste Company Safety</a>
+            <a href="{% url 'product_list' %}?industry=construction#catalogue" class="filter-pill {% if selected_industry == 'construction' %}active{% endif %}">Construction Equipment</a>
+            <a href="{% url 'product_list' %}?industry=pool#catalogue" class="filter-pill {% if selected_industry == 'pool' %}active{% endif %}">Pool Chemical Labels</a>
+            <a href="{% url 'product_list' %}?industry=government#catalogue" class="filter-pill {% if selected_industry == 'government' %}active{% endif %}">Government Property</a>
+            <a href="{% url 'product_list' %}" class="filter-pill" style="background:var(--orange); color:var(--white);">View All 100+ Prints</a>
+        </div>
+    </div>
+</div>
+
+<div class="trust-strip">
+    <div class="container trust-grid">
+        <div class="trust-item"><div class="trust-number">100+</div><div class="trust-label">Industrial Decals</div></div>
+        <div class="trust-item"><div class="trust-number">5</div><div class="trust-label">Key Industries</div></div>
+        <div class="trust-item"><div class="trust-number">USD</div><div class="trust-label">Clear Product Pricing</div></div>
+        <div class="trust-item"><div class="trust-number">100%</div><div class="trust-label">Custom Quote Support</div></div>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <div>
+                <div class="section-kicker">Shop by industry</div>
+                <h2 class="section-title">Solutions built around your work.</h2>
+            </div>
+            <p class="section-description">Explore identification and safety products designed for commercial vehicles, waste operations, construction, pools and government contractors.</p>
+        </div>
+        <div class="industry-grid">
+            <a href="{% url 'product_list' %}?industry=truck_motor_car#catalogue" class="industry-card">
+                <div><div class="industry-number">01</div><h3>Truck, Motor &amp; Car</h3><p>Fleet identification and vehicle decals.</p></div>
+                <div class="industry-arrow">&rarr;</div>
+            </a>
+            <a href="{% url 'product_list' %}?industry=waste#catalogue" class="industry-card">
+                <div><div class="industry-number">02</div><h3>Waste Companies</h3><p>Container, recycling and safety identification.</p></div>
+                <div class="industry-arrow">&rarr;</div>
+            </a>
+            <a href="{% url 'product_list' %}?industry=construction#catalogue" class="industry-card">
+                <div><div class="industry-number">03</div><h3>Construction</h3><p>Equipment and workplace safety decals.</p></div>
+                <div class="industry-arrow">&rarr;</div>
+            </a>
+            <a href="{% url 'product_list' %}?industry=pool#catalogue" class="industry-card">
+                <div><div class="industry-number">04</div><h3>Pool Companies</h3><p>Equipment, chemical and service labels.</p></div>
+                <div class="industry-arrow">&rarr;</div>
+            </a>
+            <a href="{% url 'product_list' %}?industry=government#catalogue" class="industry-card">
+                <div><div class="industry-number">05</div><h3>Government Contractors</h3><p>Asset, property and compliance identification.</p></div>
+                <div class="industry-arrow">&rarr;</div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="section section-light">
+    <div class="container">
+        <div id="catalogue" class="section-heading">
+            <div>
+                <div class="section-kicker">Catalogue preview</div>
+                <h2 class="section-title">
+                    {% if selected_industry == 'truck_motor_car' %}Truck &amp; Fleet Decals
+                    {% elif selected_industry == 'waste' %}Waste Company Safety
+                    {% elif selected_industry == 'construction' %}Construction Equipment
+                    {% elif selected_industry == 'pool' %}Pool Chemical Labels
+                    {% elif selected_industry == 'government' %}Government Property
+                    {% else %}Industrial Safety &amp; Decals{% endif %}
+                </h2>
+            </div>
+            <a href="{% url 'product_list' %}#catalogue" class="section-link">OPEN FULL CATALOGUE &rarr;</a>
+        </div>
+
+        <div class="product-grid">
+            {% for product in products %}
+            <div class="product-card">
+                <div class="product-image">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                    <div class="image-placeholder">PRODUCT IMAGE<br>COMING SOON</div>
+                    {% endif %}
+                </div>
+                <div class="product-body">
+                    <div class="product-code">PRODUCT #{{ product.sku|default:product.id }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">{% if product.price %}${{ product.price }}{% endif %}</div>
+                    <div class="product-actions">
+                        <a href="{% url 'product_detail' product.id %}" class="product-button details-button">VIEW DETAILS</a>
+                        <a href="{% url 'quote_cart' %}" class="product-button quote-button">ADD TO QUOTE</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-products" style="grid-column: 1 / -1;">
+                <h3>No products found</h3>
+                <p>There are currently no products available for this category.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<footer>
+    <div class="container">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <h3>THE LABEL GROUP</h3>
+                <p>Your complete industrial source for commercial prints, safety decals, and equipment identification labels.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <a href="{% url 'product_list' %}">All Products</a>
+                <a href="{% url 'quote_cart' %}">Request Quote</a>
+                <a href="{% url 'shipping' %}">Shipping Info</a>
+            </div>
+            <div class="footer-column">
+                <h3>Industries</h3>
+                <a href="{% url 'product_list' %}?industry=truck_motor_car#catalogue">Truck &amp; Fleet</a>
+                <a href="{% url 'product_list' %}?industry=waste#catalogue">Waste Management</a>
+                <a href="{% url 'product_list' %}?industry=construction#catalogue">Construction</a>
+            </div>
+            <div class="footer-column">
+                <h3>Support</h3>
+                <a href="mailto:support@thelabelgroup.com">Contact Us</a>
+                <a href="{% url 'staff_login' %}">Staff Portal</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>&copy; 2026 THE LABEL GROUP. All Rights Reserved.</div>
+            <div>Industrial Identification Solutions</div>
+        </div>
+    </div>
+</footer>
+
+
+

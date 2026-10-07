@@ -1,0 +1,1015 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Request a Quote | THE LABEL GROUP</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fa;
+            color: #172033;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .topbar {
+            background: #102a43;
+            color: white;
+            padding: 10px 5%;
+            font-size: 13px;
+        }
+
+        .topbar-inner {
+            max-width: 1300px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .topbar a {
+            color: white;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-inner {
+            max-width: 1300px;
+            margin: auto;
+            padding: 22px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: #123c69;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .logo span {
+            color: #f47b20;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .header-actions a {
+            color: #172033;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .quote-button {
+            background: #f47b20;
+            color: white !important;
+            padding: 12px 18px;
+            border-radius: 6px;
+        }
+
+        .navigation {
+            background: #123c69;
+        }
+
+        .navigation-inner {
+            max-width: 1300px;
+            margin: auto;
+            padding: 0 5%;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .navigation a {
+            color: white;
+            padding: 15px 16px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .navigation a:hover {
+            background: #f47b20;
+        }
+
+        .page {
+            max-width: 1300px;
+            margin: auto;
+            padding: 45px 5% 70px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            margin-bottom: 18px;
+            color: #667085;
+        }
+
+        .breadcrumb a {
+            color: #123c69;
+            font-weight: 700;
+        }
+
+        .page-heading {
+            margin-bottom: 35px;
+        }
+
+        .page-heading h1 {
+            margin: 0 0 10px;
+            font-size: 42px;
+            color: #102a43;
+        }
+
+        .page-heading p {
+            margin: 0;
+            max-width: 780px;
+            line-height: 1.7;
+            color: #667085;
+        }
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 30px;
+            align-items: start;
+        }
+
+        .form-box {
+            background: white;
+            border: 1px solid #e1e5ea;
+            border-radius: 8px;
+            padding: 30px;
+        }
+
+        .section-title {
+            margin: 0 0 22px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            color: #102a43;
+            font-size: 22px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group.full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #344054;
+        }
+
+        .required {
+            color: #f47b20;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            border: 1px solid #cfd6df;
+            border-radius: 6px;
+            padding: 12px 13px;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            color: #172033;
+            background: white;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #123c69;
+            box-shadow: 0 0 0 2px rgba(18, 60, 105, 0.08);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+            line-height: 1.6;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            background: #f8fafc;
+        }
+
+        .help-text {
+            margin-top: 7px;
+            color: #667085;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .error-list {
+            margin: 7px 0 0;
+            padding: 0;
+            list-style: none;
+            color: #b42318;
+            font-size: 12px;
+        }
+
+        .submit-button {
+            width: 100%;
+            border: none;
+            background: #f47b20;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .submit-button:hover {
+            background: #d96512;
+        }
+
+        .selected-box {
+            background: white;
+            border: 1px solid #e1e5ea;
+            border-radius: 8px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .selected-box h2 {
+            margin: 0 0 8px;
+            color: #102a43;
+            font-size: 21px;
+        }
+
+        .selected-intro {
+            margin: 0 0 20px;
+            color: #667085;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .selected-item {
+            padding: 16px 0;
+            border-top: 1px solid #edf0f3;
+        }
+
+        .selected-item:first-of-type {
+            border-top: none;
+        }
+
+        .selected-item h3 {
+            margin: 0 0 6px;
+            color: #123c69;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+
+        .selected-item p {
+            margin: 4px 0;
+            color: #667085;
+            font-size: 12px;
+        }
+
+        .selected-code {
+            color: #f47b20 !important;
+            font-weight: 800;
+        }
+
+        .quantity {
+            margin-top: 8px;
+            font-weight: 800;
+            color: #172033 !important;
+        }
+
+        .summary {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+
+        .summary-row strong {
+            color: #123c69;
+        }
+
+        .notice {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f7fa;
+            border-left: 4px solid #f47b20;
+            color: #596579;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #123c69;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        footer {
+            background: #102a43;
+            color: white;
+            padding: 45px 5% 25px;
+        }
+
+        .footer-inner {
+            max-width: 1300px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 45px;
+        }
+
+        footer h3 {
+            margin-top: 0;
+            font-size: 18px;
+        }
+
+        footer p {
+            color: #cbd5e1;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        footer a {
+            display: block;
+            color: #cbd5e1;
+            margin: 9px 0;
+            font-size: 14px;
+        }
+
+        .footer-bottom {
+            max-width: 1300px;
+            margin: 35px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            color: #aebdcc;
+            font-size: 12px;
+        }
+
+        @media (max-width: 900px) {
+            .form-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .selected-box {
+                position: static;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .topbar-inner,
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .navigation-inner {
+                flex-direction: column;
+            }
+
+            .page-heading h1 {
+                font-size: 32px;
+            }
+
+            .form-box {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .form-group.full {
+                grid-column: auto;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="topbar-inner">
+            <div>Professional industrial prints and decals</div>
+
+            <div>
+                <a href="{% url 'home' %}">
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <header class="header">
+        <div class="header-inner">
+
+            <a href="{% url 'home' %}" class="logo">
+                THE LABEL <span>GROUP</span>
+            </a>
+
+            <div class="header-actions">
+
+                <a href="{% url 'home' %}#custom-orders">
+                    Custom Orders
+                </a>
+
+                <a href="{% url 'quote_cart' %}" class="quote-button">
+                    VIEW QUOTE
+                </a>
+
+            </div>
+
+        </div>
+    </header>
+
+
+    <nav class="navigation">
+        <div class="navigation-inner">
+
+            <a href="{% url 'home' %}">
+                Home
+            </a>
+
+            <a href="{% url 'industry_products' 'truck_motor_car' %}">
+                Truck / Motor / Car
+            </a>
+
+            <a href="{% url 'industry_products' 'government' %}">
+                Government
+            </a>
+
+            <a href="{% url 'industry_products' 'pool' %}">
+                Pool
+            </a>
+
+            <a href="{% url 'industry_products' 'construction' %}">
+                Construction
+            </a>
+
+            <a href="{% url 'industry_products' 'waste' %}">
+                Waste Companies
+            </a>
+
+            <a href="{% url 'home' %}#shipping">
+                Shipping
+            </a>
+
+            <a href="/staff/login/">
+                Staff Login
+            </a>
+
+        </div>
+    </nav>
+
+
+    <main class="page">
+
+        <div class="breadcrumb">
+
+            <a href="{% url 'home' %}">
+                Home
+            </a>
+
+            &nbsp; / &nbsp;
+
+            <a href="{% url 'quote_cart' %}">
+                Quote Cart
+            </a>
+
+            &nbsp; / &nbsp;
+
+            Request a Quote
+
+        </div>
+
+
+        <div class="page-heading">
+
+            <h1>
+                Request a Quote
+            </h1>
+
+            <p>
+                Tell us what you need and our team will review your selected
+                products and requirements before preparing your quote.
+                Pricing will be confirmed based on your specifications.
+            </p>
+
+        </div>
+
+
+        <div class="form-layout">
+
+
+            <section class="form-box">
+
+                <h2 class="section-title">
+                    Your Contact Information
+                </h2>
+
+
+                <form
+                    method="post"
+                    enctype="multipart/form-data"
+                >
+
+                    {% csrf_token %}
+
+
+                    {% if form.non_field_errors %}
+
+                        <div class="error-list">
+
+                            {{ form.non_field_errors }}
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <div class="form-grid">
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.customer_name.id_for_label }}">
+                                Full Name <span class="required">*</span>
+                            </label>
+
+                            {{ form.customer_name }}
+
+                            {% if form.customer_name.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.customer_name.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.company_name.id_for_label }}">
+                                Company Name
+                            </label>
+
+                            {{ form.company_name }}
+
+                            {% if form.company_name.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.company_name.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.customer_email.id_for_label }}">
+                                Email Address <span class="required">*</span>
+                            </label>
+
+                            {{ form.customer_email }}
+
+                            {% if form.customer_email.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.customer_email.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.customer_phone.id_for_label }}">
+                                Phone Number <span class="required">*</span>
+                            </label>
+
+                            {{ form.customer_phone }}
+
+                            {% if form.customer_phone.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.customer_phone.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group full">
+
+                            <label for="{{ form.street_address.id_for_label }}">
+                                Street Address
+                            </label>
+
+                            {{ form.street_address }}
+
+                            {% if form.street_address.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.street_address.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group full">
+
+                            <label for="{{ form.address_continued.id_for_label }}">
+                                Address Continued
+                            </label>
+
+                            {{ form.address_continued }}
+
+                            {% if form.address_continued.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.address_continued.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.city.id_for_label }}">
+                                City
+                            </label>
+
+                            {{ form.city }}
+
+                            {% if form.city.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.city.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.state.id_for_label }}">
+                                State / County / Region
+                            </label>
+
+                            {{ form.state }}
+
+                            {% if form.state.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.state.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.postal_code.id_for_label }}">
+                                Postal Code
+                            </label>
+
+                            {{ form.postal_code }}
+
+                            {% if form.postal_code.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.postal_code.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="{{ form.country.id_for_label }}">
+                                Country
+                            </label>
+
+                            {{ form.country }}
+
+                            {% if form.country.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.country.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group full">
+
+                            <label for="{{ form.requirements.id_for_label }}">
+                                Requirements / Special Instructions
+                            </label>
+
+                            {{ form.requirements }}
+
+                            <div class="help-text">
+                                Include sizes quantities materials finishes
+                                artwork requirements delivery information or
+                                anything else our team should know.
+                            </div>
+
+                            {% if form.requirements.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.requirements.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                        <div class="form-group full">
+
+                            <label for="{{ form.uploaded_file.id_for_label }}">
+                                Reference File
+                            </label>
+
+                            {{ form.uploaded_file }}
+
+                            <div class="help-text">
+                                Optional. You can attach artwork or another
+                                reference file.
+                            </div>
+
+                            {% if form.uploaded_file.errors %}
+                                <ul class="error-list">
+                                    {% for error in form.uploaded_file.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+
+                        </div>
+
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="submit-button"
+                    >
+                        SUBMIT QUOTE REQUEST
+                    </button>
+
+                </form>
+
+            </section>
+
+
+            <aside class="selected-box">
+
+                <h2>
+                    Selected Products
+                </h2>
+
+                <p class="selected-intro">
+                    These products will be included in your quote request.
+                    Review the quantities before submitting.
+                </p>
+
+
+                {% for item in quote_items %}
+
+                    <div class="selected-item">
+
+                        <h3>
+                            {{ item.product.name }}
+                        </h3>
+
+
+                        {% if item.product.product_code %}
+
+                            <p class="selected-code">
+                                Sticker #{{ item.product.product_code }}
+                            </p>
+
+                        {% endif %}
+
+
+                        <p>
+                            {{ item.product.get_industry_display }}
+                        </p>
+
+
+                        <p class="quantity">
+                            Quantity: {{ item.quantity }}
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+
+                <div class="summary">
+
+                    <div class="summary-row">
+
+                        <span>
+                            Products
+                        </span>
+
+                        <strong>
+                            {{ quote_items|length }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span>
+                            Total quantities
+                        </span>
+
+                        <strong>
+                            {{ total_quantity }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="notice">
+                    No payment is required at this stage.
+                    THE LABEL GROUP will review your request and contact
+                    you with pricing and production details.
+                </div>
+
+
+                <a
+                    href="{% url 'quote_cart' %}"
+                    class="back-link"
+                >
+                    ← Back to Quote Cart
+                </a>
+
+            </aside>
+
+        </div>
+
+    </main>
+
+
+    <footer>
+
+        <div class="footer-inner">
+
+            <div>
+
+                <h3>
+                    THE LABEL GROUP
+                </h3>
+
+                <p>
+                    Professional industrial stickers decals labels and
+                    custom printed products for businesses contractors
+                    government suppliers and service companies.
+                </p>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    Catalogue
+                </h3>
+
+                <a href="{% url 'industry_products' 'truck_motor_car' %}">
+                    Truck / Motor / Car
+                </a>
+
+                <a href="{% url 'industry_products' 'government' %}">
+                    Government
+                </a>
+
+                <a href="{% url 'industry_products' 'pool' %}">
+                    Pool
+                </a>
+
+                <a href="{% url 'industry_products' 'construction' %}">
+                    Construction
+                </a>
+
+                <a href="{% url 'industry_products' 'waste' %}">
+                    Waste Companies
+                </a>
+
+            </div>
+
+
+            <div>
+
+                <h3>
+                    Customer Service
+                </h3>
+
+                <a href="{% url 'home' %}#custom-orders">
+                    Custom Orders
+                </a>
+
+                <a href="{% url 'home' %}#shipping">
+                    Shipping
+                </a>
+
+                <a href="{% url 'quote_cart' %}">
+                    Quote Cart
+                </a>
+
+                <a href="/staff/login/">
+                    Staff Login
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            © 2026 THE LABEL GROUP. All rights reserved.
+
+        </div>
+
+    </footer>
+
+</body>
+</html>

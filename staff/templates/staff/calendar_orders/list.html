@@ -1,0 +1,612 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Collection Calendar Orders | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #08233f;
+            --blue: #0d4f87;
+            --orange: #f58220;
+            --light: #f4f6f8;
+            --white: #ffffff;
+            --text: #182838;
+            --border: #d9e0e7;
+            --green: #218739;
+            --red: #c62828;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        .topbar {
+            background: var(--navy);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1250px;
+            margin: auto;
+            min-height: 95px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 220px;
+            max-width: 100%;
+        }
+
+        .header-title {
+            text-align: right;
+        }
+
+        .header-title h1 {
+            margin: 0;
+            color: var(--navy);
+            font-size: 26px;
+        }
+
+        .header-title p {
+            margin: 6px 0 0;
+            color: #687785;
+            font-size: 14px;
+        }
+
+        .page {
+            max-width: 1250px;
+            margin: 35px auto;
+            padding: 0 25px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .back-link:hover {
+            color: var(--orange);
+        }
+
+        .card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 6px 25px rgba(8, 35, 63, 0.08);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 22px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .card-header h2 {
+            margin: 0;
+            color: var(--navy);
+            font-size: 21px;
+        }
+
+        .count {
+            background: var(--blue);
+            color: white;
+            padding: 7px 13px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .filters {
+            padding: 20px 25px;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .filters form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 11px 13px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .filters input {
+            min-width: 280px;
+            flex: 1;
+        }
+
+        .filter-button {
+            padding: 11px 20px;
+            border: none;
+            border-radius: 7px;
+            background: var(--orange);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .filter-button:hover {
+            background: #d9680b;
+        }
+
+        .clear-button {
+            display: inline-flex;
+            align-items: center;
+            padding: 11px 18px;
+            border-radius: 7px;
+            background: var(--navy);
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 950px;
+        }
+
+        th {
+            background: var(--navy);
+            color: white;
+            text-align: left;
+            padding: 15px 14px;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 15px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 14px;
+        }
+
+        tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: #f8fbfd;
+        }
+
+        .order-link {
+            display: block;
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .order-link:hover .request-number {
+            color: var(--orange);
+        }
+
+        .request-number {
+            color: var(--blue);
+            font-weight: bold;
+        }
+
+        .company {
+            font-weight: bold;
+            color: var(--navy);
+        }
+
+        .customer {
+            color: #586977;
+            line-height: 1.5;
+        }
+
+        .quantity {
+            font-weight: bold;
+            color: var(--navy);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .status-new {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-in_progress {
+            background: #dceeff;
+            color: var(--blue);
+        }
+
+        .status-completed {
+            background: #e8f7ed;
+            color: var(--green);
+        }
+
+        .status-cancelled {
+            background: #fde8e8;
+            color: var(--red);
+        }
+
+        .view-button {
+            display: inline-block;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: var(--blue);
+            color: white;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .view-button:hover {
+            background: var(--orange);
+        }
+
+        .empty {
+            padding: 60px 25px;
+            text-align: center;
+        }
+
+        .empty h3 {
+            margin: 0 0 10px;
+            color: var(--navy);
+        }
+
+        .empty p {
+            margin: 0;
+            color: #687785;
+        }
+
+        .footer {
+            margin-top: 50px;
+            background: var(--navy);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .footer img {
+            width: 190px;
+            max-width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .footer p {
+            margin: 0;
+            color: #dce5ed;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+
+            .header-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header-title {
+                text-align: center;
+            }
+
+            .header-title h1 {
+                font-size: 22px;
+            }
+
+            .page {
+                padding: 0 15px;
+            }
+
+            .card-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .filters input {
+                min-width: 100%;
+            }
+
+            .filters select,
+            .filter-button,
+            .clear-button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    THE LABEL GROUP • Staff Management System
+</div>
+
+<header class="header">
+
+    <div class="header-inner">
+
+        <a href="{% url 'staff_dashboard' %}">
+            <img
+                src="{% static 'products/logo 2 (1).png' %}"
+                alt="THE LABEL GROUP"
+                class="logo"
+            >
+        </a>
+
+        <div class="header-title">
+            <h1>Collection Calendar Orders</h1>
+            <p>Manage customer Collection Calendar Sticker requests</p>
+        </div>
+
+    </div>
+
+</header>
+
+<main class="page">
+
+    <a href="{% url 'staff_dashboard' %}" class="back-link">
+        ← Back to Staff Dashboard
+    </a>
+
+    <div class="card">
+
+        <div class="card-header">
+
+            <h2>Customer Requests</h2>
+
+            <div class="count">
+                {{ calendar_orders|length }} Request{{ calendar_orders|length|pluralize }}
+            </div>
+
+        </div>
+
+        <div class="filters">
+
+            <form method="get">
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search company, name, email or phone..."
+                >
+
+                <select name="status">
+
+                    <option value="">
+                        All Statuses
+                    </option>
+
+                    {% for value, label in status_choices %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if selected_status == value %}selected{% endif %}
+                        >
+                            {{ label }}
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+                <button type="submit" class="filter-button">
+                    Search
+                </button>
+
+                <a
+                    href="{% url 'staff_calendar_order_list' %}"
+                    class="clear-button"
+                >
+                    Clear
+                </a>
+
+            </form>
+
+        </div>
+
+        {% if calendar_orders %}
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+                            <th>Request</th>
+                            <th>Company</th>
+                            <th>Customer</th>
+                            <th>Calendar Year</th>
+                            <th>Quantity</th>
+                            <th>Created</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% for order in calendar_orders %}
+
+                            <tr>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        <span class="request-number">
+                                            #{{ order.id }}
+                                        </span>
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        <div class="company">
+                                            {{ order.company }}
+                                        </div>
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        <div class="customer">
+                                            {{ order.name }}<br>
+                                            {{ order.email }}<br>
+                                            {{ order.phone }}
+                                        </div>
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        {{ order.calendar_year }}
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        <span class="quantity">
+                                            {{ order.quantity }}
+                                        </span>
+                                    </a>
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+                                        {{ order.created_at|date:"M d, Y" }}<br>
+                                        {{ order.created_at|date:"g:i A" }}
+                                    </a>
+                                </td>
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="order-link"
+                                    >
+
+                                        <span class="status status-{{ order.status }}">
+                                            {{ order.get_status_display }}
+                                        </span>
+
+                                    </a>
+
+                                </td>
+
+                                <td>
+
+                                    <a
+                                        href="{% url 'staff_calendar_order_detail' order_id=order.id %}"
+                                        class="view-button"
+                                    >
+                                        View Request
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+
+                <h3>No Collection Calendar Requests</h3>
+
+                <p>
+                    There are currently no customer Collection Calendar Sticker requests.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</main>
+
+<footer class="footer">
+
+    <img
+        src="{% static 'products/logo 2 (1).png' %}"
+        alt="THE LABEL GROUP"
+    >
+
+    <p>
+        Professional Industrial Identification
+    </p>
+
+</footer>
+
+</body>
+</html>

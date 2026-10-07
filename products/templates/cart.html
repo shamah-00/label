@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart | THE LABEL GROUP{% endblock %}
+
+{% block content %}
+
+<div class="container" style="max-width: 1200px; margin: 0 auto; padding: 50px 20px;">
+
+```
+<div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 42px; margin-bottom: 10px;">Your Shopping Cart</h1>
+    <p style="color: #666; font-size: 17px;">
+        Review your selected products before checkout.
+    </p>
+</div>
+
+{% if cart_items %}
+
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px; align-items: start;">
+
+        <div>
+
+            {% for item in cart_items %}
+
+                <div style="
+                    display: flex;
+                    gap: 20px;
+                    align-items: center;
+                    padding: 20px;
+                    margin-bottom: 15px;
+                    border: 1px solid #e5e5e5;
+                    border-radius: 12px;
+                    background: #fff;
+                ">
+
+                    {% if item.product.image %}
+                        <img
+                            src="{{ item.product.image.url }}"
+                            alt="{{ item.product.name }}"
+                            style="
+                                width: 110px;
+                                height: 110px;
+                                object-fit: cover;
+                                border-radius: 8px;
+                            "
+                        >
+                    {% else %}
+                        <div style="
+                            width: 110px;
+                            height: 110px;
+                            border-radius: 8px;
+                            background: #f3f3f3;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            color: #888;
+                            font-size: 13px;
+                        ">
+                            No Image
+                        </div>
+                    {% endif %}
+
+                    <div style="flex: 1;">
+
+                        <h3 style="margin: 0 0 8px;">
+                            {{ item.product.name }}
+                        </h3>
+
+                        {% if item.product.product_code %}
+                            <p style="margin: 0 0 8px; color: #777;">
+                                Product Code: {{ item.product.product_code }}
+                            </p>
+                        {% endif %}
+
+                        <p style="margin: 0 0 12px; font-weight: 600;">
+                            ${{ item.unit_price|floatformat:2 }}
+                        </p>
+
+                        <form
+                            method="post"
+                            action="{% url 'update_cart' item.product.id %}"
+                            style="display: flex; gap: 10px; align-items: center;"
+                        >
+
+                            {% csrf_token %}
+
+                            <label for="quantity-{{ item.product.id }}">
+                                Quantity:
+                            </label>
+
+                            <input
+                                id="quantity-{{ item.product.id }}"
+                                type="number"
+                                name="quantity"
+                                value="{{ item.quantity }}"
+                                min="1"
+                                style="
+                                    width: 75px;
+                                    padding: 8px;
+                                    border: 1px solid #ccc;
+                                    border-radius: 6px;
+                                "
+                            >
+
+                            <button
+                                type="submit"
+                                style="
+                                    padding: 9px 14px;
+                                    border: none;
+                                    border-radius: 6px;
+                                    background: #f28c28;
+                                    color: white;
+                                    cursor: pointer;
+                                    font-weight: 600;
+                                "
+                            >
+                                Update
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                    <div style="text-align: right;">
+
+                        <strong style="font-size: 18px;">
+                            ${{ item.item_total|floatformat:2 }}
+                        </strong>
+
+                        <br>
+
+                        <a
+                            href="{% url 'remove_from_cart' item.product.id %}"
+                            style="
+                                display: inline-block;
+                                margin-top: 12px;
+                                color: #c62828;
+                                text-decoration: none;
+                                font-size: 14px;
+                            "
+                        >
+                            Remove
+                        </a>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+            <div style="margin-top: 20px;">
+                <a
+                    href="{% url 'clear_cart' %}"
+                    style="
+                        color: #c62828;
+                        text-decoration: none;
+                        font-weight: 600;
+                    "
+                >
+                    Clear Cart
+                </a>
+            </div>
+
+        </div>
+
+
+        <div style="
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 25px;
+            background: #fafafa;
+            position: sticky;
+            top: 20px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Order Summary
+            </h2>
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin: 18px 0;
+            ">
+                <span>Items</span>
+                <strong>{{ total_quantity }}</strong>
+            </div>
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin: 18px 0;
+            ">
+                <span>Subtotal</span>
+                <strong>${{ subtotal|floatformat:2 }}</strong>
+            </div>
+
+            <div style="
+                border-top: 1px solid #ddd;
+                padding-top: 18px;
+                margin-top: 20px;
+                display: flex;
+                justify-content: space-between;
+                font-size: 21px;
+            ">
+                <strong>Total</strong>
+                <strong>${{ subtotal|floatformat:2 }}</strong>
+            </div>
+
+            <a
+                href="{% url 'checkout' %}"
+                style="
+                    display: block;
+                    text-align: center;
+                    margin-top: 25px;
+                    padding: 15px;
+                    border-radius: 8px;
+                    background: #f28c28;
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 17px;
+                "
+            >
+                Proceed to Checkout
+            </a>
+
+            <a
+                href="{% url 'home' %}"
+                style="
+                    display: block;
+                    text-align: center;
+                    margin-top: 15px;
+                    color: #174a7c;
+                    text-decoration: none;
+                    font-weight: 600;
+                "
+            >
+                Continue Shopping
+            </a>
+
+        </div>
+
+    </div>
+
+{% else %}
+
+    <div style="
+        text-align: center;
+        padding: 70px 20px;
+        border: 1px solid #e5e5e5;
+        border-radius: 12px;
+        background: #fafafa;
+    ">
+
+        <h2>Your cart is empty</h2>
+
+        <p style="color: #666; margin: 15px 0 25px;">
+            You haven't added any products to your shopping cart yet.
+        </p>
+
+        <a
+            href="{% url 'home' %}"
+            style="
+                display: inline-block;
+                padding: 14px 25px;
+                border-radius: 8px;
+                background: #f28c28;
+                color: white;
+                text-decoration: none;
+                font-weight: 700;
+            "
+        >
+            Start Shopping
+        </a>
+
+    </div>
+
+{% endif %}
+```
+
+</div>
+
+{% endblock %}

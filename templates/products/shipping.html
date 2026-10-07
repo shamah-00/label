@@ -1,0 +1,443 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shipping & Delivery | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #071426;
+            --orange: #f47b20;
+            --orange-dark: #d96512;
+            --white: #ffffff;
+            --light: #f4f6f8;
+            --lighter: #fafbfc;
+            --border: #e3e7eb;
+            --text: #17212b;
+            --muted: #66717d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* TOP BAR & HEADER */
+        .topbar {
+            background: var(--navy-dark);
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .topbar-inner {
+            max-width: 1400px;
+            margin: auto;
+            padding: 9px 24px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .topbar a:hover {
+            color: var(--orange);
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: auto;
+            padding: 17px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-main {
+            color: var(--navy);
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .logo-sub {
+            color: var(--orange);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .cart-link {
+            background: var(--navy);
+            color: #fff;
+            padding: 12px 17px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .cart-link:hover {
+            background: var(--orange);
+        }
+
+        /* NAVBAR */
+        .nav {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: auto;
+            display: flex;
+        }
+
+        .nav-item > a {
+            display: block;
+            padding: 15px 20px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .3px;
+        }
+
+        .nav-item:hover > a {
+            background: var(--orange);
+        }
+
+        /* HERO BANNER */
+        .hero-banner {
+            background: linear-gradient(90deg, var(--navy-dark), var(--navy));
+            color: #fff;
+            padding: 50px 24px;
+            border-bottom: 3px solid var(--orange);
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            color: var(--orange);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            transition: color .2s;
+        }
+
+        .back-link:hover {
+            color: #fff;
+        }
+
+        .hero-banner h1 {
+            font-size: 38px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+
+        .hero-banner p {
+            color: #dce3ea;
+            font-size: 16px;
+            max-width: 680px;
+        }
+
+        /* MAIN CONTENT LAYOUT */
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 24px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 50px;
+        }
+
+        .feature-card {
+            background: var(--lighter);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 28px;
+            border-top: 4px solid var(--navy);
+        }
+
+        .feature-card.highlight {
+            border-top-color: var(--orange);
+        }
+
+        .feature-card h3 {
+            color: var(--navy);
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .feature-card p {
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* DETAILS SECTION */
+        .info-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+
+        .info-box {
+            margin-bottom: 35px;
+        }
+
+        .info-box h2 {
+            color: var(--navy);
+            font-size: 22px;
+            font-weight: 900;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .info-box p {
+            color: #334155;
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .bullet-list {
+            margin-left: 20px;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .bullet-list li {
+            margin-bottom: 8px;
+        }
+
+        /* SIDEBAR CARD */
+        .sidebar-card {
+            background: var(--navy);
+            color: #fff;
+            padding: 30px;
+            border-radius: 6px;
+            height: fit-content;
+        }
+
+        .sidebar-card h3 {
+            font-size: 20px;
+            font-weight: 900;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-card p {
+            color: #dce3ea;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .btn-sidebar {
+            display: block;
+            width: 100%;
+            text-align: center;
+            background: var(--orange);
+            color: #fff;
+            padding: 13px;
+            border-radius: 4px;
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: .5px;
+        }
+
+        .btn-sidebar:hover {
+            background: var(--orange-dark);
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--navy-dark);
+            color: #fff;
+            margin-top: 70px;
+            padding: 40px 24px 20px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: auto;
+            color: #84919d;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media (max-width: 900px) {
+            .grid-3 { grid-template-columns: 1fr; }
+            .info-section { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+    <div class="topbar-inner">
+        <a href="{% url 'product_list' %}">Request a Catalog</a>
+        <a href="{% url 'quote_cart' %}">Request a Quote</a>
+        <a href="{% url 'shipping' %}">Contact Us</a>
+    </div>
+</div>
+
+<!-- HEADER -->
+<header class="header">
+    <div class="header-inner">
+        <a href="/" class="logo">
+            <div class="logo-main">THE LABEL GROUP</div>
+            <div class="logo-sub">INDUSTRIAL PRINTS & DECALS</div>
+        </a>
+
+        <a href="{% url 'cart' %}" class="cart-link">VIEW CART</a>
+    </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-item"><a href="/">HOME</a></div>
+        <div class="nav-item"><a href="{% url 'product_list' %}">SHOP ALL</a></div>
+        <div class="nav-item"><a href="{% url 'quote_cart' %}">CUSTOM ORDERS</a></div>
+        <div class="nav-item"><a href="{% url 'shipping' %}">SHIPPING</a></div>
+    </div>
+</nav>
+
+<!-- HERO BANNER -->
+<section class="hero-banner">
+    <div class="hero-inner">
+        <a href="/" class="back-link">&larr; Back to Home</a>
+        <h1>Shipping & Commercial Delivery</h1>
+        <p>Reliable logistics and fast fulfillment for standard decals, heavy-duty labels, and custom industrial production orders.</p>
+    </div>
+</section>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+    <!-- 3 KEY HIGHLIGHT CARDS -->
+    <div class="grid-3">
+        <div class="feature-card highlight">
+            <h3>Fast Production Turnaround</h3>
+            <p>Standard catalog products ship within 1 to 2 business days. Custom printed decals complete proof approval in 3 to 5 business days.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Industrial Heavy Packaging</h3>
+            <p>Orders are packaged with protective vinyl sheets and weather-sealed wrap to ensure decals arrive flat, undamaged, and ready to install.</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>Commercial Fleet & Bulk Shipping</h3>
+            <p>Direct freight, bulk palletizing, and split-shipments available for multi-site contractors and government facilities.</p>
+        </div>
+    </div>
+
+    <!-- DETAILED INFORMATION SECTION -->
+    <div class="info-section">
+        <div>
+            <div class="info-box">
+                <h2>Standard & Expedited Delivery Options</h2>
+                <p>We work with commercial carriers to provide reliable freight and package delivery across all regions:</p>
+                <ul class="bullet-list">
+                    <li><strong>Ground Shipping:</strong> 3 to 5 business days for all standard orders.</li>
+                    <li><strong>Expedited Air Shipping:</strong> 1 to 2 business days for priority job-site deadlines.</li>
+                    <li><strong>Freight Shipping:</strong> Recommended for bulk container decals, dumpster labels, and large volume orders over 50 lbs.</li>
+                </ul>
+            </div>
+
+            <div class="info-box">
+                <h2>Order Tracking & Verification</h2>
+                <p>As soon as your shipment leaves our facility, an automated shipping confirmation email with tracking details will be issued to your specified billing email address.</p>
+            </div>
+
+            <div class="info-box">
+                <h2>Custom Order Timelines</h2>
+                <p>Custom government contractor decals, customized equipment markings, or custom die-cut vinyl require artwork proofing before production. Production timelines start immediately following digital proof confirmation.</p>
+            </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div>
+            <div class="sidebar-card">
+                <h3>Have Questions About Your Order?</h3>
+                <p>Need urgent delivery to a construction site or custom freight instructions?</p>
+                <a href="{% url 'quote_cart' %}" class="btn-sidebar">REQUEST CUSTOM SHIPPING QUOTE</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+    <div class="footer-inner">
+        <div>
+            <h2 style="font-size: 20px;">THE LABEL <strong style="color:var(--orange);">GROUP</strong></h2>
+            <p style="color:#aeb9c4; font-size:12px; margin-top:5px;">Industrial Print & Decal Solutions</p>
+        </div>
+        <div>
+            <a href="/" style="color:#aeb9c4; font-size:13px; margin-right:20px;">Home</a>
+            <a href="{% url 'product_list' %}" style="color:#aeb9c4; font-size:13px; margin-right:20px;">Catalog</a>
+            <a href="{% url 'quote_cart' %}" style="color:#aeb9c4; font-size:13px;">Custom Quote</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <div>&copy; 2026 THE LABEL GROUP. All Rights Reserved.</div>
+        <div>Industrial Delivery Logistics</div>
+    </div>
+</footer>
+
+</body>
+</html>

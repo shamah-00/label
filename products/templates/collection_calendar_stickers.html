@@ -1,0 +1,750 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Collection Calendar Stickers | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #08233f;
+            --blue: #0d4f87;
+            --orange: #f58220;
+            --light: #f4f6f8;
+            --border: #d9e0e7;
+            --text: #182838;
+            --muted: #657382;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        .topbar {
+            background: var(--navy);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            width: 250px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .back-link {
+            color: var(--blue);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .back-link:hover {
+            color: var(--orange);
+        }
+
+        .hero {
+            background: var(--navy);
+            color: white;
+            padding: 55px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            margin: 0 0 12px;
+            font-size: 42px;
+        }
+
+        .hero p {
+            margin: 0;
+            font-size: 18px;
+            color: #dbe7f2;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 45px auto;
+            padding: 0 20px;
+        }
+
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(8, 35, 63, 0.08);
+        }
+
+        .reference-box {
+            background: #fff7ef;
+            border-left: 5px solid var(--orange);
+            padding: 18px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+
+        .reference-box a {
+            color: var(--blue);
+            font-weight: 700;
+        }
+
+        .section {
+            border-top: 1px solid var(--border);
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+
+        .section:first-of-type {
+            border-top: 0;
+            padding-top: 0;
+            margin-top: 0;
+        }
+
+        .section h2 {
+            color: var(--navy);
+            font-size: 24px;
+            margin: 0 0 20px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        .field label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            background: white;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(13, 79, 135, 0.10);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .checkbox-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--light);
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        .checkbox-item input {
+            width: auto;
+        }
+
+        .error {
+            color: #b42318;
+            font-size: 14px;
+            margin-top: 6px;
+        }
+
+        .form-errors {
+            background: #fff0f0;
+            border: 1px solid #f0b7b7;
+            color: #8a1c1c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .help-text {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .spam-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .submit-area {
+            margin-top: 35px;
+            text-align: center;
+        }
+
+        .submit-button {
+            border: none;
+            background: var(--orange);
+            color: white;
+            padding: 16px 35px;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background: #d9680b;
+        }
+
+        .required {
+            color: #c62828;
+        }
+
+        .footer {
+            background: var(--navy);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+        }
+
+        .footer img {
+            width: 220px;
+            max-width: 100%;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .hero h1 {
+                font-size: 30px;
+            }
+
+            .header-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .grid,
+            .checkbox-list {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header class="header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}">
+            <img
+                src="{% static 'products/logo 2 (1).png' %}"
+                alt="THE LABEL GROUP"
+                class="logo"
+            >
+        </a>
+
+        <a href="{% url 'home' %}" class="back-link">
+            ← Back to Website
+        </a>
+
+    </div>
+</header>
+
+<section class="hero">
+    <h1>Collection Calendar Stickers</h1>
+    <p>Tell us exactly how you want your collection calendar stickers printed.</p>
+</section>
+
+<main class="container">
+
+    <div class="form-card">
+
+        <div class="reference-box">
+            <strong>Collection Calendar Sticker Reference</strong>
+            <br>
+            Use the reference image below as a guide for the calendar sticker design.
+            <br><br>
+            <a
+                href="https://www.hhhincorporated.com/images/calendar-sticker.jpg"
+                target="_blank"
+            >
+                View Reference Image
+            </a>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="form-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="section">
+                <h2>1. Calendar Year</h2>
+
+                <div class="field">
+                    <label for="{{ form.calendar_year.id_for_label }}">
+                        Calendar Year <span class="required">*</span>
+                    </label>
+
+                    {{ form.calendar_year }}
+
+                    {% for error in form.calendar_year.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>2. Trash Collection</h2>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.trash_collection_day.id_for_label }}">
+                            Trash Collection Day <span class="required">*</span>
+                        </label>
+
+                        {{ form.trash_collection_day }}
+
+                        {% for error in form.trash_collection_day.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.trash_collection_frequency.id_for_label }}">
+                            Trash Collection Frequency <span class="required">*</span>
+                        </label>
+
+                        {{ form.trash_collection_frequency }}
+
+                        {% for error in form.trash_collection_frequency.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.other_trash_frequency.id_for_label }}">
+                        Specify Other Trash Frequency
+                    </label>
+
+                    {{ form.other_trash_frequency }}
+
+                    {% for error in form.other_trash_frequency.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>3. Recycling Collection</h2>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.recycling_collection_day.id_for_label }}">
+                            Recycling Collection Day <span class="required">*</span>
+                        </label>
+
+                        {{ form.recycling_collection_day }}
+
+                        {% for error in form.recycling_collection_day.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.recycling_collection_frequency.id_for_label }}">
+                            Recycling Collection Frequency <span class="required">*</span>
+                        </label>
+
+                        {{ form.recycling_collection_frequency }}
+
+                        {% for error in form.recycling_collection_frequency.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.other_recycling_frequency.id_for_label }}">
+                        Specify Other Recycling Frequency
+                    </label>
+
+                    {{ form.other_recycling_frequency }}
+
+                    {% for error in form.other_recycling_frequency.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>4. Recognized Holidays</h2>
+
+                <div class="checkbox-list">
+
+                    <label class="checkbox-item">
+                        {{ form.new_years_day }}
+                        <span>New Year's Day</span>
+                    </label>
+
+                    <label class="checkbox-item">
+                        {{ form.memorial_day }}
+                        <span>Memorial Day</span>
+                    </label>
+
+                    <label class="checkbox-item">
+                        {{ form.independence_day }}
+                        <span>Independence Day (July 4)</span>
+                    </label>
+
+                    <label class="checkbox-item">
+                        {{ form.labor_day }}
+                        <span>Labor Day</span>
+                    </label>
+
+                    <label class="checkbox-item">
+                        {{ form.thanksgiving_day }}
+                        <span>Thanksgiving Day</span>
+                    </label>
+
+                    <label class="checkbox-item">
+                        {{ form.christmas_day }}
+                        <span>Christmas Day</span>
+                    </label>
+
+                </div>
+
+                <div class="grid" style="margin-top: 20px;">
+
+                    <div class="field">
+                        <label for="{{ form.other_holiday_1.id_for_label }}">
+                            Other Holiday
+                        </label>
+                        {{ form.other_holiday_1 }}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.other_holiday_2.id_for_label }}">
+                            Other Holiday
+                        </label>
+                        {{ form.other_holiday_2 }}
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.other_holiday_3.id_for_label }}">
+                        Other Holiday
+                    </label>
+                    {{ form.other_holiday_3 }}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>5. Sticker Design</h2>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.top_bar_color.id_for_label }}">
+                            Color of Top Bar <span class="required">*</span>
+                        </label>
+
+                        {{ form.top_bar_color }}
+
+                        {% for error in form.top_bar_color.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.include_company_logo.id_for_label }}">
+                            Include Company Logo?
+                        </label>
+
+                        {{ form.include_company_logo }}
+
+                        <div class="help-text">
+                            Check this box if you want your company logo included.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>6. Collection Information</h2>
+
+                <div class="field">
+                    <label for="{{ form.other_collection_information.id_for_label }}">
+                        Other Collection Information
+                    </label>
+
+                    {{ form.other_collection_information }}
+
+                    {% for error in form.other_collection_information.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>7. Quantity</h2>
+
+                <div class="field">
+                    <label for="{{ form.quantity.id_for_label }}">
+                        Quantity <span class="required">*</span>
+                    </label>
+
+                    {{ form.quantity }}
+
+                    <div class="help-text">
+                        Minimum order quantity: 1,000 stickers.
+                    </div>
+
+                    {% for error in form.quantity.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>8. Contact Information</h2>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.name.id_for_label }}">
+                            Name <span class="required">*</span>
+                        </label>
+                        {{ form.name }}
+
+                        {% for error in form.name.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.title.id_for_label }}">
+                            Title
+                        </label>
+                        {{ form.title }}
+
+                        {% for error in form.title.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.company.id_for_label }}">
+                            Company <span class="required">*</span>
+                        </label>
+                        {{ form.company }}
+
+                        {% for error in form.company.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.phone.id_for_label }}">
+                            Phone
+                        </label>
+                        {{ form.phone }}
+
+                        {% for error in form.phone.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.street_address.id_for_label }}">
+                        Street Address <span class="required">*</span>
+                    </label>
+                    {{ form.street_address }}
+
+                    {% for error in form.street_address.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.address_contd.id_for_label }}">
+                        Address Continued
+                    </label>
+                    {{ form.address_contd }}
+
+                    {% for error in form.address_contd.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.city.id_for_label }}">
+                            City <span class="required">*</span>
+                        </label>
+                        {{ form.city }}
+
+                        {% for error in form.city.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.state.id_for_label }}">
+                            State <span class="required">*</span>
+                        </label>
+                        {{ form.state }}
+
+                        {% for error in form.state.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.zip_code.id_for_label }}">
+                            Zip <span class="required">*</span>
+                        </label>
+                        {{ form.zip_code }}
+
+                        {% for error in form.zip_code.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="field">
+                        <label for="{{ form.email.id_for_label }}">
+                            E-mail <span class="required">*</span>
+                        </label>
+                        {{ form.email }}
+
+                        {% for error in form.email.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+
+
+            <div class="section">
+                <h2>9. Verification</h2>
+
+                <div class="spam-box">
+                    <div class="field" style="margin-bottom: 0;">
+                        <label for="spam_check">
+                            is water wet or dry?
+                        </label>
+
+                        <input
+                            type="text"
+                            name="spam_check"
+                            id="spam_check"
+                            placeholder="Type your answer"
+                            required
+                        >
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="submit-area">
+                <button
+                    type="submit"
+                    class="submit-button"
+                >
+                    Submit Collection Calendar Sticker Request
+                </button>
+            </div>
+
+        </form>
+
+    </div>
+
+</main>
+
+<footer class="footer">
+
+    <img
+        src="{% static 'products/logo 2 (1).png' %}"
+        alt="THE LABEL GROUP"
+    >
+
+    <div>
+        Professional Industrial Identification
+    </div>
+
+</footer>
+
+</body>
+</html>

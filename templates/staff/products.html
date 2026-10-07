@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Staff Products - SwiftCart</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-top: 0; }
+        .btn { background: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block; margin-bottom: 20px; }
+        .btn:hover { background: #0056b3; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; color: #333; }
+        tr:hover { background: #f1f1f1; }
+        .actions a { color: #007bff; text-decoration: none; margin-right: 10px; }
+        .actions a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #666; text-decoration: none; }
+        .back-link:hover { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'staff_dashboard' %}" class="back-link">&larr; Back to Dashboard</a>
+        
+        <h1>Staff Products</h1>
+        <a href="{% url 'staff_product_add' %}" class="btn">+ Add New Product</a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Name</th>
+                    <th>Price</th>
+                    <th>Available</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>{{ product.name }}</td>
+                    <td>{{ product.price }}</td>
+                    <td>{% if product.is_available %}Yes{% else %}No{% endif %}</td>
+                    <td class="actions">
+                        <a href="{% url 'staff_product_edit' product.pk %}">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4">No products found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

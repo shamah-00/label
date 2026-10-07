@@ -1,0 +1,158 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request a Quote | THE LABEL GROUP</title>
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #071426;
+            --orange: #f47b20;
+            --orange-dark: #d96512;
+            --white: #ffffff;
+            --light: #f4f6f8;
+            --border: #e3e7eb;
+            --text: #17212b;
+            --muted: #66717d;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.5; }
+        a { color: inherit; text-decoration: none; }
+
+        /* HEADER & TOPBAR */
+        .topbar { background: var(--navy-dark); color: #fff; font-size: 13px; }
+        .topbar-inner { max-width: 1400px; margin: auto; padding: 10px 24px; display: flex; justify-content: flex-end; gap: 28px; }
+        .topbar a:hover { color: var(--orange); }
+
+        .header { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
+        .header-inner { max-width: 1400px; margin: auto; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+        .logo-main { color: var(--navy); font-size: 26px; font-weight: 900; letter-spacing: 2px; line-height: 1; }
+        .logo-sub { color: var(--orange); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-top: 4px; }
+
+        .cart-link { background: var(--navy); color: #fff; padding: 12px 20px; border-radius: 4px; font-size: 13px; font-weight: 800; }
+        .cart-link:hover { background: var(--orange); }
+
+        /* NAV */
+        .nav { background: var(--navy); color: #fff; }
+        .nav-inner { max-width: 1400px; margin: auto; display: flex; }
+        .nav-item > a { display: block; padding: 16px 22px; font-size: 13px; font-weight: 800; }
+        .nav-item:hover > a { background: var(--orange); }
+
+        /* CONTENT CONTAINER */
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+
+        .back-link { display: inline-block; color: var(--orange-dark); font-weight: 800; font-size: 13px; margin-bottom: 20px; }
+        .back-link:hover { text-decoration: underline; }
+
+        h1 { color: var(--navy); font-size: 32px; font-weight: 900; margin-bottom: 8px; }
+        .subtitle { color: var(--muted); font-size: 15px; margin-bottom: 30px; }
+
+        /* TABLE */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid var(--border); }
+        th { background: var(--navy); color: #fff; padding: 14px; text-align: left; font-size: 13px; font-weight: 800; text-transform: uppercase; }
+        td { padding: 16px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .remove-btn { color: #d9534f; font-weight: 700; font-size: 13px; }
+        .remove-btn:hover { text-decoration: underline; }
+
+        /* EMPTY STATE BOX */
+        .empty-box { background: var(--light); border: 1px solid var(--border); border-radius: 6px; padding: 50px 20px; text-align: center; }
+        .empty-box p { color: var(--muted); font-size: 16px; margin-bottom: 20px; }
+
+        /* FORM */
+        .form-card { background: var(--light); border: 1px solid var(--border); border-radius: 6px; padding: 30px; margin-top: 30px; }
+        .form-card h2 { color: var(--navy); font-size: 20px; font-weight: 800; margin-bottom: 20px; }
+        .form-card p { margin-bottom: 15px; }
+        .form-card label { display: block; font-weight: 700; font-size: 13px; color: var(--navy); margin-bottom: 5px; }
+        .form-card input, .form-card textarea, .form-card select { width: 100%; padding: 12px; border: 1px solid #ccd3da; border-radius: 4px; font-size: 14px; outline: none; }
+        .form-card input:focus, .form-card textarea:focus { border-color: var(--orange); }
+
+        .btn-submit { display: inline-block; padding: 15px 30px; background: var(--orange); color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: 900; cursor: pointer; transition: background .2s; }
+        .btn-submit:hover { background: var(--orange-dark); }
+        .btn-navy { display: inline-block; padding: 12px 24px; background: var(--navy); color: #fff; border-radius: 4px; font-size: 13px; font-weight: 800; }
+        .btn-navy:hover { background: var(--orange); }
+
+        /* FOOTER */
+        footer { background: var(--navy-dark); color: #fff; margin-top: 80px; padding: 30px 24px; text-align: center; font-size: 12px; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">
+    <div class="topbar-inner">
+        <a href="{% url 'product_list' %}">Request a Catalog</a>
+        <a href="{% url 'quote_cart' %}">Request a Quote</a>
+        <a href="{% url 'shipping' %}">Contact Us</a>
+    </div>
+</div>
+
+<header class="header">
+    <div class="header-inner">
+        <a href="/" class="logo">
+            <div class="logo-main">THE LABEL GROUP</div>
+            <div class="logo-sub">INDUSTRIAL PRINTS & DECALS</div>
+        </a>
+        <a href="{% url 'cart' %}" class="cart-link">VIEW CART</a>
+    </div>
+</header>
+
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-item"><a href="/">HOME</a></div>
+        <div class="nav-item"><a href="{% url 'product_list' %}">SHOP ALL</a></div>
+        <div class="nav-item"><a href="{% url 'quote_cart' %}">CUSTOM ORDERS</a></div>
+        <div class="nav-item"><a href="{% url 'shipping' %}">SHIPPING</a></div>
+    </div>
+</nav>
+
+<div class="container">
+    <a href="/" class="back-link">&larr; Back to Home</a>
+    <h1>Request a Custom Quote</h1>
+    <p class="subtitle">Submit specifications for commercial decals, custom sizes, and quantity discounts.</p>
+
+    {% if quote_items %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Product Description</th>
+                    <th>Requested Quantity</th>
+                    <th style="text-align: right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in quote_items %}
+                <tr>
+                    <td><strong>{{ item.product.name }}</strong></td>
+                    <td>{{ item.quantity }}</td>
+                    <td style="text-align: right;"><a href="{% url 'remove_from_quote' item.product.id %}" class="remove-btn">Remove</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="form-card">
+            <h2>Customer & Shipping Information</h2>
+            <form action="{% url 'quote_cart' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn-submit">SUBMIT QUOTE REQUEST</button>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="empty-box">
+            <p>Your quote request list is currently empty.</p>
+            <a href="{% url 'product_list' %}" class="btn-navy">BROWSE PRODUCTS CATALOGUE</a>
+        </div>
+    {% endif %}
+</div>
+
+<footer>
+    &copy; 2026 THE LABEL GROUP. All Rights Reserved. Industrial Identification Solutions.
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,714 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Add Product | The Label Group</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fa;
+            color: #111827;
+        }
+
+        .topbar {
+            background: #071a2b;
+            color: #fff;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 4px solid #f58220;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            color: #f58220;
+        }
+
+        .top-links {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .top-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .top-links a:hover {
+            color: #f58220;
+        }
+
+        .container {
+            max-width: 1150px;
+            margin: 40px auto;
+            padding: 0 20px 60px;
+        }
+
+        .heading {
+            margin-bottom: 25px;
+        }
+
+        .heading h1 {
+            margin: 0 0 8px;
+            font-size: 34px;
+            color: #071a2b;
+        }
+
+        .heading p {
+            margin: 0;
+            color: #667085;
+            font-size: 15px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #dfe5eb;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 8px 30px rgba(7, 26, 43, 0.06);
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section:last-of-type {
+            margin-bottom: 10px;
+        }
+
+        .section-title {
+            font-size: 19px;
+            font-weight: 800;
+            color: #071a2b;
+            margin-bottom: 20px;
+            border-left: 4px solid #f58220;
+            padding-left: 12px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #263445;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #cbd5df;
+            border-radius: 7px;
+            font-size: 15px;
+            background: #fff;
+            color: #111827;
+            font-family: inherit;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #f58220;
+            box-shadow: 0 0 0 3px rgba(245, 130, 32, 0.12);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .help {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #667085;
+            line-height: 1.5;
+        }
+
+        .price-note {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: #fff7ed;
+            border-left: 3px solid #f58220;
+            color: #7c3f00;
+            font-size: 12px;
+            line-height: 1.5;
+            border-radius: 4px;
+        }
+
+        .checkboxes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 14px;
+            border: 1px solid #dfe5eb;
+            border-radius: 8px;
+            background: #f8fafc;
+            cursor: pointer;
+        }
+
+        .checkbox:hover {
+            border-color: #f58220;
+        }
+
+        .checkbox input {
+            width: auto;
+            margin: 0;
+        }
+
+        .error {
+            color: #b42318;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .non-field-errors {
+            background: #fff1f0;
+            border: 1px solid #f0b4ae;
+            color: #a11a12;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .image-note {
+            padding: 14px;
+            margin-top: 12px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 7px;
+            font-size: 13px;
+            color: #475467;
+            line-height: 1.5;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 13px 24px;
+            border-radius: 7px;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background: #edf0f3;
+            color: #263445;
+        }
+
+        .btn-secondary:hover {
+            background: #dfe5eb;
+        }
+
+        .btn-primary {
+            background: #f58220;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #d96d0d;
+        }
+
+        @media (max-width: 800px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .checkboxes {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .btn {
+                text-align: center;
+            }
+
+            .card {
+                padding: 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        THE LABEL <span>GROUP</span>
+    </div>
+
+    <nav class="top-links">
+        <a href="/">Website</a>
+        <a href="{% url 'staff_dashboard' %}">Dashboard</a>
+        <a href="{% url 'staff_product_list' %}">Products</a>
+        <a href="{% url 'staff_logout' %}">Logout</a>
+    </nav>
+
+</header>
+
+<main class="container">
+
+    <div class="heading">
+        <h1>Add Product</h1>
+        <p>
+            Add a new sticker, decal, label or custom print to The Label Group catalogue.
+        </p>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <div class="card">
+
+            {% if form.non_field_errors %}
+                <div class="non-field-errors">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <!-- PRODUCT INFORMATION -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Information
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.name.id_for_label }}">
+                            Product Name
+                        </label>
+
+                        {{ form.name }}
+
+                        <div class="help">
+                            Enter the actual name customers will see.
+                        </div>
+
+                        {% for error in form.name.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.product_code.id_for_label }}">
+                            Product / Sticker Code
+                        </label>
+
+                        {{ form.product_code }}
+
+                        <div class="help">
+                            Example: DGO, 320, P001, G001 or C001.
+                        </div>
+
+                        {% for error in form.product_code.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.industry.id_for_label }}">
+                            Industry
+                        </label>
+
+                        {{ form.industry }}
+
+                        <div class="help">
+                            Choose where this product belongs in the main catalogue.
+                        </div>
+
+                        {% for error in form.industry.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.product_type.id_for_label }}">
+                            Product Type
+                        </label>
+
+                        {{ form.product_type }}
+
+                        <div class="help">
+                            Select the type of sticker, decal or printed product.
+                        </div>
+
+                        {% for error in form.product_type.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.category.id_for_label }}">
+                            Category
+                        </label>
+
+                        {{ form.category }}
+
+                        <div class="help">
+                            Use this for the product's general catalogue category.
+                        </div>
+
+                        {% for error in form.category.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.slug.id_for_label }}">
+                            URL Slug
+                        </label>
+
+                        {{ form.slug }}
+
+                        <div class="help">
+                            Example: gasoline-only-dgo.
+                        </div>
+
+                        {% for error in form.slug.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field full">
+                        <label for="{{ form.description.id_for_label }}">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        <div class="help">
+                            Add useful information customers should know about this product.
+                        </div>
+
+                        {% for error in form.description.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PRICING -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Pricing & Inventory
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.price.id_for_label }}">
+                            Price (USD)
+                        </label>
+
+                        {{ form.price }}
+
+                        <div class="price-note">
+                            Leave this blank when the product requires a custom quote.
+                            The website will show <strong>Request a Quote</strong> instead of $0.00.
+                        </div>
+
+                        {% for error in form.price.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.discount_price.id_for_label }}">
+                            Discount Price (USD)
+                        </label>
+
+                        {{ form.discount_price }}
+
+                        <div class="help">
+                            Optional. Only enter this when a discounted selling price applies.
+                        </div>
+
+                        {% for error in form.discount_price.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.stock.id_for_label }}">
+                            Stock
+                        </label>
+
+                        {{ form.stock }}
+
+                        {% for error in form.stock.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.brand.id_for_label }}">
+                            Brand
+                        </label>
+
+                        {{ form.brand }}
+
+                        <div class="help">
+                            Optional manufacturer or brand.
+                        </div>
+
+                        {% for error in form.brand.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PRODUCT SPECIFICATIONS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Specifications
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+                        <label for="{{ form.material.id_for_label }}">
+                            Material
+                        </label>
+
+                        {{ form.material }}
+
+                        {% for error in form.material.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.finish.id_for_label }}">
+                            Finish
+                        </label>
+
+                        {{ form.finish }}
+
+                        {% for error in form.finish.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.shape.id_for_label }}">
+                            Shape
+                        </label>
+
+                        {{ form.shape }}
+
+                        {% for error in form.shape.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field">
+                        <label for="{{ form.printing_method.id_for_label }}">
+                            Printing Method
+                        </label>
+
+                        {{ form.printing_method }}
+
+                        {% for error in form.printing_method.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+
+                    <div class="field full">
+                        <label for="{{ form.adhesive.id_for_label }}">
+                            Adhesive / Application
+                        </label>
+
+                        {{ form.adhesive }}
+
+                        {% for error in form.adhesive.errors %}
+                            <div class="error">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- IMAGE -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Image
+                </div>
+
+                <div class="field">
+
+                    <label for="{{ form.image.id_for_label }}">
+                        Individual Product / Sticker Image
+                    </label>
+
+                    {{ form.image }}
+
+                    <div class="image-note">
+                        Upload the picture belonging specifically to this product.
+                        Each sticker in the catalogue can have its own image.
+                    </div>
+
+                    {% for error in form.image.errors %}
+                        <div class="error">{{ error }}</div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Website Status
+                </div>
+
+                <div class="checkboxes">
+
+                    <label class="checkbox">
+                        {{ form.is_custom }}
+                        <span>Custom Product</span>
+                    </label>
+
+
+                    <label class="checkbox">
+                        {{ form.is_available }}
+                        <span>Available on Website</span>
+                    </label>
+
+
+                    <label class="checkbox">
+                        {{ form.is_featured }}
+                        <span>Featured Product</span>
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <div class="buttons">
+
+                <a
+                    href="{% url 'staff_product_list' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Add Product
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</main>
+
+</body>
+</html>

@@ -1,0 +1,379 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Label Group - Industrial Labels, Fleet Decals & Custom Stickers</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --white: #ffffff;
+            --light: #f5f7fa;
+            --border: #e2e7ed;
+            --text: #172033;
+            --muted: #667085;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* TOP BAR / NAV */
+        .site-nav {
+            background: var(--navy-dark);
+            color: #fff;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            font-weight: bold;
+        }
+
+        .nav-links a:hover {
+            color: var(--orange);
+        }
+
+        /* HERO HEADER */
+        .hero-header {
+            background: var(--navy);
+            color: #fff;
+            padding: 60px 30px;
+            text-align: center;
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .hero-header h1 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        .hero-header p {
+            color: #dce4ee;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        /* SEARCH FORM */
+        .search-form {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto;
+            gap: 10px;
+        }
+
+        .search-form input {
+            flex: 1;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+
+        .search-form button {
+            background: var(--orange);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .search-form button:hover {
+            background: var(--orange-dark);
+        }
+
+        /* MAIN LAYOUT */
+        .main-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 30px;
+        }
+
+        section {
+            margin-bottom: 50px;
+        }
+
+        section h2 {
+            color: var(--navy);
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--orange);
+        }
+
+        /* PRODUCT GRID */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 25px;
+        }
+
+        .product-card {
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+        }
+
+        .product-code {
+            font-size: 12px;
+            font-weight: bold;
+            color: var(--orange);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .product-card h3 {
+            font-size: 18px;
+            color: var(--navy);
+            margin-bottom: 10px;
+        }
+
+        .product-card p {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .product-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .price {
+            font-weight: bold;
+            color: var(--navy);
+            font-size: 16px;
+        }
+
+        .btn {
+            background: var(--navy);
+            color: white;
+            padding: 8px 14px;
+            font-size: 13px;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--orange);
+        }
+
+        /* MESSAGES */
+        .messages {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 30px;
+        }
+
+        .message {
+            background: #e6f4ea;
+            border-left: 4px solid #34a853;
+            padding: 12px 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #137333;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOP NAVIGATION BAR -->
+    <nav class="site-nav">
+        <div><strong>The Label Group</strong></div>
+        <div class="nav-links">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'shipping' %}">Shipping & Delivery</a>
+            <a href="{% url 'quote_cart' %}">Request Quote</a>
+            <a href="{% url 'cart' %}">Cart</a>
+        </div>
+    </nav>
+
+    <!-- HERO HEADER & SEARCH -->
+    <header class="hero-header">
+        <div class="hero-container">
+            <h1>Industrial Labels & Fleet Decals</h1>
+            <p>Heavy-duty industrial labels, fleet branding, and custom calendar stickers built for rigorous environments.</p>
+            
+            <form method="get" action="{% url 'home' %}" class="search-form">
+                <input type="text" name="q" value="{{ search_query|default:'' }}" placeholder="Search products by name or code...">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+    </header>
+
+    <!-- MESSAGES -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="message">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- MAIN CONTENT -->
+    <div class="main-container">
+
+        <!-- SEARCH RESULTS / FILTER NOTICE -->
+        {% if search_query or selected_industry %}
+        <section>
+            <h2>Search / Filter Results</h2>
+            <p style="margin-bottom: 20px; color: var(--muted);">
+                Showing results 
+                {% if search_query %}for "<strong>{{ search_query }}</strong>"{% endif %}
+                {% if selected_industry %}in industry "{{ selected_industry }}"{% endif %}
+                (<a href="{% url 'home' %}" style="color: var(--orange); text-decoration: underline;">Clear filters</a>)
+            </p>
+            
+            {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <div>
+                        <div class="product-code">{{ product.product_code }}</div>
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description|truncatechars:90 }}</p>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price">
+                            {% if product.discount_price %}
+                                ${{ product.discount_price }}
+                            {% elif product.price %}
+                                ${{ product.price }}
+                            {% else %}
+                                Quote Only
+                            {% endif %}
+                        </span>
+                        <a href="{% url 'product_detail' product.id %}" class="btn">View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No products found matching your criteria.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+
+        <!-- FEATURED PRODUCTS -->
+        {% if featured_products and not search_query and not selected_industry %}
+        <section>
+            <h2>Featured Products</h2>
+            <div class="product-grid">
+                {% for product in featured_products %}
+                <div class="product-card">
+                    <div>
+                        <div class="product-code">{{ product.product_code }}</div>
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description|truncatechars:90 }}</p>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price">
+                            {% if product.discount_price %}
+                                ${{ product.discount_price }}
+                            {% elif product.price %}
+                                ${{ product.price }}
+                            {% else %}
+                                Quote Only
+                            {% endif %}
+                        </span>
+                        <a href="{% url 'product_detail' product.id %}" class="btn">View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- ALL PRODUCTS CATALOG -->
+        {% if not search_query and not selected_industry %}
+        <section>
+            <h2>All Available Products</h2>
+            {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <div>
+                        <div class="product-code">{{ product.product_code }}</div>
+                        <h3>{{ product.name }}</h3>
+                        <p>{{ product.description|truncatechars:90 }}</p>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price">
+                            {% if product.discount_price %}
+                                ${{ product.discount_price }}
+                            {% elif product.price %}
+                                ${{ product.price }}
+                            {% else %}
+                                Quote Only
+                            {% endif %}
+                        </span>
+                        <a href="{% url 'product_detail' product.id %}" class="btn">View Details</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No products are currently available.</p>
+            {% endif %}
+        </section>
+        {% endif %}
+
+    </div>
+
+</body>
+</html>

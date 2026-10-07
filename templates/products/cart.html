@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Shopping Cart | THE LABEL GROUP</title>
+    <style>
+        :root { --navy: #0b1f3a; --orange: #f47b20; --border: #e3e7eb; }
+        body { font-family: Arial, sans-serif; padding: 30px; color: #17212b; }
+        .container { max-width: 900px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+        .btn { padding: 12px 24px; background: var(--orange); color: white; font-weight: 900; text-decoration: none; display: inline-block; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="/" style="color: var(--navy); font-weight: 800; text-decoration: none;">&larr; Back to Catalog</a>
+    <h1 style="color: var(--navy);">Shopping Cart</h1>
+    {% if cart_items %}
+        <table>
+            <tr style="background: var(--navy); color: #fff;"><th>Product</th><th>Price</th><th>Quantity</th><th>Total</th><th>Action</th></tr>
+            {% for item in cart_items %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>${{ item.product.price }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>${{ item.total_price }}</td>
+                <td><a href="{% url 'remove_from_cart' item.product.id %}" style="color:red;">Remove</a></td>
+            </tr>
+            {% endfor %}
+        </table>
+        <h2 style="color: var(--navy);">Total: ${{ total_price }}</h2>
+        <a href="{% url 'checkout' %}" class="btn">PROCEED TO CHECKOUT</a>
+    {% else %}
+        <p>Your shopping cart is empty.</p>
+    {% endif %}
+</div>
+</body>
+</html>

@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>The Label Group</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #0b0d10;
+            --dark: #11151a;
+            --red: #e63946;
+            --light: #f5f6f8;
+            --white: #ffffff;
+            --gray: #707780;
+            --border: #e5e7eb;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--white);
+            color: var(--black);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        img {
+            width: 100%;
+            display: block;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav {
+            max-width: 1280px;
+            height: 76px;
+            margin: auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .brand span {
+            color: var(--red);
+        }
+
+        .nav-menu {
+            display: flex;
+            gap: 28px;
+            align-items: center;
+        }
+
+        .nav-menu a {
+            font-size: 14px;
+            font-weight: 600;
+            color: #34383d;
+        }
+
+        .nav-menu a:hover {
+            color: var(--red);
+        }
+
+        .nav-action {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .login {
+            font-size: 13px;
+            font-weight: 700;
+            padding: 11px 15px;
+        }
+
+        .quote {
+            background: var(--black);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        /* =========================
+           HERO
+        ========================= */
+
+        .hero {
+            background: var(--black);
+            color: white;
+            min-height: 650px;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: var(--red);
+            right: -180px;
+            top: -180px;
+            opacity: .18;
+            filter: blur(20px);
+        }
+
+        .hero-inner {
+            max-width: 1280px;
+            width: 100%;
+            margin: auto;
+            padding: 80px 24px;
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 70px;
+            align-items: center;
+        }
+
+        .eyebrow {
+            color: #ff6874;
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 {
+            font-size: clamp(45px, 6vw, 78px);
+            line-height: .98;
+            letter-spacing: -4px;
+            max-width: 760px;
+            margin-bottom: 25px;
+        }
+
+        .hero h1 span {
+            color: #ff4f5d;
+        }
+
+        .hero-text {
+            color: #aeb4bb;
+            max-width: 590px;
+            font-size: 17px;
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .hero-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .hero-main {
+            background: var(--red);
+            color: white;
+            padding: 15px 23px;
+            border-radius: 7px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .hero-outline {
+            border: 1px solid #555b63;
+            color: white;
+            padding: 14px 23px;
+            border-radius: 7px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .hero-card {
+            background: #171b20;
+            border: 1px solid #282d33;
+            border-radius: 18px;
+            padding: 30px;
+        }
+
+        .hero-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .hero-card-label {
+            color: #8d949c;
+            font-size: 12px;
+        }
+
+        .status {
+            width: 9px;
+            height: 9px;
+            background: #39d98a;
+            border-radius: 50%;
+        }
+
+        .hero-card h3 {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+
+        .hero-card p {
+            color: #999fa6;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .hero-stat {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .stat {
+            background: #101317;
+            border-radius: 10px;
+            padding: 18px;
+        }
+
+        .stat strong {
+            display: block;
+            font-size: 21px;
+            margin-bottom: 4px;
+        }
+
+        .stat span {
+            color: #858c94;
+            font-size: 11px;
+        }
+
+        /* =========================
+           TRUST BAR
+        ========================= */
+
+        .trust {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .trust-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .trust-item {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .trust-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 9px;
+            background: #f1f2f4;
+            display: grid;
+            place-items: center;
+            font-weight: 900;
+        }
+
+        .trust-item strong {
+            display: block;
+            font-size: 13px;
+        }
+
+        .trust-item span {
+            display: block;
+            color: var(--gray);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        /* =========================
+           GENERAL
+        ========================= */
+
+        .section {
+            max-width: 1280px;
+            margin: auto;
+            padding: 90px 24px;
+        }
+
+        .section-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 30px;
+            margin-bottom: 35px;
+        }
+
+        .section-label {
+            color: var(--red);
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .section-head h2 {
+            font-size: 38px;
+            letter-spacing: -2px;
+        }
+
+        .section-head p {
+            max-width: 450px;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        /* =========================
+           CATEGORIES
+        ========================= */
+
+        .categories {
+            background: var(--light);
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 14px;
+        }
+
+        .category {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 27px 20px;
+            transition: .25s;
+        }
+
+        .category:hover {
+            transform: translateY(-5px);
+            border-color: var(--red);
+        }
+
+        .category-number {
+            color: #b7bbc0;
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 30px;
+        }
+
+        .category-icon {
+            font-size: 27px;
+            margin-bottom: 15px;
+        }
+
+        .category h3 {
+            font-size: 15px;
+            margin-bottom: 5px;
+        }
+
+        .category p {
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        /* =========================
+           PRODUCTS
+        ========================= */
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .product {
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+            background: white;
+            transition: .25s;
+        }
+
+        .product:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,.08);
+        }
+
+        .product-image {
+            height: 240px;
+            background: #f1f2f4;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .no-image {
+            height: 100%;
+            display: grid;
+            place-items: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .product-body {
+            padding: 18px;
+        }
+
+        .product-type {
+            color: var(--red);
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .product h3 {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .product-description {
+            color: var(--gray);
+            font-size: 12px;
+            min-height: 38px;
+        }
+
+        .product-footer {
+            margin-top: 17px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .product-price {
+            font-size: 17px;
+            font-weight: 900;
+        }
+
+        .old-price {
+            font-size: 11px;
+            color: #999;
+            text-decoration: line-through;
+            margin-left: 4px;
+        }
+
+        .view-product {
+            background: var(--black);
+            color: white;
+            padding: 9px 13px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        /* =========================
+           CUSTOM
+        ========================= */
+
+        .custom-section {
+            background: var(--black);
+            color: white;
+        }
+
+        .custom-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 90px 24px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 70px;
+            align-items: center;
+        }
+
+        .custom-inner h2 {
+            font-size: 48px;
+            line-height: 1;
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+        }
+
+        .custom-inner p {
+            color: #9ba1a8;
+            max-width: 550px;
+            font-size: 15px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .custom-list {
+            display: grid;
+            gap: 11px;
+            margin-bottom: 28px;
+        }
+
+        .custom-list div {
+            color: #d5d8dc;
+            font-size: 13px;
+        }
+
+        .custom-button {
+            display: inline-block;
+            background: var(--red);
+            color: white;
+            padding: 14px 21px;
+            border-radius: 7px;
+            font-weight: 800;
+            font-size: 13px;
+        }
+
+        .custom-panel {
+            border: 1px solid #292e34;
+            border-radius: 15px;
+            padding: 30px;
+            background: #12161a;
+        }
+
+        .custom-panel-title {
+            font-size: 12px;
+            color: #858c94;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .custom-row {
+            padding: 18px 0;
+            border-top: 1px solid #252a30;
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .custom-row span {
+            color: #8d949c;
+        }
+
+        /* =========================
+           PROCESS
+        ========================= */
+
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0;
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            overflow: hidden;
+        }
+
+        .process {
+            padding: 28px;
+            border-right: 1px solid var(--border);
+        }
+
+        .process:last-child {
+            border-right: none;
+        }
+
+        .process-number {
+            color: var(--red);
+            font-weight: 900;
+            font-size: 12px;
+            margin-bottom: 30px;
+        }
+
+        .process h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .process p {
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        /* =========================
+           WHY US
+        ========================= */
+
+        .why {
+            background: var(--light);
+        }
+
+        .why-grid {
+            display: grid;
+            grid-template-columns: 1.2fr .8fr .8fr;
+            gap: 15px;
+        }
+
+        .why-main {
+            background: var(--black);
+            color: white;
+            padding: 40px;
+            border-radius: 14px;
+        }
+
+        .why-main h3 {
+            font-size: 30px;
+            letter-spacing: -1px;
+            margin-bottom: 15px;
+        }
+
+        .why-main p {
+            color: #a1a7ae;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+
+        .why-card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: 14px;
+        }
+
+        .why-card-icon {
+            font-size: 25px;
+            margin-bottom: 30px;
+        }
+
+        .why-card h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .why-card p {
+            color: var(--gray);
+            font-size: 12px;
+        }
+
+        /* =========================
+           FAQ
+        ========================= */
+
+        .faq {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .faq-question {
+            padding: 22px 5px;
+            display: flex;
+            justify-content: space-between;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .faq-answer {
+            display: none;
+            padding: 0 5px 20px;
+            color: var(--gray);
+            font-size: 13px;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        /* =========================
+           FINAL CTA
+        ========================= */
+
+        .final-cta {
+            background: var(--red);
+            color: white;
+            text-align: center;
+        }
+
+        .final-inner {
+            max-width: 800px;
+            margin: auto;
+            padding: 80px 24px;
+        }
+
+        .final-inner h2 {
+            font-size: 44px;
+            letter-spacing: -2px;
+            line-height: 1;
+            margin-bottom: 15px;
+        }
+
+        .final-inner p {
+            opacity: .9;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .final-button {
+            display: inline-block;
+            background: white;
+            color: var(--black);
+            padding: 14px 22px;
+            border-radius: 7px;
+            font-weight: 900;
+            font-size: 13px;
+        }
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        footer {
+            background: #080a0c;
+            color: white;
+        }
+
+        .footer-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 60px 24px 30px;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-brand p {
+            color: #7d848c;
+            font-size: 12px;
+            max-width: 300px;
+            margin-top: 15px;
+            line-height: 1.7;
+        }
+
+        footer h4 {
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+
+        footer a {
+            display: block;
+            color: #7d848c;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        footer a:hover {
+            color: white;
+        }
+
+        .copyright {
+            max-width: 1280px;
+            margin: auto;
+            padding: 20px 24px;
+            border-top: 1px solid #1e2226;
+            color: #666d74;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 950px) {
+
+            .nav-menu {
+                display: none;
+            }
+
+            .hero-inner,
+            .custom-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-card {
+                max-width: 600px;
+            }
+
+            .category-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .trust-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process {
+                border-bottom: 1px solid var(--border);
+            }
+
+            .why-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .why-main {
+                grid-column: 1 / -1;
+            }
+
+            .footer-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .nav {
+                height: 65px;
+                padding: 0 16px;
+            }
+
+            .brand {
+                font-size: 18px;
+            }
+
+            .login {
+                display: none;
+            }
+
+            .hero {
+                min-height: 590px;
+            }
+
+            .hero-inner {
+                padding: 65px 18px;
+            }
+
+            .hero h1 {
+                font-size: 48px;
+                letter-spacing: -3px;
+            }
+
+            .hero-text {
+                font-size: 14px;
+            }
+
+            .trust-inner {
+                grid-template-columns: 1fr 1fr;
+                padding: 20px 16px;
+            }
+
+            .section {
+                padding: 65px 16px;
+            }
+
+            .section-head {
+                display: block;
+            }
+
+            .section-head h2 {
+                font-size: 31px;
+                margin-bottom: 10px;
+            }
+
+            .category-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .custom-inner {
+                padding: 65px 18px;
+            }
+
+            .custom-inner h2 {
+                font-size: 38px;
+            }
+
+            .process-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .process {
+                border-right: none;
+            }
+
+            .why-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .why-main {
+                grid-column: auto;
+            }
+
+            .final-inner h2 {
+                font-size: 36px;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr 1fr;
+                padding: 50px 18px 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<header>
+    <nav class="nav">
+
+        <a href="/" class="brand">
+            THE LABEL <span>GROUP</span>
+        </a>
+
+        <div class="nav-menu">
+            <a href="#products">Products</a>
+            <a href="#categories">Categories</a>
+            <a href="#custom">Custom</a>
+            <a href="#process">How It Works</a>
+            <a href="#faq">FAQ</a>
+        </div>
+
+        <div class="nav-action">
+            <a href="/staff/login/" class="login">
+                Staff Login
+            </a>
+
+            <a href="#quote" class="quote">
+                Get a Quote
+            </a>
+        </div>
+
+    </nav>
+</header>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="hero-inner">
+
+        <div>
+
+            <div class="eyebrow">
+                The Label Group
+            </div>
+
+            <h1>
+                Print it.
+                <span>Label it.</span>
+                Make it stand out.
+            </h1>
+
+            <p class="hero-text">
+                Professional labels and custom printing for businesses,
+                organizations and individuals. Built around quality,
+                precision and your exact requirements.
+            </p>
+
+            <div class="hero-actions">
+
+                <a href="#products" class="hero-main">
+                    Explore Products
+                </a>
+
+                <a href="#custom" class="hero-outline">
+                    Custom Printing →
+                </a>
+
+            </div>
+
+        </div>
+
+
+        <div class="hero-card">
+
+            <div class="hero-card-top">
+
+                <span class="hero-card-label">
+                    PRINTING SOLUTIONS
+                </span>
+
+                <span class="status"></span>
+
+            </div>
+
+            <h3>
+                Made for your brand.
+            </h3>
+
+            <p>
+                From everyday labels to completely custom projects,
+                choose the specifications that work for you.
+            </p>
+
+            <div class="hero-stat">
+
+                <div class="stat">
+                    <strong>01</strong>
+                    <span>Custom Solutions</span>
+                </div>
+
+                <div class="stat">
+                    <strong>02</strong>
+                    <span>Quality Materials</span>
+                </div>
+
+                <div class="stat">
+                    <strong>03</strong>
+                    <span>Professional Finish</span>
+                </div>
+
+                <div class="stat">
+                    <strong>04</strong>
+                    <span>Reliable Service</span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- TRUST -->
+
+<section class="trust">
+
+    <div class="trust-inner">
+
+        <div class="trust-item">
+            <div class="trust-icon">✓</div>
+            <div>
+                <strong>Quality First</strong>
+                <span>Professional printing</span>
+            </div>
+        </div>
+
+        <div class="trust-item">
+            <div class="trust-icon">◆</div>
+            <div>
+                <strong>Custom Options</strong>
+                <span>Made to your specification</span>
+            </div>
+        </div>
+
+        <div class="trust-item">
+            <div class="trust-icon">⚡</div>
+            <div>
+                <strong>Efficient Service</strong>
+                <span>Focused on turnaround</span>
+            </div>
+        </div>
+
+        <div class="trust-item">
+            <div class="trust-icon">★</div>
+            <div>
+                <strong>Business Ready</strong>
+                <span>For small and bulk orders</span>
+            </div>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- CATEGORIES -->
+
+<section class="categories" id="categories">
+
+    <div class="section">
+
+        <div class="section-head">
+
+            <div>
+                <div class="section-label">
+                    Explore
+                </div>
+
+                <h2>
+                    Find what you need.
+                </h2>
+            </div>
+
+            <p>
+                Browse our main product categories and discover
+                printing solutions for different applications.
+            </p>
+
+        </div>
+
+
+        <div class="category-grid">
+
+            <a href="#products" class="category">
+                <div class="category-number">01</div>
+                <div class="category-icon">♻</div>
+                <h3>Waste Labels</h3>
+                <p>Clear identification solutions.</p>
+            </a>
+
+            <a href="#products" class="category">
+                <div class="category-number">02</div>
+                <div class="category-icon">▣</div>
+                <h3>Government</h3>
+                <p>Official and identification labels.</p>
+            </a>
+
+            <a href="#products" class="category">
+                <div class="category-number">03</div>
+                <div class="category-icon">◆</div>
+                <h3>Motor</h3>
+                <p>Vehicle and motor applications.</p>
+            </a>
+
+            <a href="#products" class="category">
+                <div class="category-number">04</div>
+                <div class="category-icon">◉</div>
+                <h3>Pool</h3>
+                <p>Pool and safety identification.</p>
+            </a>
+
+            <a href="#custom" class="category">
+                <div class="category-number">05</div>
+                <div class="category-icon">+</div>
+                <h3>Custom</h3>
+                <p>Create something unique.</p>
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- PRODUCTS -->
+
+<section class="section" id="products">
+
+    <div class="section-head">
+
+        <div>
+            <div class="section-label">
+                Shop
+            </div>
+
+            <h2>
+                Featured products.
+            </h2>
+        </div>
+
+        <p>
+            Explore products currently available through
+            The Label Group.
+        </p>
+
+    </div>
+
+
+    <div class="product-grid">
+
+        {% for product in featured_products %}
+
+        <article class="product">
+
+            <div class="product-image">
+
+                {% if product.image %}
+
+                    <img
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                    >
+
+                {% else %}
+
+                    <div class="no-image">
+                        Product image
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+
+            <div class="product-body">
+
+                <div class="product-type">
+                    {{ product.get_category_display }}
+                </div>
+
+                <h3>
+                    {{ product.name }}
+                </h3>
+
+                <p class="product-description">
+                    {{ product.description|truncatewords:12 }}
+                </p>
+
+                <div class="product-footer">
+
+                    <div class="product-price">
+
+                        {% if product.discount_price %}
+
+                            ${{ product.discount_price }}
+
+                            <span class="old-price">
+                                ${{ product.price }}
+                            </span>
+
+                        {% else %}
+
+                            ${{ product.price }}
+
+                        {% endif %}
+
+                    </div>
+
+                    <a
+                        href="{% url 'product_detail' product.id %}"
+                        class="view-product"
+                    >
+                        View Product
+                    </a>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <p>No featured products available yet.</p>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<!-- ALL PRODUCTS -->
+
+<section class="section" style="padding-top: 0;">
+
+    <div class="section-head">
+
+        <div>
+            <div class="section-label">
+                Collection
+            </div>
+
+            <h2>
+                All products.
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="product-grid">
+
+        {% for product in products %}
+
+        <article class="product">
+
+            <div class="product-image">
+
+                {% if product.image %}
+
+                    <img
+                        src="{{ product.image.url }}"
+                        alt="{{ product.name }}"
+                    >
+
+                {% else %}
+
+                    <div class="no-image">
+                        Product image
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+            <div class="product-body">
+
+                <div class="product-type">
+                    {{ product.get_category_display }}
+                </div>
+
+                <h3>
+                    {{ product.name }}
+                </h3>
+
+                <p class="product-description">
+                    {{ product.description|truncatewords:12 }}
+                </p>
+
+                <div class="product-footer">
+
+                    <div class="product-price">
+
+                        {% if product.discount_price %}
+
+                            ${{ product.discount_price }}
+
+                        {% else %}
+
+                            ${{ product.price }}
+
+                        {% endif %}
+
+                    </div>
+
+                    <a
+                        href="{% url 'product_detail' product.id %}"
+                        class="view-product"
+                    >
+                        View Product
+                    </a>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        {% empty %}
+
+        <p>No products available yet.</p>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<!-- CUSTOM -->
+
+<section class="custom-section" id="custom">
+
+    <div class="custom-inner">
+
+        <div>
+
+            <div class="section-label">
+                Custom Printing
+            </div>
+
+            <h2>
+                Your idea.
+                Our print.
+            </h2>
+
+            <p>
+                Don't see exactly what you need? Tell us what you're
+                looking for and we can work around your required
+                size, material, shape, finish and printing method.
+            </p>
+
+            <div class="custom-list">
+                <div>✓ Custom sizes</div>
+                <div>✓ Custom shapes</div>
+                <div>✓ Multiple materials</div>
+                <div>✓ Different finishes</div>
+                <div>✓ Business and bulk orders</div>
+            </div>
+
+            <a href="#quote" class="custom-button">
+                Request a Custom Quote
+            </a>
+
+        </div>
+
+
+        <div class="custom-panel">
+
+            <div class="custom-panel-title">
+                Custom specification
+            </div>
+
+            <div class="custom-row">
+                <strong>Material</strong>
+                <span>Choose yours</span>
+            </div>
+
+            <div class="custom-row">
+                <strong>Shape</strong>
+                <span>Custom available</span>
+            </div>
+
+            <div class="custom-row">
+                <strong>Finish</strong>
+                <span>Multiple options</span>
+            </div>
+
+            <div class="custom-row">
+                <strong>Printing</strong>
+                <span>Full colour / more</span>
+            </div>
+
+            <div class="custom-row">
+                <strong>Quantity</strong>
+                <span>Small or bulk</span>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- PROCESS -->
+
+<section class="section" id="process">
+
+    <div class="section-head">
+
+        <div>
+            <div class="section-label">
+                Simple Process
+            </div>
+
+            <h2>
+                From idea to print.
+            </h2>
+        </div>
+
+        <p>
+            A straightforward process designed to make your
+            printing project easier.
+        </p>
+
+    </div>
+
+
+    <div class="process-grid">
+
+        <div class="process">
+            <div class="process-number">01</div>
+            <h3>Choose</h3>
+            <p>
+                Select a product or start a custom request.
+            </p>
+        </div>
+
+        <div class="process">
+            <div class="process-number">02</div>
+            <h3>Specify</h3>
+            <p>
+                Tell us your size, material, quantity and design.
+            </p>
+        </div>
+
+        <div class="process">
+            <div class="process-number">03</div>
+            <h3>Produce</h3>
+            <p>
+                Your project moves into production.
+            </p>
+        </div>
+
+        <div class="process">
+            <div class="process-number">04</div>
+            <h3>Receive</h3>
+            <p>
+                Collect or arrange delivery for your order.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- WHY -->
+
+<section class="why">
+
+    <div class="section" id="why-us">
+
+        <div class="section-head">
+
+            <div>
+                <div class="section-label">
+                    Why Us
+                </div>
+
+                <h2>
+                    Built around quality.
+                </h2>
+            </div>
+
+        </div>
+
+
+        <div class="why-grid">
+
+            <div class="why-main">
+
+                <h3>
+                    Printing that represents your brand.
+                </h3>
+
+                <p>
+                    Your label is often one of the first things people
+                    see. We focus on producing clean, professional
+                    printing that works for your product and your
+                    business.
+                </p>
+
+            </div>
+
+
+            <div class="why-card">
+
+                <div class="why-card-icon">
+                    ◆
+                </div>
+
+                <h3>
+                    Flexible
+                </h3>
+
+                <p>
+                    Different materials, shapes, finishes and
+                    printing options.
+                </p>
+
+            </div>
+
+
+            <div class="why-card">
+
+                <div class="why-card-icon">
+                    ✓
+                </div>
+
+                <h3>
+                    Professional
+                </h3>
+
+                <p>
+                    A clean and consistent approach from order
+                    to finished product.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- FAQ -->
+
+<section class="section" id="faq">
+
+    <div class="section-head">
+
+        <div>
+            <div class="section-label">
+                FAQ
+            </div>
+
+            <h2>
+                Common questions.
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div class="faq">
+
+        <div class="faq-item">
+
+            <div class="faq-question">
+                Can I order a custom label?
+                <span>+</span>
+            </div>
+
+            <div class="faq-answer">
+                Yes. Custom sizes, shapes, materials, finishes and
+                printing requirements can be requested.
+            </div>
+
+        </div>
+
+
+        <div class="faq-item">
+
+            <div class="faq-question">
+                Do you handle bulk orders?
+                <span>+</span>
+            </div>
+
+            <div class="faq-answer">
+                Yes. Bulk and business orders can be discussed
+                according to your requirements.
+            </div>
+
+        </div>
+
+
+        <div class="faq-item">
+
+            <div class="faq-question">
+                Can I request a quotation?
+                <span>+</span>
+            </div>
+
+            <div class="faq-answer">
+                Yes. Use the quote section to contact The Label
+                Group about your project.
+            </div>
+
+        </div>
+
+
+        <div class="faq-item">
+
+            <div class="faq-question">
+                Is delivery available?
+                <span>+</span>
+            </div>
+
+            <div class="faq-answer">
+                Delivery arrangements can be made depending on
+                your location and order.
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- FINAL CTA -->
+
+<section class="final-cta" id="quote">
+
+    <div class="final-inner">
+
+        <h2>
+            Have a project in mind?
+        </h2>
+
+        <p>
+            Let's turn your idea into something ready to print.
+        </p>
+
+        <a
+            href="mailto:info@thelabelgroup.com"
+            class="final-button"
+        >
+            Start Your Project
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <div class="footer-inner">
+
+        <div class="footer-brand">
+
+            <div class="brand">
+                THE LABEL <span>GROUP</span>
+            </div>
+
+            <p>
+                Professional printing and custom label solutions
+                for businesses, organizations and individuals.
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <h4>Shop</h4>
+
+            <a href="#products">Products</a>
+            <a href="#categories">Categories</a>
+            <a href="#custom">Custom Printing</a>
+
+        </div>
+
+
+        <div>
+
+            <h4>Company</h4>
+
+            <a href="#why-us">Why Us</a>
+            <a href="#process">How It Works</a>
+            <a href="#faq">FAQ</a>
+
+        </div>
+
+
+        <div>
+
+            <h4>Staff</h4>
+
+            <a href="/staff/login/">
+                Staff Login
+            </a>
+
+            <a href="/staff/register/">
+                Staff Registration
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="copyright">
+        © 2026 The Label Group. All rights reserved.
+    </div>
+
+</footer>
+
+
+<script>
+
+    document.querySelectorAll(".faq-question").forEach(
+        function(question) {
+
+            question.addEventListener(
+                "click",
+                function() {
+
+                    const item =
+                        this.parentElement;
+
+                    item.classList.toggle("active");
+
+                    const symbol =
+                        this.querySelector("span");
+
+                    symbol.textContent =
+                        item.classList.contains("active")
+                        ? "−"
+                        : "+";
+                }
+            );
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

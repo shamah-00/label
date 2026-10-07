@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+```
+<title>The Label Group | Staff Dashboard</title>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f5f5f5;
+        color: #111;
+    }
+
+    .layout {
+        display: flex;
+        min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+
+    .sidebar {
+        width: 250px;
+        background: #111;
+        color: white;
+        padding: 25px 18px;
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        overflow-y: auto;
+    }
+
+    .brand {
+        padding: 5px 10px 30px;
+        border-bottom: 1px solid #333;
+        margin-bottom: 25px;
+    }
+
+    .brand h1 {
+        font-size: 21px;
+        line-height: 1.2;
+    }
+
+    .brand p {
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 6px;
+    }
+
+    .menu-title {
+        font-size: 11px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin: 20px 10px 8px;
+    }
+
+    .sidebar a {
+        display: block;
+        color: #ddd;
+        text-decoration: none;
+        padding: 11px 12px;
+        border-radius: 6px;
+        margin-bottom: 4px;
+        font-size: 14px;
+    }
+
+    .sidebar a:hover {
+        background: #292929;
+        color: white;
+    }
+
+    .sidebar a.active {
+        background: #155eef;
+        color: white;
+    }
+
+    .logout {
+        margin-top: 25px;
+        border-top: 1px solid #333;
+        padding-top: 20px;
+    }
+
+    .logout a {
+        background: #8b0000;
+        color: white;
+        text-align: center;
+    }
+
+    .logout a:hover {
+        background: #b00000;
+    }
+
+    /* MAIN */
+
+    .main {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+        padding: 30px;
+    }
+
+    .topbar {
+        background: white;
+        border-radius: 10px;
+        padding: 20px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .topbar h2 {
+        font-size: 25px;
+    }
+
+    .topbar p {
+        color: #777;
+        font-size: 14px;
+        margin-top: 5px;
+    }
+
+    .staff-name {
+        font-weight: bold;
+        text-align: right;
+    }
+
+    .staff-role {
+        font-size: 12px;
+        color: #777;
+        margin-top: 4px;
+    }
+
+    /* STATISTICS */
+
+    .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 18px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 22px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .stat-card h3 {
+        font-size: 13px;
+        color: #777;
+        font-weight: normal;
+        margin-bottom: 12px;
+    }
+
+    .stat-card .number {
+        font-size: 30px;
+        font-weight: bold;
+    }
+
+    .stat-card a {
+        display: inline-block;
+        margin-top: 12px;
+        color: #155eef;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    /* MANAGEMENT */
+
+    .section-title {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+
+    .management-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 18px;
+    }
+
+    .management-card {
+        background: white;
+        padding: 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        text-decoration: none;
+        color: #111;
+        transition: 0.2s;
+    }
+
+    .management-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.10);
+    }
+
+    .management-card .icon {
+        font-size: 28px;
+        margin-bottom: 12px;
+    }
+
+    .management-card h3 {
+        font-size: 17px;
+        margin-bottom: 7px;
+    }
+
+    .management-card p {
+        color: #777;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* BOTTOM PANELS */
+
+    .bottom-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 18px;
+        margin-top: 30px;
+    }
+
+    .panel {
+        background: white;
+        padding: 22px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .panel-header h2 {
+        font-size: 19px;
+    }
+
+    .panel-header a {
+        color: #155eef;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .quote-row,
+    .activity-row {
+        padding: 13px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .quote-row:last-child,
+    .activity-row:last-child {
+        border-bottom: none;
+    }
+
+    .quote-name {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .quote-company {
+        color: #777;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .quote-status {
+        display: inline-block;
+        margin-top: 7px;
+        background: #eef5ff;
+        color: #155eef;
+        padding: 5px 9px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: bold;
+    }
+
+    .quote-date {
+        color: #999;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    .activity-title {
+        font-weight: bold;
+        font-size: 14px;
+    }
+
+    .activity-description {
+        color: #777;
+        font-size: 13px;
+        margin-top: 4px;
+    }
+
+    .activity-date {
+        color: #999;
+        font-size: 11px;
+        margin-top: 5px;
+    }
+
+    .empty {
+        color: #999;
+        text-align: center;
+        padding: 20px 0;
+    }
+
+    /* INFORMATION */
+
+    .information {
+        margin-top: 30px;
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .information h2 {
+        font-size: 19px;
+        margin-bottom: 10px;
+    }
+
+    .information p {
+        color: #666;
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 1100px) {
+
+        .stats {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .management-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .bottom-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 900px) {
+
+        .sidebar {
+            width: 210px;
+        }
+
+        .main {
+            margin-left: 210px;
+            width: calc(100% - 210px);
+        }
+    }
+
+    @media (max-width: 650px) {
+
+        .layout {
+            display: block;
+        }
+
+        .sidebar {
+            position: relative;
+            width: 100%;
+        }
+
+        .main {
+            margin-left: 0;
+            width: 100%;
+            padding: 15px;
+        }
+
+        .topbar {
+            display: block;
+        }
+
+        .staff-name {
+            text-align: left;
+            margin-top: 15px;
+        }
+
+        .stats {
+            grid-template-columns: 1fr;
+        }
+
+        .management-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="layout">
+
+```
+<!-- SIDEBAR -->
+
+<aside class="sidebar">
+
+    <div class="brand">
+
+        <h1>
+            The Label Group
+        </h1>
+
+        <p>
+            Print Shop Staff Management
+        </p>
+
+    </div>
+
+    <div class="menu-title">
+        Dashboard
+    </div>
+
+    <a
+        href="{% url 'staff_dashboard' %}"
+        class="active"
+    >
+        Dashboard
+    </a>
+
+    <div class="menu-title">
+        Management
+    </div>
+
+    <a href="{% url 'staff_product_list' %}">
+        Products
+    </a>
+
+    <!-- CONNECTED CUSTOMER LINK -->
+
+    <a href="{% url 'staff_customer_list' %}">
+        Customers
+    </a>
+
+    <a href="{% url 'staff_quote_list' %}">
+        Quote Requests
+    </a>
+
+    <a href="#">
+        Orders
+    </a>
+
+    <div class="menu-title">
+        Website
+    </div>
+
+    <a href="#">
+        Business Information
+    </a>
+
+    <a href="#">
+        Website Content
+    </a>
+
+    <a href="#">
+        FAQs
+    </a>
+
+    {% if user.is_superuser %}
+
+    <div class="menu-title">
+        Owner
+    </div>
+
+    <a href="{% url 'boss_staff_management' %}">
+        Staff Management
+    </a>
+
+    <a href="{% url 'staff_activity_log' %}">
+        Activity Log
+    </a>
+
+    {% endif %}
+
+    <div class="menu-title">
+        Account
+    </div>
+
+    <a href="{% url 'staff_profile' %}">
+        Staff Profile
+    </a>
+
+    <div class="logout">
+
+        <a href="{% url 'staff_logout' %}">
+            Logout
+        </a>
+
+    </div>
+
+</aside>
+
+<!-- MAIN CONTENT -->
+
+<main class="main">
+
+    <div class="topbar">
+
+        <div>
+
+            <h2>
+                Staff Dashboard
+            </h2>
+
+            <p>
+                Manage The Label Group Print Shop
+            </p>
+
+        </div>
+
+        <div class="staff-name">
+
+            {{ user.username }}
+
+            <div class="staff-role">
+                Authorized Staff
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- STATISTICS -->
+
+    <div class="stats">
+
+        <div class="stat-card">
+
+            <h3>
+                Total Products
+            </h3>
+
+            <div class="number">
+                {{ total_products }}
+            </div>
+
+            <a href="{% url 'staff_product_list' %}">
+                Manage Products
+            </a>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Available Products
+            </h3>
+
+            <div class="number">
+                {{ available_products }}
+            </div>
+
+            <a href="{% url 'staff_product_list' %}">
+                View Products
+            </a>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Total Quote Requests
+            </h3>
+
+            <div class="number">
+                {{ total_quotes }}
+            </div>
+
+            <a href="{% url 'staff_quote_list' %}">
+                View Quotes
+            </a>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                New Quotes
+            </h3>
+
+            <div class="number">
+                {{ new_quotes }}
+            </div>
+
+            <a href="{% url 'staff_quote_list' %}">
+                Review Quotes
+            </a>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Being Reviewed
+            </h3>
+
+            <div class="number">
+                {{ reviewing_quotes }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Quote Sent
+            </h3>
+
+            <div class="number">
+                {{ quoted_requests }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Approved
+            </h3>
+
+            <div class="number">
+                {{ approved_quotes }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                In Production
+            </h3>
+
+            <div class="number">
+                {{ production_quotes }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Completed
+            </h3>
+
+            <div class="number">
+                {{ completed_quotes }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Total Orders
+            </h3>
+
+            <div class="number">
+                {{ total_orders }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Pending Staff
+            </h3>
+
+            <div class="number">
+                {{ pending_staff }}
+            </div>
+
+        </div>
+
+        <div class="stat-card">
+
+            <h3>
+                Approved Staff
+            </h3>
+
+            <div class="number">
+                {{ approved_staff }}
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MANAGEMENT -->
+
+    <h2 class="section-title">
+        Management
+    </h2>
+
+    <div class="management-grid">
+
+        <a
+            href="{% url 'staff_product_list' %}"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Products
+            </div>
+
+            <h3>
+                Products
+            </h3>
+
+            <p>
+                Add, edit, delete and manage printing products
+                displayed on The Label Group website.
+            </p>
+
+        </a>
+
+        <a
+            href="{% url 'staff_quote_list' %}"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Quotes
+            </div>
+
+            <h3>
+                Quote Requests
+            </h3>
+
+            <p>
+                Review and respond to customer printing quote requests.
+            </p>
+
+        </a>
+
+        <!-- CONNECTED CUSTOMER CARD -->
+
+        <a
+            href="{% url 'staff_customer_list' %}"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Customers
+            </div>
+
+            <h3>
+                Customers
+            </h3>
+
+            <p>
+                View and manage customer accounts and information.
+            </p>
+
+        </a>
+
+        <a
+            href="#"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Orders
+            </div>
+
+            <h3>
+                Orders
+            </h3>
+
+            <p>
+                Manage customer orders from purchase through
+                production and delivery.
+            </p>
+
+        </a>
+
+        <a
+            href="#"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Website
+            </div>
+
+            <h3>
+                Website Content
+            </h3>
+
+            <p>
+                Manage information and content displayed on
+                The Label Group website.
+            </p>
+
+        </a>
+
+        <a
+            href="#"
+            class="management-card"
+        >
+
+            <div class="icon">
+                Business
+            </div>
+
+            <h3>
+                Business Information
+            </h3>
+
+            <p>
+                Manage business contact information, location
+                and social media links.
+            </p>
+
+        </a>
+
+    </div>
+
+    <!-- RECENT INFORMATION -->
+
+    <div class="bottom-grid">
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Recent Quote Requests
+                </h2>
+
+                <a href="{% url 'staff_quote_list' %}">
+                    View All
+                </a>
+
+            </div>
+
+            {% for quote in recent_quotes %}
+
+            <div class="quote-row">
+
+                <div class="quote-name">
+
+                    Quote #{{ quote.id }}
+                    —
+                    {{ quote.customer_name }}
+
+                </div>
+
+                {% if quote.company_name %}
+
+                <div class="quote-company">
+
+                    {{ quote.company_name }}
+
+                </div>
+
+                {% endif %}
+
+                <div class="quote-status">
+
+                    {{ quote.get_status_display }}
+
+                </div>
+
+                <div class="quote-date">
+
+                    {{ quote.created_at|date:"M d, Y H:i" }}
+
+                </div>
+
+            </div>
+
+            {% empty %}
+
+            <div class="empty">
+
+                No quote requests yet.
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <h2>
+                    Recent Activity
+                </h2>
+
+                {% if user.is_superuser %}
+
+                <a href="{% url 'staff_activity_log' %}">
+                    View All
+                </a>
+
+                {% endif %}
+
+            </div>
+
+            {% for activity in recent_activity %}
+
+            <div class="activity-row">
+
+                <div class="activity-title">
+
+                    {{ activity.staff.user.username }}
+                    —
+                    {{ activity.get_action_display }}
+
+                </div>
+
+                {% if activity.description %}
+
+                <div class="activity-description">
+
+                    {{ activity.description }}
+
+                </div>
+
+                {% endif %}
+
+                <div class="activity-date">
+
+                    {{ activity.created_at|date:"M d, Y H:i" }}
+
+                </div>
+
+            </div>
+
+            {% empty %}
+
+            <div class="empty">
+
+                No staff activity recorded yet.
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    <!-- INFORMATION -->
+
+    <div class="information">
+
+        <h2>
+            Welcome to The Label Group Staff Management System
+        </h2>
+
+        <p>
+            From this dashboard, authorized staff can manage
+            products, customers, quote requests, orders and
+            website information.
+        </p>
+
+        <p style="margin-top: 10px;">
+
+            Staff access and permissions depend on the role
+            assigned and approved by the business owner.
+
+        </p>
+
+    </div>
+
+</main>
+```
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quote Detail #{{ quote.pk }} - The Label Group</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-top: 0; }
+        .details-group { margin-bottom: 20px; }
+        .details-group label { font-weight: bold; color: #555; display: block; margin-bottom: 5px; }
+        .details-group p { background: #f8f9fa; padding: 10px; border-radius: 4px; border: 1px solid #ddd; margin: 0; }
+        .btn { background: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 15px; }
+        .btn:hover { background: #0056b3; }
+        form select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #666; text-decoration: none; }
+        .back-link:hover { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'staff_quotes' %}" class="back-link">&larr; Back to Quotes</a>
+        
+        <h1>Quote Request #{{ quote.pk }}</h1>
+
+        <div class="details-group">
+            <label>Customer Name:</label>
+            <p>{{ quote.customer_name|default:"N/A" }}</p>
+        </div>
+
+        <div class="details-group">
+            <label>Email / Phone:</label>
+            <p>{{ quote.customer_email|default:"N/A" }} | {{ quote.customer_phone|default:"N/A" }}</p>
+        </div>
+
+        <div class="details-group">
+            <label>Request Details:</label>
+            <p>{{ quote.details|default:"No details provided." }}</p>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="details-group">
+                <label for="status">Update Status:</label>
+                <select name="status" id="status">
+                    {% for code, label in status_choices %}
+                        <option value="{{ code }}" {% if quote.status == code %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn">Update Quote Status</button>
+        </form>
+    </div>
+</body>
+</html>

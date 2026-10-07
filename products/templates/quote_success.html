@@ -1,0 +1,431 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Quote Request Received | THE LABEL GROUP</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f7fa;
+            color: #172033;
+            line-height: 1.6;
+        }
+
+        header {
+            background: #ffffff;
+            border-bottom: 1px solid #e4e8ee;
+        }
+
+        .top-bar {
+            background: #0b2d5c;
+            color: #ffffff;
+            text-align: center;
+            padding: 10px 20px;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+
+        .header-main {
+            max-width: 1200px;
+            margin: auto;
+            padding: 22px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .logo {
+            text-decoration: none;
+            color: #0b2d5c;
+            font-size: 25px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .logo span {
+            color: #f47b20;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        nav a {
+            color: #172033;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        nav a:hover {
+            color: #f47b20;
+        }
+
+        .quote-link {
+            background: #f47b20;
+            color: #ffffff !important;
+            padding: 11px 17px;
+            border-radius: 5px;
+        }
+
+        .quote-link:hover {
+            background: #d9630c;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #0b2d5c, #124b91);
+            color: #ffffff;
+            padding: 70px 20px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            font-weight: 800;
+        }
+
+        .hero p {
+            max-width: 700px;
+            margin: auto;
+            font-size: 18px;
+            color: #e7eef8;
+        }
+
+        .success-wrapper {
+            max-width: 900px;
+            margin: 55px auto;
+            padding: 0 20px;
+        }
+
+        .success-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 55px 45px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e7ebf0;
+        }
+
+        .success-icon {
+            width: 76px;
+            height: 76px;
+            margin: 0 auto 25px;
+            border-radius: 50%;
+            background: #eaf7ef;
+            color: #238b45;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+        }
+
+        .success-card h2 {
+            color: #0b2d5c;
+            font-size: 30px;
+            margin-bottom: 15px;
+        }
+
+        .success-card > p {
+            max-width: 650px;
+            margin: 0 auto 25px;
+            color: #596579;
+            font-size: 16px;
+        }
+
+        .reference-box {
+            background: #f5f8fc;
+            border: 1px solid #dce4ee;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px auto;
+            max-width: 500px;
+        }
+
+        .reference-label {
+            color: #697586;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .reference-number {
+            color: #0b2d5c;
+            font-size: 25px;
+            font-weight: 800;
+        }
+
+        .customer-message {
+            background: #fff7ef;
+            border-left: 4px solid #f47b20;
+            padding: 18px 20px;
+            margin: 25px auto 30px;
+            max-width: 700px;
+            text-align: left;
+            color: #4f5867;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .button {
+            display: inline-block;
+            text-decoration: none;
+            padding: 13px 22px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .button-primary {
+            background: #f47b20;
+            color: #ffffff;
+        }
+
+        .button-primary:hover {
+            background: #d9630c;
+        }
+
+        .button-secondary {
+            background: #0b2d5c;
+            color: #ffffff;
+        }
+
+        .button-secondary:hover {
+            background: #082448;
+        }
+
+        footer {
+            background: #0a1f3d;
+            color: #ffffff;
+            margin-top: 70px;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 45px 25px 30px;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 45px;
+        }
+
+        .footer-brand h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .footer-brand h3 span {
+            color: #f47b20;
+        }
+
+        .footer-brand p {
+            color: #cbd5e3;
+            max-width: 500px;
+            font-size: 14px;
+        }
+
+        .footer-column h4 {
+            margin-bottom: 14px;
+            font-size: 15px;
+        }
+
+        .footer-column a {
+            display: block;
+            color: #cbd5e3;
+            text-decoration: none;
+            margin-bottom: 9px;
+            font-size: 14px;
+        }
+
+        .footer-column a:hover {
+            color: #f47b20;
+        }
+
+        .copyright {
+            border-top: 1px solid rgba(255,255,255,0.12);
+            padding: 18px 20px;
+            text-align: center;
+            color: #aebbd0;
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .header-main {
+                flex-direction: column;
+            }
+
+            nav {
+                justify-content: center;
+            }
+
+            .hero h1 {
+                font-size: 32px;
+            }
+
+            .success-card {
+                padding: 40px 22px;
+            }
+
+            .footer-inner {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 500px) {
+            nav {
+                gap: 13px;
+            }
+
+            .hero {
+                padding: 50px 18px;
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+
+            .success-card h2 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="top-bar">
+        Professional custom stickers and decals for business
+    </div>
+
+    <div class="header-main">
+        <a href="{% url 'home' %}" class="logo">
+            THE LABEL <span>GROUP</span>
+        </a>
+
+        <nav>
+            <a href="{% url 'home' %}">Shop Prints</a>
+            <a href="{% url 'home' %}?industry=truck_motor_car">Truck / Motor / Car</a>
+            <a href="{% url 'home' %}?industry=government">Government</a>
+            <a href="{% url 'home' %}?industry=pool">Pool</a>
+            <a href="{% url 'home' %}?industry=construction">Construction</a>
+            <a href="{% url 'home' %}?industry=waste">Waste</a>
+            <a href="{% url 'quote_cart' %}" class="quote-link">Quote Cart</a>
+        </nav>
+    </div>
+</header>
+
+<section class="hero">
+    <h1>Quote Request Received</h1>
+    <p>
+        Thank you for choosing THE LABEL GROUP. Your request has been received
+        and our team will review your requirements.
+    </p>
+</section>
+
+<main class="success-wrapper">
+    <div class="success-card">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h2>Thank You, {{ quote_request.customer_name }}!</h2>
+
+        <p>
+            We have successfully received your quote request. Our team will
+            review the products and quantities you selected together with any
+            special instructions you provided.
+        </p>
+
+        <div class="reference-box">
+            <div class="reference-label">
+                Quote Reference
+            </div>
+
+            <div class="reference-number">
+                #{{ quote_request.id }}
+            </div>
+        </div>
+
+        <div class="customer-message">
+            <strong>What happens next?</strong><br>
+            Our team will review your request and contact you using the email
+            address or phone number you provided. Pricing and production details
+            will be confirmed before you place an order.
+        </div>
+
+        <div class="buttons">
+            <a href="{% url 'home' %}" class="button button-primary">
+                Continue Shopping
+            </a>
+
+            <a href="{% url 'quote_cart' %}" class="button button-secondary">
+                View Quote Cart
+            </a>
+        </div>
+
+    </div>
+</main>
+
+<footer>
+    <div class="footer-inner">
+
+        <div class="footer-brand">
+            <h3>THE LABEL <span>GROUP</span></h3>
+            <p>
+                Professional custom stickers, decals and identification
+                products built for businesses and organizations.
+            </p>
+        </div>
+
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{% url 'home' %}">All Products</a>
+            <a href="{% url 'home' %}?industry=truck_motor_car">Truck / Motor / Car</a>
+            <a href="{% url 'home' %}?industry=government">Government Contractor</a>
+            <a href="{% url 'home' %}?industry=pool">Pool</a>
+            <a href="{% url 'home' %}?industry=construction">Construction</a>
+            <a href="{% url 'home' %}?industry=waste">Waste Companies</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Customer Service</h4>
+            <a href="{% url 'quote_cart' %}">Quote Cart</a>
+            <a href="{% url 'home' %}">Request a Quote</a>
+            <a href="/staff/login/">Staff Login</a>
+        </div>
+
+    </div>
+
+    <div class="copyright">
+        © 2026 THE LABEL GROUP. All rights reserved.
+    </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,498 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Login | The Label Group</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f4f8ff 0%, #ffffff 48%, #fff5eb 100%);
+            color: #172033;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 22px;
+        }
+
+        .staff-logo {
+            display: block;
+            width: 300px;
+            max-width: 90%;
+            height: auto;
+            max-height: 105px;
+            object-fit: contain;
+            object-position: center;
+            margin: 0 auto 12px;
+        }
+
+        .brand-subtitle {
+            color: #1557a6;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+        }
+
+        .brand-line {
+            width: 70px;
+            height: 4px;
+            background: #f58220;
+            border-radius: 10px;
+            margin: 12px auto 0;
+        }
+
+        .card {
+            background: #ffffff;
+            border: 1px solid #e1e6ee;
+            border-radius: 18px;
+            padding: 38px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.10);
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #eef5ff;
+            color: #1557a6;
+            border: 1px solid #d9e7fb;
+            border-radius: 999px;
+            padding: 8px 13px;
+            font-size: 12px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .security-dot {
+            width: 8px;
+            height: 8px;
+            background: #f58220;
+            border-radius: 50%;
+        }
+
+        h1 {
+            font-size: 30px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            color: #172033;
+        }
+
+        .intro {
+            color: #657083;
+            font-size: 14px;
+            line-height: 1.7;
+            margin-bottom: 27px;
+        }
+
+        .message {
+            padding: 13px 14px;
+            border-radius: 9px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.success {
+            background: #edf9f1;
+            border: 1px solid #b9e3c5;
+            color: #176b32;
+        }
+
+        .message.error {
+            background: #fff1f1;
+            border: 1px solid #efb4b4;
+            color: #9b2020;
+        }
+
+        .form-group {
+            margin-bottom: 19px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #172033;
+        }
+
+        input {
+            width: 100%;
+            min-height: 49px;
+            padding: 13px 14px;
+            border: 1px solid #ccd3de;
+            border-radius: 9px;
+            background: #ffffff;
+            color: #172033;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #1557a6;
+            box-shadow: 0 0 0 3px rgba(21, 87, 166, 0.10);
+        }
+
+        .password-wrap {
+            position: relative;
+        }
+
+        .password-wrap input {
+            padding-right: 70px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #1557a6;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            padding: 9px;
+        }
+
+        .toggle-password:hover {
+            color: #f58220;
+        }
+
+        .login-btn {
+            width: 100%;
+            min-height: 51px;
+            border: none;
+            border-radius: 9px;
+            background: #1557a6;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 5px;
+            transition: 0.2s ease;
+        }
+
+        .login-btn:hover {
+            background: #104887;
+        }
+
+        .register-box {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 22px;
+            border-top: 1px solid #e8ebf0;
+        }
+
+        .register-box p {
+            color: #687386;
+            font-size: 13px;
+            margin-bottom: 9px;
+        }
+
+        .register-box a {
+            color: #1557a6;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .register-box a:hover {
+            color: #f58220;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 18px;
+            color: #687386;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .back-link:hover {
+            color: #1557a6;
+        }
+
+        .security-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #7a8494;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        .security-note strong {
+            color: #1557a6;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 16px;
+            }
+
+            .staff-logo {
+                width: 260px;
+                max-width: 92%;
+                max-height: 90px;
+            }
+
+            .brand-subtitle {
+                font-size: 10px;
+                letter-spacing: 1.4px;
+            }
+
+            .card {
+                padding: 28px 20px;
+                border-radius: 15px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            input {
+                min-height: 50px;
+                font-size: 16px;
+            }
+
+            .login-btn {
+                min-height: 52px;
+            }
+        }
+
+        @media (max-width: 360px) {
+
+            .staff-logo {
+                width: 230px;
+            }
+
+            .card {
+                padding: 24px 17px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="brand">
+
+        <img
+            src="{% static 'products/logo 2 (1).png' %}"
+            class="staff-logo"
+            alt="THE LABEL GROUP"
+        >
+
+        <div class="brand-subtitle">
+            Staff Management Portal
+        </div>
+
+        <div class="brand-line"></div>
+
+    </div>
+
+    <div class="card">
+
+        <div class="security-badge">
+            <span class="security-dot"></span>
+            Secure Staff Access
+        </div>
+
+        <h1>
+            Staff Login
+        </h1>
+
+        <p class="intro">
+            Sign in with your approved staff account to access
+            The Label Group management system.
+        </p>
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="message {% if message.tags == 'success' %}success{% else %}error{% endif %}">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+        {% if error %}
+
+            <div class="message error">
+                {{ error }}
+            </div>
+
+        {% endif %}
+
+        <form method="POST" autocomplete="on">
+
+            {% csrf_token %}
+
+            <div class="form-group">
+
+                <label for="username">
+                    Username
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    autocomplete="username"
+                    maxlength="150"
+                >
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="password">
+                    Password
+                </label>
+
+                <div class="password-wrap">
+
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                        maxlength="128"
+                    >
+
+                    <button
+                        type="button"
+                        class="toggle-password"
+                        id="togglePassword"
+                        aria-label="Show password"
+                    >
+                        Show
+                    </button>
+
+                </div>
+
+            </div>
+
+            <button
+                type="submit"
+                class="login-btn"
+            >
+                Sign In
+            </button>
+
+        </form>
+
+        <div class="register-box">
+
+            <p>
+                Don't have a staff account?
+            </p>
+
+            <a href="{% url 'staff_register' %}">
+                Register as Staff
+            </a>
+
+        </div>
+
+        <a
+            href="/"
+            class="back-link"
+        >
+            Back to The Label Group
+        </a>
+
+    </div>
+
+    <div class="security-note">
+
+        <strong>Protected Staff Area</strong><br>
+
+        Staff accounts require approval before access is granted.
+        Never share your password with another person.
+
+    </div>
+
+</div>
+
+<script>
+
+    const togglePassword =
+        document.getElementById("togglePassword");
+
+    const password =
+        document.getElementById("password");
+
+    togglePassword.addEventListener(
+        "click",
+        function () {
+
+            if (password.type === "password") {
+
+                password.type = "text";
+                togglePassword.textContent = "Hide";
+
+                togglePassword.setAttribute(
+                    "aria-label",
+                    "Hide password"
+                );
+
+            } else {
+
+                password.type = "password";
+                togglePassword.textContent = "Show";
+
+                togglePassword.setAttribute(
+                    "aria-label",
+                    "Show password"
+                );
+
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>
+

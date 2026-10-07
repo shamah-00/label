@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Order Confirmed | THE LABEL GROUP{% endblock %}
+
+{% block content %}
+
+<div style="
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 70px 20px;
+">
+
+```
+<div style="
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 14px;
+    padding: 45px 30px;
+">
+
+    <div style="
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 20px;
+        border-radius: 50%;
+        background: #174a7c;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+        font-weight: 700;
+    ">
+        ✓
+    </div>
+
+    <h1 style="
+        margin-bottom: 12px;
+        font-size: 40px;
+    ">
+        Thank You for Your Order!
+    </h1>
+
+    <p style="
+        color: #666;
+        font-size: 17px;
+        line-height: 1.6;
+    ">
+        Your order has been successfully received by
+        <strong>THE LABEL GROUP</strong>.
+    </p>
+
+    <div style="
+        margin: 30px auto;
+        max-width: 500px;
+        padding: 20px;
+        background: #f8f8f8;
+        border-radius: 10px;
+    ">
+
+        <p style="margin: 0 0 8px;">
+            <strong>Order Number</strong>
+        </p>
+
+        <p style="
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #174a7c;
+        ">
+            #{{ order.id }}
+        </p>
+
+    </div>
+
+
+    <div style="
+        text-align: left;
+        max-width: 600px;
+        margin: 35px auto 0;
+        border-top: 1px solid #e5e5e5;
+        padding-top: 25px;
+    ">
+
+        <h2>
+            Order Summary
+        </h2>
+
+        {% for item in order.items.all %}
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                gap: 20px;
+                padding: 15px 0;
+                border-bottom: 1px solid #eeeeee;
+            ">
+
+                <div>
+
+                    <strong>
+                        {{ item.product_name }}
+                    </strong>
+
+                    <div style="
+                        color: #666;
+                        font-size: 14px;
+                        margin-top: 4px;
+                    ">
+                        Quantity: {{ item.quantity }}
+                    </div>
+
+                </div>
+
+                <strong>
+                    ${{ item.total_price|floatformat:2 }}
+                </strong>
+
+            </div>
+
+        {% endfor %}
+
+
+        <div style="
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            font-size: 21px;
+        ">
+
+            <strong>
+                Total
+            </strong>
+
+            <strong>
+                ${{ order.total|floatformat:2 }}
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <div style="
+        margin-top: 35px;
+        padding: 20px;
+        background: #f8f8f8;
+        border-radius: 10px;
+        text-align: left;
+    ">
+
+        <h3 style="margin-top: 0;">
+            Shipping To
+        </h3>
+
+        <p style="margin-bottom: 0; line-height: 1.7;">
+            <strong>{{ order.customer_name }}</strong><br>
+            {{ order.shipping_address }}<br>
+            {{ order.shipping_city }}
+            {% if order.shipping_state %}
+                , {{ order.shipping_state }}
+            {% endif %}
+            {% if order.shipping_postal_code %}
+                {{ order.shipping_postal_code }}
+            {% endif %}
+            <br>
+            {{ order.shipping_country }}<br>
+            {{ order.customer_phone }}<br>
+            {{ order.customer_email }}
+        </p>
+
+    </div>
+
+
+    <div style="
+        margin-top: 30px;
+        color: #666;
+        line-height: 1.6;
+    ">
+
+        <p>
+            Your order is currently
+            <strong>{{ order.get_status_display }}</strong>.
+        </p>
+
+        <p>
+            Our team will review your order and begin processing it.
+            Thank you for choosing THE LABEL GROUP.
+        </p>
+
+    </div>
+
+
+    <div style="
+        margin-top: 35px;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    ">
+
+        <a
+            href="{% url 'home' %}"
+            style="
+                display: inline-block;
+                padding: 14px 25px;
+                border-radius: 8px;
+                background: #f28c28;
+                color: white;
+                text-decoration: none;
+                font-weight: 700;
+            "
+        >
+            Continue Shopping
+        </a>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+{% endblock %}

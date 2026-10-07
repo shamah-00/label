@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Quote Requests - The Label Group</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-top: 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; color: #333; }
+        tr:hover { background: #f1f1f1; }
+        .badge { padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; font-weight: bold; background: #e2e8f0; color: #334155; }
+        .actions a { color: #007bff; text-decoration: none; font-weight: 600; }
+        .actions a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #666; text-decoration: none; }
+        .back-link:hover { color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'staff_dashboard' %}" class="back-link">&larr; Back to Dashboard</a>
+        
+        <h1>Quote Requests</h1>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Customer Name</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quote in quotes %}
+                <tr>
+                    <td>#{{ quote.pk }}</td>
+                    <td>{{ quote.customer_name|default:"Customer" }}</td>
+                    <td><span class="badge">{{ quote.status|title }}</span></td>
+                    <td>{{ quote.created_at|date:"M d, Y" }}</td>
+                    <td class="actions">
+                        <a href="{% url 'staff_quote_detail' quote.pk %}">View &amp; Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5">No quote requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

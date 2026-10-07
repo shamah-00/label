@@ -1,0 +1,12 @@
+﻿<!DOCTYPE html>
+<html>
+<head><title>Checkout | THE LABEL GROUP</title></head>
+<body style="font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px;">
+    <h2>Complete Your Order</h2>
+    <form method="post">
+        {% csrf_token %}
+        <p>Click below to place your order with your selected items.</p>
+        <button type="submit" style="padding: 12px 24px; background: #f47b20; color: white; border: none; font-weight: bold; cursor: pointer;">PLACE ORDER</button>
+    </form>
+</body>
+</html>

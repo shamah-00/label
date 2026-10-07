@@ -1,0 +1,1332 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>THE LABEL GROUP | Industrial Decals & Stickers</title>
+
+    <style>
+        :root {
+            --blue: #0b2f55;
+            --blue-dark: #071f39;
+            --orange: #f58220;
+            --orange-dark: #d9680d;
+            --white: #ffffff;
+            --light: #f4f6f8;
+            --border: #dfe4e8;
+            --text: #17212b;
+            --muted: #65727e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--white);
+            line-height: 1.5;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* TOP BAR */
+
+        .topbar {
+            background: var(--blue-dark);
+            color: white;
+            font-size: 13px;
+        }
+
+        .topbar-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 9px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .top-links {
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .top-links a:hover {
+            color: var(--orange);
+        }
+
+        .top-message {
+            color: #dce5ed;
+        }
+
+        /* HEADER */
+
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 22px 25px;
+            display: flex;
+            align-items: center;
+            gap: 35px;
+        }
+
+        .logo {
+            min-width: 270px;
+        }
+
+        .logo-main {
+            color: var(--blue);
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .logo-line {
+            width: 70px;
+            height: 5px;
+            background: var(--orange);
+            margin-top: 5px;
+        }
+
+        .logo-sub {
+            color: var(--muted);
+            font-size: 11px;
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+
+        .search {
+            flex: 1;
+            display: flex;
+            max-width: 600px;
+        }
+
+        .search input {
+            flex: 1;
+            height: 46px;
+            border: 1px solid #cbd3da;
+            padding: 0 15px;
+            font-size: 14px;
+        }
+
+        .search button {
+            width: 55px;
+            border: none;
+            background: var(--orange);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .cart-button {
+            background: var(--blue);
+            color: white;
+            padding: 13px 20px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .cart-button:hover {
+            background: var(--orange);
+        }
+
+        /* NAVIGATION */
+
+        nav {
+            background: var(--blue);
+            color: white;
+        }
+
+        .nav-inner {
+            max-width: 1280px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-item > a {
+            display: block;
+            padding: 16px 19px;
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: .4px;
+        }
+
+        .nav-item:hover > a {
+            background: var(--orange);
+        }
+
+        .mega-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 320px;
+            background: white;
+            color: var(--text);
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.18);
+            z-index: 100;
+        }
+
+        .nav-item:hover .mega-menu {
+            display: block;
+        }
+
+        .mega-menu a {
+            display: block;
+            padding: 9px 5px;
+            border-bottom: 1px solid #edf0f2;
+            font-size: 14px;
+        }
+
+        .mega-menu a:hover {
+            color: var(--orange);
+            padding-left: 10px;
+        }
+
+        /* HERO */
+
+        .hero {
+            background:
+                linear-gradient(rgba(7,31,57,.92), rgba(11,47,85,.88)),
+                linear-gradient(135deg, #0b2f55, #123f6c);
+            color: white;
+        }
+
+        .hero-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 80px 25px;
+            display: grid;
+            grid-template-columns: 1.2fr .8fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(38px, 5vw, 64px);
+            line-height: 1.05;
+            margin-bottom: 22px;
+            max-width: 760px;
+        }
+
+        .hero h1 span {
+            color: var(--orange);
+        }
+
+        .hero p {
+            max-width: 680px;
+            font-size: 18px;
+            color: #dce5ed;
+            margin-bottom: 30px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 24px;
+            font-weight: bold;
+            border: 2px solid transparent;
+        }
+
+        .btn-orange {
+            background: var(--orange);
+            color: white;
+        }
+
+        .btn-orange:hover {
+            background: var(--orange-dark);
+        }
+
+        .btn-white {
+            border-color: white;
+            color: white;
+        }
+
+        .btn-white:hover {
+            background: white;
+            color: var(--blue);
+        }
+
+        .hero-panel {
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.18);
+            padding: 30px;
+        }
+
+        .hero-panel h3 {
+            color: var(--orange);
+            margin-bottom: 15px;
+            font-size: 22px;
+        }
+
+        .hero-panel p {
+            font-size: 15px;
+            margin-bottom: 0;
+        }
+
+        /* SECTION */
+
+        .section {
+            max-width: 1280px;
+            margin: auto;
+            padding: 70px 25px;
+        }
+
+        .section-heading {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-heading .eyebrow {
+            color: var(--orange);
+            font-size: 13px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .section-heading h2 {
+            color: var(--blue);
+            font-size: 34px;
+            margin-bottom: 10px;
+        }
+
+        .section-heading p {
+            color: var(--muted);
+            max-width: 700px;
+            margin: auto;
+        }
+
+        /* FIVE INDUSTRIES */
+
+        .industry-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+        }
+
+        .industry-card {
+            min-height: 280px;
+            background: var(--blue);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            padding: 22px;
+            color: white;
+        }
+
+        .industry-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(to top, rgba(4,19,35,.95), rgba(11,47,85,.2));
+        }
+
+        .industry-art {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 70px;
+            font-weight: 900;
+            color: rgba(255,255,255,.10);
+        }
+
+        .industry-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .industry-content h3 {
+            font-size: 20px;
+            line-height: 1.15;
+            margin-bottom: 8px;
+        }
+
+        .industry-content span {
+            color: var(--orange);
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .industry-card:hover {
+            transform: translateY(-4px);
+            transition: .2s ease;
+        }
+
+        /* FEATURED STRIP */
+
+        .feature-strip {
+            background: var(--light);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .feature-grid {
+            max-width: 1280px;
+            margin: auto;
+            padding: 45px 25px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .feature-box {
+            background: white;
+            padding: 28px;
+            border-left: 5px solid var(--orange);
+        }
+
+        .feature-box h3 {
+            color: var(--blue);
+            margin-bottom: 8px;
+        }
+
+        .feature-box p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        /* PRODUCTS */
+
+        .products-section {
+            background: white;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        .product-card {
+            border: 1px solid var(--border);
+            background: white;
+            transition: .2s ease;
+        }
+
+        .product-card:hover {
+            box-shadow: 0 10px 25px rgba(0,0,0,.10);
+            transform: translateY(-3px);
+        }
+
+        .product-image {
+            height: 220px;
+            background: #eef1f3;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .no-image {
+            color: #89949d;
+            font-size: 13px;
+        }
+
+        .product-info {
+            padding: 18px;
+        }
+
+        .product-info h3 {
+            color: var(--blue);
+            font-size: 17px;
+            margin-bottom: 7px;
+        }
+
+        .product-industry {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .price {
+            color: var(--orange);
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .view-product {
+            display: inline-block;
+            margin-top: 14px;
+            background: var(--blue);
+            color: white;
+            padding: 9px 13px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-product:hover {
+            background: var(--orange);
+        }
+
+        /* ABOUT */
+
+        .about {
+            background: var(--blue);
+            color: white;
+        }
+
+        .about-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 70px 25px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+
+        .about h2 {
+            font-size: 35px;
+            margin-bottom: 18px;
+        }
+
+        .about h2 span {
+            color: var(--orange);
+        }
+
+        .about p {
+            color: #dce5ed;
+            margin-bottom: 15px;
+        }
+
+        .about-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .about-item {
+            border-left: 4px solid var(--orange);
+            padding: 10px 15px;
+            background: rgba(255,255,255,.06);
+        }
+
+        .about-item strong {
+            display: block;
+            margin-bottom: 3px;
+        }
+
+        /* FOOTER */
+
+        footer {
+            background: var(--blue-dark);
+            color: white;
+        }
+
+        .footer-inner {
+            max-width: 1280px;
+            margin: auto;
+            padding: 55px 25px 25px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr 1fr;
+            gap: 40px;
+            padding-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            color: var(--orange);
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .footer-column a {
+            display: block;
+            color: #dce5ed;
+            margin-bottom: 9px;
+            font-size: 13px;
+        }
+
+        .footer-column a:hover {
+            color: var(--orange);
+        }
+
+        .footer-brand h2 {
+            font-size: 25px;
+            margin-bottom: 8px;
+        }
+
+        .footer-brand p {
+            color: #b9c6d1;
+            font-size: 13px;
+            max-width: 320px;
+        }
+
+        .copyright {
+            border-top: 1px solid rgba(255,255,255,.12);
+            padding-top: 20px;
+            color: #94a5b4;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 1000px) {
+
+            .industry-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-inner,
+            .about-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .header-inner {
+                flex-wrap: wrap;
+            }
+
+            .logo {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .topbar-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav-inner {
+                overflow-x: auto;
+            }
+
+            .industry-grid,
+            .product-grid,
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .industry-card {
+                min-height: 220px;
+            }
+
+            .hero-inner {
+                padding: 55px 20px;
+            }
+
+            .section,
+            .about-inner {
+                padding: 50px 20px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+
+<div class="topbar">
+    <div class="topbar-inner">
+
+        <div class="top-links">
+            <a href="#">Request a Catalog</a>
+            <a href="#">Request a Quote</a>
+            <a href="#">Why The Label Group</a>
+            <a href="#">Contact Us</a>
+        </div>
+
+        <div class="top-message">
+            Durable labels & decals built for business
+        </div>
+
+    </div>
+</div>
+
+
+<!-- HEADER -->
+
+<header>
+
+    <div class="header-inner">
+
+        <div class="logo">
+            <div class="logo-main">THE LABEL GROUP</div>
+            <div class="logo-line"></div>
+            <div class="logo-sub">
+                INDUSTRIAL PRINTS & DECALS
+            </div>
+        </div>
+
+        <form class="search" method="get" action="">
+            <input
+                type="text"
+                name="q"
+                placeholder="Search labels, stickers and decals..."
+            >
+            <button type="submit">⌕</button>
+        </form>
+
+        <a href="#" class="cart-button">
+            VIEW CART
+        </a>
+
+    </div>
+
+</header>
+
+
+<!-- NAVIGATION -->
+
+<nav>
+
+    <div class="nav-inner">
+
+        <div class="nav-item">
+            <a href="/">HOME</a>
+        </div>
+
+        <div class="nav-item">
+            <a href="#">SHOP ▾</a>
+
+            <div class="mega-menu">
+
+                <a href="{% url 'industry_products' 'truck_motor_car' %}">
+                    Truck / Motor / Car Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'government' %}">
+                    Government Contractor Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'pool' %}">
+                    Pool Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'construction' %}">
+                    Construction Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'waste' %}">
+                    Waste Company Decals
+                </a>
+
+            </div>
+        </div>
+
+
+        <div class="nav-item">
+            <a href="#">PRODUCTS ▾</a>
+
+            <div class="mega-menu">
+
+                <a href="?category=decals">Decals</a>
+                <a href="?category=stickers">Stickers</a>
+                <a href="?category=reflective">Reflective Products</a>
+                <a href="?category=custom">Custom Products</a>
+
+            </div>
+        </div>
+
+
+        <div class="nav-item">
+            <a href="#">CUSTOM ORDERS</a>
+        </div>
+
+        <div class="nav-item">
+            <a href="#">SHIPPING</a>
+        </div>
+
+        <div class="nav-item">
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+    <div class="hero-inner">
+
+        <div>
+
+            <h1>
+                Professional prints that
+                <span>make your brand stick.</span>
+            </h1>
+
+            <p>
+                Industrial labels, decals and identification stickers
+                designed for demanding business environments.
+                Choose your industry and find the right product for the job.
+            </p>
+
+            <div class="hero-buttons">
+
+                <a href="#industries" class="btn btn-orange">
+                    SHOP PRODUCTS
+                </a>
+
+                <a href="#" class="btn btn-white">
+                    REQUEST A QUOTE
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="hero-panel">
+
+            <h3>Built for the job.</h3>
+
+            <p>
+                From fleet identification and government property labels
+                to construction safety and pool chemical warnings,
+                THE LABEL GROUP provides durable professional printing
+                for real working environments.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- FIVE INDUSTRIES -->
+
+<section class="section" id="industries">
+
+    <div class="section-heading">
+
+        <div class="eyebrow">
+            Shop by industry
+        </div>
+
+        <h2>
+            Find Your Product
+        </h2>
+
+        <p>
+            Explore our five core product collections and find
+            labels and decals designed for your industry.
+        </p>
+
+    </div>
+
+
+    <div class="industry-grid">
+
+
+        <a href="{% url 'industry_products' 'truck_motor_car' %}" class="industry-card">
+
+            <div class="industry-art">
+                TRUCK
+            </div>
+
+            <div class="industry-content">
+
+                <h3>
+                    Truck / Motor / Car Decals
+                </h3>
+
+                <span>
+                    VIEW COLLECTION →
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <a href="{% url 'industry_products' 'government' %}" class="industry-card">
+
+            <div class="industry-art">
+                GOV
+            </div>
+
+            <div class="industry-content">
+
+                <h3>
+                    Government Contractor Decals
+                </h3>
+
+                <span>
+                    VIEW COLLECTION →
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <a href="{% url 'industry_products' 'pool' %}" class="industry-card">
+
+            <div class="industry-art">
+                POOL
+            </div>
+
+            <div class="industry-content">
+
+                <h3>
+                    Pool Decals
+                </h3>
+
+                <span>
+                    VIEW COLLECTION →
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <a href="{% url 'industry_products' 'construction' %}" class="industry-card">
+
+            <div class="industry-art">
+                BUILD
+            </div>
+
+            <div class="industry-content">
+
+                <h3>
+                    Construction Decals
+                </h3>
+
+                <span>
+                    VIEW COLLECTION →
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <a href="{% url 'industry_products' 'waste' %}" class="industry-card">
+
+            <div class="industry-art">
+                WASTE
+            </div>
+
+            <div class="industry-content">
+
+                <h3>
+                    Waste Company Decals
+                </h3>
+
+                <span>
+                    VIEW COLLECTION →
+                </span>
+
+            </div>
+
+        </a>
+
+
+    </div>
+
+</section>
+
+
+<!-- THREE FEATURES -->
+
+<section class="feature-strip">
+
+    <div class="feature-grid">
+
+        <div class="feature-box">
+
+            <h3>Professional Printing</h3>
+
+            <p>
+                Clear, durable and professional labels made
+                for demanding working environments.
+            </p>
+
+        </div>
+
+
+        <div class="feature-box">
+
+            <h3>Custom Solutions</h3>
+
+            <p>
+                Need something specific? Request a custom
+                label or decal designed around your requirements.
+            </p>
+
+        </div>
+
+
+        <div class="feature-box">
+
+            <h3>Built for Business</h3>
+
+            <p>
+                Identification, safety, compliance and branding
+                products for companies that need labels that last.
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- PRODUCTS -->
+
+<section class="section products-section">
+
+    <div class="section-heading">
+
+        <div class="eyebrow">
+            Our catalogue
+        </div>
+
+        <h2>
+            Featured Products
+        </h2>
+
+        <p>
+            Browse products currently available from
+            THE LABEL GROUP.
+        </p>
+
+    </div>
+
+
+    {% if products %}
+
+        <div class="product-grid">
+
+            {% for product in products %}
+
+                <article class="product-card">
+
+                    <div class="product-image">
+
+                        {% if product.image %}
+
+                            <img
+                                src="{{ product.image.url }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        {% else %}
+
+                            <div class="no-image">
+                                Product image coming soon
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="product-info">
+
+                        <h3>
+                            {{ product.name }}
+                        </h3>
+
+                        <div class="product-industry">
+                            {{ product.get_industry_display }}
+                        </div>
+
+
+                        {% if product.discount_price %}
+
+                            <div class="price">
+                                ${{ product.discount_price }}
+                            </div>
+
+                            <div style="
+                                color:#89949d;
+                                text-decoration:line-through;
+                                font-size:13px;
+                            ">
+                                ${{ product.price }}
+                            </div>
+
+                        {% else %}
+
+                            <div class="price">
+                                ${{ product.price }}
+                            </div>
+
+                        {% endif %}
+
+
+                        <a
+                            href="{% url 'product_detail' product.id %}"
+                            class="view-product"
+                        >
+                            VIEW PRODUCT
+                        </a>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </div>
+
+    {% else %}
+
+        <div style="
+            text-align:center;
+            padding:50px;
+            background:#f4f6f8;
+            border:1px solid #dfe4e8;
+        ">
+
+            <h3 style="color:#0b2f55;">
+                Our catalogue is being prepared.
+            </h3>
+
+            <p style="color:#65727e; margin-top:8px;">
+                New products will appear here as they are added.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+</section>
+
+
+<!-- ABOUT -->
+
+<section class="about">
+
+    <div class="about-inner">
+
+        <div>
+
+            <h2>
+                Labels that work as hard as
+                <span>your business.</span>
+            </h2>
+
+            <p>
+                THE LABEL GROUP provides professional labels,
+                stickers and decals for businesses that need
+                clear identification, safety communication,
+                compliance marking and durable branding.
+            </p>
+
+            <p>
+                Our catalogue is organized around the industries
+                we serve, making it easier to find the right
+                product without searching through an overwhelming
+                list of unrelated products.
+            </p>
+
+            <a href="#" class="btn btn-orange">
+                LEARN MORE
+            </a>
+
+        </div>
+
+
+        <div class="about-list">
+
+            <div class="about-item">
+
+                <strong>Truck & Fleet Identification</strong>
+
+                Professional markings for vehicles,
+                equipment and fleet operations.
+
+            </div>
+
+
+            <div class="about-item">
+
+                <strong>Government Property</strong>
+
+                Identification and asset labels
+                for government contractors.
+
+            </div>
+
+
+            <div class="about-item">
+
+                <strong>Construction Safety</strong>
+
+                Clear warnings and equipment labels
+                for construction environments.
+
+            </div>
+
+
+            <div class="about-item">
+
+                <strong>Pool & Chemical Safety</strong>
+
+                Durable labels for pool equipment,
+                chemicals and service records.
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <div class="footer-inner">
+
+        <div class="footer-grid">
+
+
+            <div class="footer-brand">
+
+                <h2>
+                    THE LABEL GROUP
+                </h2>
+
+                <p>
+                    Professional industrial labels,
+                    stickers and decals built for business.
+                </p>
+
+            </div>
+
+
+            <div class="footer-column">
+
+                <h3>SHOP</h3>
+
+                <a href="{% url 'industry_products' 'truck_motor_car' %}">
+                    Truck / Motor / Car
+                </a>
+
+                <a href="{% url 'industry_products' 'government' %}">
+                    Government Contractors
+                </a>
+
+                <a href="{% url 'industry_products' 'pool' %}">
+                    Pool Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'construction' %}">
+                    Construction Decals
+                </a>
+
+                <a href="{% url 'industry_products' 'waste' %}">
+                    Waste Company Decals
+                </a>
+
+            </div>
+
+
+            <div class="footer-column">
+
+                <h3>SUPPORT</h3>
+
+                <a href="#">Request a Quote</a>
+                <a href="#">Custom Orders</a>
+                <a href="#">Shipping</a>
+                <a href="#">Contact Us</a>
+                <a href="#">Why The Label Group</a>
+
+            </div>
+
+
+            <div class="footer-column">
+
+                <h3>ACCOUNT</h3>
+
+                <a href="#">View Cart</a>
+                <a href="/staff/login/">Staff Login</a>
+                <a href="#">Terms & Conditions</a>
+                <a href="#">Privacy Policy</a>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="copyright">
+
+            <div>
+                © {% now "Y" %} THE LABEL GROUP. All rights reserved.
+            </div>
+
+            <div>
+                Industrial Prints & Decals
+            </div>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+</html>

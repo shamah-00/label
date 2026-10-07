@@ -1,0 +1,703 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Label Group | Industrial Labels & Decals</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #172033;
+            background: #ffffff;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .topbar {
+            background: #073b78;
+            color: white;
+            padding: 10px 6%;
+            text-align: center;
+            font-size: 13px;
+            letter-spacing: .3px;
+        }
+
+        header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 20px 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: #073b78;
+            white-space: nowrap;
+        }
+
+        .logo span {
+            color: #f47b20;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        nav a {
+            font-size: 14px;
+            font-weight: 700;
+            color: #26364d;
+        }
+
+        nav a:hover {
+            color: #f47b20;
+        }
+
+        .staff-btn {
+            background: #f47b20;
+            color: white !important;
+            padding: 11px 18px;
+            border-radius: 4px;
+        }
+
+        .hero {
+            background: linear-gradient(120deg, #073b78 0%, #0a4e96 60%, #f47b20 100%);
+            color: white;
+            padding: 75px 6%;
+        }
+
+        .hero-inner {
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .eyebrow {
+            text-transform: uppercase;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 {
+            font-size: clamp(42px, 6vw, 76px);
+            line-height: .98;
+            max-width: 850px;
+            margin: 0 0 22px;
+        }
+
+        .hero p {
+            max-width: 700px;
+            font-size: 19px;
+            line-height: 1.6;
+            color: #edf4ff;
+        }
+
+        .hero-actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 23px;
+            border-radius: 4px;
+            font-weight: 800;
+        }
+
+        .btn-orange {
+            background: #f47b20;
+            color: white;
+        }
+
+        .btn-white {
+            background: white;
+            color: #073b78;
+        }
+
+        .industries {
+            padding: 25px 6%;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f7f9fc;
+        }
+
+        .industry-inner {
+            max-width: 1250px;
+            margin: auto;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .industry-inner a {
+            padding: 12px 16px;
+            background: white;
+            border: 1px solid #dbe2ea;
+            font-size: 13px;
+            font-weight: 800;
+            color: #073b78;
+        }
+
+        .section {
+            max-width: 1250px;
+            margin: auto;
+            padding: 70px 6%;
+        }
+
+        .section-heading {
+            margin-bottom: 35px;
+        }
+
+        .section-heading small {
+            color: #f47b20;
+            text-transform: uppercase;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+        }
+
+        .section-heading h2 {
+            font-size: 42px;
+            margin: 8px 0;
+            color: #073b78;
+        }
+
+        .section-heading p {
+            color: #667085;
+            max-width: 700px;
+            line-height: 1.6;
+        }
+
+        .catalog {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 40px;
+        }
+
+        .sidebar {
+            border-right: 1px solid #e2e6ec;
+            padding-right: 25px;
+        }
+
+        .sidebar h3 {
+            color: #073b78;
+            margin-top: 0;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px 0;
+            color: #536174;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f2f5;
+        }
+
+        .sidebar a:hover {
+            color: #f47b20;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .product {
+            border: 1px solid #e1e6ec;
+            background: white;
+            transition: .2s;
+        }
+
+        .product:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,.08);
+        }
+
+        .product-image {
+            height: 190px;
+            background: #f2f5f8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-placeholder {
+            font-size: 48px;
+            font-weight: 900;
+            color: #c5ccd5;
+        }
+
+        .product-body {
+            padding: 18px;
+        }
+
+        .product-body h3 {
+            margin: 0 0 8px;
+            color: #073b78;
+            font-size: 18px;
+        }
+
+        .product-body p {
+            color: #687386;
+            font-size: 13px;
+            line-height: 1.5;
+            min-height: 40px;
+        }
+
+        .price {
+            color: #f47b20;
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .families {
+            background: #f5f7fa;
+        }
+
+        .family-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .family {
+            background: white;
+            padding: 28px 22px;
+            border-left: 5px solid #f47b20;
+            min-height: 130px;
+        }
+
+        .family h3 {
+            color: #073b78;
+            margin: 0 0 8px;
+        }
+
+        .family p {
+            color: #697586;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .truck {
+            background: #073b78;
+            color: white;
+        }
+
+        .truck .section-heading h2 {
+            color: white;
+        }
+
+        .truck .section-heading p {
+            color: #dce8f7;
+        }
+
+        .truck-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 45px;
+            align-items: center;
+        }
+
+        .truck-art {
+            min-height: 300px;
+            background: linear-gradient(135deg, #f47b20, #ff9b4a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 110px;
+        }
+
+        .truck-list {
+            line-height: 2;
+            font-size: 17px;
+        }
+
+        .custom {
+            background: #f47b20;
+            color: white;
+        }
+
+        .custom h2 {
+            font-size: 44px;
+            margin-top: 0;
+        }
+
+        .custom p {
+            max-width: 700px;
+            font-size: 18px;
+            line-height: 1.7;
+        }
+
+        footer {
+            background: #071d38;
+            color: #dbe5f0;
+            padding: 50px 6%;
+        }
+
+        .footer-inner {
+            max-width: 1250px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        footer h3 {
+            color: white;
+        }
+
+        footer p {
+            color: #aebdce;
+            max-width: 450px;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1000px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            nav {
+                justify-content: flex-start;
+            }
+
+            .catalog {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-right: none;
+                border-bottom: 1px solid #e2e6ec;
+                padding-bottom: 20px;
+            }
+
+            .products {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .family-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 650px) {
+            .products,
+            .family-grid,
+            .truck-box {
+                grid-template-columns: 1fr;
+            }
+
+            .hero {
+                padding: 55px 6%;
+            }
+
+            .hero h1 {
+                font-size: 44px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Professional industrial labels • Durable custom printing • Built for business
+</div>
+
+<header>
+    <a href="/" class="logo">THE LABEL <span>GROUP</span></a>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="#catalog">Shop Labels</a>
+        <a href="#industries">Industries</a>
+        <a href="#custom">Custom Printing</a>
+        <a href="#truck">Truck Decals</a>
+        <a href="#contact">Contact</a>
+        <a href="/staff/login/" class="staff-btn">Staff Login</a>
+    </nav>
+</header>
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="eyebrow">Industrial labels & decals</div>
+
+        <h1>Labels that work as hard as your business.</h1>
+
+        <p>
+            Durable labels, stickers and decals for waste companies,
+            government contractors, construction companies, motor manufacturers,
+            trucking companies and pool companies.
+        </p>
+
+        <div class="hero-actions">
+            <a href="#catalog" class="btn btn-orange">Shop Products</a>
+            <a href="#custom" class="btn btn-white">Request Custom Printing</a>
+        </div>
+    </div>
+</section>
+
+<section class="industries" id="industries">
+    <div class="industry-inner">
+        <a href="?industry=waste">Waste Companies</a>
+        <a href="?industry=government">Government Contractors</a>
+        <a href="?industry=construction">Construction Companies</a>
+        <a href="?industry=motor">Motor Manufacturers</a>
+        <a href="?industry=trucking">Trucking Companies</a>
+        <a href="?industry=pool">Pool Companies</a>
+    </div>
+</section>
+
+<section class="section" id="catalog">
+    <div class="section-heading">
+        <small>Product Catalog</small>
+        <h2>Shop Labels & Decals</h2>
+        <p>
+            Browse our growing collection of industrial labels and decals.
+            Products added by our staff automatically appear here.
+        </p>
+    </div>
+
+    <div class="catalog">
+
+        <aside class="sidebar">
+            <h3>Product Categories</h3>
+
+            <a href="?category=bag_tag">Bag & Tag Stickers</a>
+            <a href="?category=container">Container Decals</a>
+            <a href="?category=baler">Baler Decals</a>
+            <a href="?category=compactor">Compactor Decals</a>
+            <a href="?category=rolloff">Rolloff Decals</a>
+            <a href="?category=recycling">Recycling Decals</a>
+            <a href="?category=truck_fleet">Truck Decals</a>
+            <a href="?category=yard_waste">Yard Waste Decals</a>
+            <a href="?category=safety">Safety & Compliance</a>
+            <a href="?category=reflective">Reflective Tape</a>
+            <a href="?category=facility">Facility Signage</a>
+            <a href="?category=food_waste">Food Waste Decals</a>
+            <a href="?category=medical_waste">Medical Waste Stickers</a>
+            <a href="?category=portable_toilet">Portable Toilet Decals</a>
+            <a href="?category=custom">Custom Labels</a>
+        </aside>
+
+        <div class="products">
+
+            {% for product in products %}
+            <article class="product">
+
+                <div class="product-image">
+                    {% if product.image %}
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <div class="product-placeholder">TLG</div>
+                    {% endif %}
+                </div>
+
+                <div class="product-body">
+                    <h3>{{ product.name }}</h3>
+
+                    <p>
+                        {{ product.description|default:"Durable professional label or decal for commercial use."|truncatewords:18 }}
+                    </p>
+
+                    <div class="price">
+                        ${{ product.discount_price|default:product.price }}
+                    </div>
+
+                    <br>
+
+                    <a href="{% url 'product_detail' product.id %}" class="btn btn-orange">
+                        View Product
+                    </a>
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div>
+                <h3>Our product catalog is being prepared.</h3>
+                <p>
+                    Products added by The Label Group staff will appear here automatically.
+                </p>
+            </div>
+
+            {% endfor %}
+
+        </div>
+    </div>
+</section>
+
+<section class="families">
+    <div class="section">
+        <div class="section-heading">
+            <small>Product Families</small>
+            <h2>Built for demanding industries.</h2>
+            <p>
+                From waste containers to commercial trucks,
+                The Label Group provides durable identification,
+                safety and branding solutions.
+            </p>
+        </div>
+
+        <div class="family-grid">
+
+            <div class="family">
+                <h3>Bag & Tag Stickers</h3>
+                <p>Professional waste bag tags, refuse stickers and collection labels.</p>
+            </div>
+
+            <div class="family">
+                <h3>Container Decals</h3>
+                <p>Identification, safety, placement and operational decals.</p>
+            </div>
+
+            <div class="family">
+                <h3>Recycling Decals</h3>
+                <p>Clear recycling labels for containers, facilities and collection programs.</p>
+            </div>
+
+            <div class="family">
+                <h3>Facility Signage</h3>
+                <p>Durable labels and signs for commercial and industrial facilities.</p>
+            </div>
+
+            <div class="family">
+                <h3>Safety Decals</h3>
+                <p>Important operational and safety communication for equipment.</p>
+            </div>
+
+            <div class="family">
+                <h3>Reflective Products</h3>
+                <p>High-visibility reflective materials for vehicles and equipment.</p>
+            </div>
+
+            <div class="family">
+                <h3>Yard Waste Decals</h3>
+                <p>Clear and durable identification for yard waste collection.</p>
+            </div>
+
+            <div class="family">
+                <h3>Custom Labels</h3>
+                <p>Custom sizes, designs, branding and application requirements.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="truck">
+    <div class="section" id="truck">
+
+        <div class="truck-box">
+
+            <div>
+                <div class="section-heading">
+                    <small>Truck & Fleet</small>
+                    <h2>Put your brand on every truck.</h2>
+                    <p>
+                        Professional truck decals, fleet identification,
+                        safety markings and reflective products built for
+                        commercial vehicles.
+                    </p>
+                </div>
+
+                <div class="truck-list">
+                    ✓ Truck identification decals<br>
+                    ✓ Fleet branding<br>
+                    ✓ Safety decals<br>
+                    ✓ Reflective markings<br>
+                    ✓ Custom company logos
+                </div>
+            </div>
+
+            <div class="truck-art">
+                🚛
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+<section class="custom" id="custom">
+    <div class="section">
+        <h2>Need something made for your business?</h2>
+
+        <p>
+            Tell us what you need. Our team can create custom labels,
+            stickers, decals and vehicle graphics around your size,
+            material, finish, branding and application requirements.
+        </p>
+
+        <a href="mailto:info@thelabelgroup.com" class="btn btn-white">
+            Request a Custom Quote
+        </a>
+    </div>
+</section>
+
+<footer id="contact">
+    <div class="footer-inner">
+
+        <div>
+            <h3>THE LABEL GROUP</h3>
+            <p>
+                Professional labels, stickers and decals for businesses
+                that need durable identification and branding.
+            </p>
+        </div>
+
+        <div>
+            <h3>Quick Links</h3>
+            <p>
+                Shop Products<br>
+                Custom Printing<br>
+                Truck Decals<br>
+                Staff Login
+            </p>
+        </div>
+
+        <div>
+            <h3>Customer Support</h3>
+            <p>
+                Need help choosing a product?
+                Contact The Label Group for assistance.
+            </p>
+        </div>
+
+    </div>
+</footer>
+
+</body>
+</html>
