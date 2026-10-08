@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -441,7 +441,7 @@
             <div>Professional industrial prints and decals</div>
 
             <div>
-                <a href="{% url 'home' %}">
+                <a href="{% url 'shipping_quote' %}'home' %}">
                     Home
                 </a>
             </div>
@@ -462,7 +462,7 @@
                     Custom Orders
                 </a>
 
-                <a href="{% url 'quote_cart' %}" class="quote-button">
+                <a href="{% url 'shipping_quote' %}" class="quote-button">
                     VIEW QUOTE
                 </a>
 
@@ -521,9 +521,7 @@
 
             &nbsp; / &nbsp;
 
-            <a href="{% url 'quote_cart' %}">
-                Quote Cart
-            </a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
 
             &nbsp; / &nbsp;
 
@@ -915,10 +913,10 @@
 
 
                 <a
-                    href="{% url 'quote_cart' %}"
+                    href="{% url 'shipping_quote' %}"
                     class="back-link"
                 >
-                    ← Back to Quote Cart
+                    â† Back to Quote Cart
                 </a>
 
             </aside>
@@ -990,9 +988,7 @@
                     Shipping
                 </a>
 
-                <a href="{% url 'quote_cart' %}">
-                    Quote Cart
-                </a>
+                <a href="{% url 'quote_cart' %}">QUOTE CART</a>
 
                 <a href="/staff/login/">
                     Staff Login
@@ -1005,7 +1001,7 @@
 
         <div class="footer-bottom">
 
-            © 2026 THE LABEL GROUP. All rights reserved.
+            Â© 2026 THE LABEL GROUP. All rights reserved.
 
         </div>
 
@@ -1013,3 +1009,4 @@
 
 </body>
 </html>
+

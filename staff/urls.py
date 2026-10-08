@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 urlpatterns = [
@@ -14,6 +14,7 @@ urlpatterns = [
     path("products/", views.staff_products, name="staff_product_list"),
     path("products/add/", views.staff_product_add, name="staff_product_add"),
     path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+    path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
     
     # Customers
     path("customers/", views.staff_customers, name="staff_customers"),
@@ -45,4 +46,5 @@ urlpatterns = [
     path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
     path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
     path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+    path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
 ]

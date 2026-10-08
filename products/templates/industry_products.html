@@ -790,7 +790,7 @@
 
             <div class="topbar-links">
                 <a href="#">Request a Catalog</a>
-                <a href="#quote">Request a Quote</a>
+                <a href="{% url 'shipping_quote' %}">Request a Quote</a>
                 <a href="#">Contact Us</a>
             </div>
 
@@ -833,7 +833,7 @@
             </form>
 
 
-            <a href="#quote" class="cart-button">
+            <a href="{% url 'shipping_quote' %}" class="cart-button">
                 VIEW QUOTE
             </a>
 
@@ -922,7 +922,7 @@
                     Browse Products
                 </a>
 
-                <a href="#quote" class="hero-action secondary">
+                <a href="{% url 'shipping_quote' %}" class="hero-action secondary">
                     Request a Custom Quote
                 </a>
 
@@ -1254,7 +1254,7 @@
                     Customer Service
                 </h3>
 
-                <a href="#quote">
+                <a href="{% url 'shipping_quote' %}">
                     Request a Quote
                 </a>
 

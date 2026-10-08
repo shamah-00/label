@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Quote Requests | THE LABEL GROUP</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fa;color:#172033}.top{background:#06152a;color:white;padding:14px 30px;font-size:13px}.wrap{max-width:1400px;margin:auto;padding:30px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.head h1{margin:0;color:#0b1f3a;font-size:32px}.head p{color:#64748b}.btn{display:inline-block;padding:11px 17px;border-radius:8px;text-decoration:none;font-weight:bold;border:0;cursor:pointer}.orange{background:#f47b20;color:white}.navy{background:#0b1f3a;color:white}.filters{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:22px;display:flex;gap:10px;flex-wrap:wrap}.filters input,.filters select{padding:12px;border:1px solid #cbd5e1;border-radius:8px;min-width:230px}.tablebox{background:white;border:1px solid #e2e8f0;border-radius:14px;overflow:auto}table{width:100%;border-collapse:collapse}th{background:#0b1f3a;color:white;text-align:left;padding:14px}td{padding:15px;border-bottom:1px solid #edf2f7;vertical-align:top}.status{display:inline-block;background:#fff1e6;color:#d9620d;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:bold}.empty{text-align:center;padding:60px;color:#64748b}@media(max-width:700px){.wrap{padding:18px}.head{display:block}.head .btn{margin-top:12px}.filters input,.filters select{width:100%;min-width:0}}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fa;color:#172033}.top{background:#06152a;color:#fff;padding:14px 30px;font-size:13px}.wrap{max-width:1400px;margin:auto;padding:30px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.head h1{margin:0;color:#0b1f3a;font-size:32px}.head p{color:#64748b}.btn{display:inline-block;padding:11px 17px;border-radius:8px;text-decoration:none;font-weight:bold;border:0;cursor:pointer}.orange{background:#f47b20;color:#fff}.navy{background:#0b1f3a;color:#fff}.filters{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:18px;margin-bottom:22px;display:flex;gap:10px;flex-wrap:wrap}.filters input,.filters select{padding:12px;border:1px solid #cbd5e1;border-radius:8px;min-width:230px}.tablebox{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:auto}table{width:100%;border-collapse:collapse}th{background:#0b1f3a;color:#fff;text-align:left;padding:14px}td{padding:15px;border-bottom:1px solid #edf2f7;vertical-align:top}.status{display:inline-block;background:#fff1e6;color:#d9620d;padding:6px 10px;border-radius:20px;font-size:12px;font-weight:bold}.empty{text-align:center;padding:60px;color:#64748b}
 </style>
 </head>
 <body>
@@ -15,6 +15,7 @@
 <div><h1>Quote Requests</h1><p>Review and manage customer quotation requests.</p></div>
 <a class="btn navy" href="/staff/">← Dashboard</a>
 </div>
+
 <form method="get" class="filters">
 <input name="search" value="{{ search_query|default:'' }}" placeholder="Search customer, company, email or phone...">
 <select name="status">
@@ -24,6 +25,7 @@
 <button class="btn orange" type="submit">Search</button>
 <a class="btn navy" href="/staff/quotes/">Clear</a>
 </form>
+
 <div class="tablebox">
 {% if quotes %}
 <table>

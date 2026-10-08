@@ -9,6 +9,16 @@ from .models import StaffProfile
 
 
 class ProductForm(forms.ModelForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["image"].widget = forms.FileInput(
+            attrs={
+                "accept": "image/*",
+                "class": "tlg-image-input",
+            }
+        )
+
 
     class Meta:
         model = Product
@@ -94,16 +104,16 @@ class ProductForm(forms.ModelForm):
             "price": forms.NumberInput(
                 attrs={
                     "step": "0.01",
-                    "min": "1",
-                    "placeholder": "1.00"
+                    "min": "0",
+                    "placeholder": "0.00"
                 }
             ),
 
             "discount_price": forms.NumberInput(
                 attrs={
                     "step": "0.01",
-                    "min": "1",
-                    "placeholder": "1.00"
+                    "min": "0",
+                    "placeholder": "0.00"
                 }
             ),
 
@@ -121,12 +131,12 @@ class ProductForm(forms.ModelForm):
         price = cleaned_data.get("price")
         discount_price = cleaned_data.get("discount_price")
 
-        minimum_price = Decimal("1.00")
+        minimum_price = Decimal("0.00")
 
         if price is not None and price < minimum_price:
             self.add_error(
                 "price",
-                "Price must be at least $1.00 USD."
+                "Price cannot be below $0.00 USD."
             )
 
         if (
@@ -135,7 +145,7 @@ class ProductForm(forms.ModelForm):
         ):
             self.add_error(
                 "discount_price",
-                "Discount price must be at least $1.00 USD."
+                "Discount price cannot be below $0.00 USD."
             )
 
         if discount_price is not None and price is None:
@@ -457,3 +467,4 @@ class OwnerStaffForm(forms.Form):
                 self.add_error("password", error)
 
         return cleaned_data
+

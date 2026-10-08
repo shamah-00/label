@@ -30,7 +30,7 @@ class ProductForm(forms.ModelForm):
             "is_custom",
             "is_available",
             "is_featured",
-        ]
+        "product_code"]
 
         labels = {
             "name": "Product Name",

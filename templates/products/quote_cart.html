@@ -1,157 +1,589 @@
-﻿{% load static %}
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request a Quote | THE LABEL GROUP</title>
+
+    <title>Quote Cart | THE LABEL GROUP</title>
+
+    {% load static %}
+
     <style>
         :root {
-            --navy: #0b1f3a;
-            --navy-dark: #071426;
-            --orange: #f47b20;
-            --orange-dark: #d96512;
-            --white: #ffffff;
-            --light: #f4f6f8;
-            --border: #e3e7eb;
-            --text: #17212b;
-            --muted: #66717d;
+            --navy:#0b1f3a;
+            --navy-dark:#06152a;
+            --orange:#f47b20;
+            --orange-dark:#d9620d;
+            --light:#f5f7fa;
+            --border:#dfe4ea;
+            --text:#182230;
+            --muted:#687386;
+            --white:#ffffff;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text); background: var(--white); line-height: 1.5; }
-        a { color: inherit; text-decoration: none; }
+        * {
+            box-sizing:border-box;
+        }
 
-        /* HEADER & TOPBAR */
-        .topbar { background: var(--navy-dark); color: #fff; font-size: 13px; }
-        .topbar-inner { max-width: 1400px; margin: auto; padding: 10px 24px; display: flex; justify-content: flex-end; gap: 28px; }
-        .topbar a:hover { color: var(--orange); }
+        body {
+            margin:0;
+            font-family:Arial, Helvetica, sans-serif;
+            background:var(--light);
+            color:var(--text);
+        }
 
-        .header { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; }
-        .header-inner { max-width: 1400px; margin: auto; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
-        .logo-main { color: var(--navy); font-size: 26px; font-weight: 900; letter-spacing: 2px; line-height: 1; }
-        .logo-sub { color: var(--orange); font-size: 10px; font-weight: 800; letter-spacing: 2px; margin-top: 4px; }
+        a {
+            text-decoration:none;
+        }
 
-        .cart-link { background: var(--navy); color: #fff; padding: 12px 20px; border-radius: 4px; font-size: 13px; font-weight: 800; }
-        .cart-link:hover { background: var(--orange); }
+        .topbar {
+            background:var(--navy-dark);
+            color:#fff;
+            text-align:center;
+            padding:10px 16px;
+            font-size:13px;
+            font-weight:700;
+        }
 
-        /* NAV */
-        .nav { background: var(--navy); color: #fff; }
-        .nav-inner { max-width: 1400px; margin: auto; display: flex; }
-        .nav-item > a { display: block; padding: 16px 22px; font-size: 13px; font-weight: 800; }
-        .nav-item:hover > a { background: var(--orange); }
+        header {
+            background:#fff;
+            border-bottom:1px solid var(--border);
+            position:sticky;
+            top:0;
+            z-index:100;
+        }
 
-        /* CONTENT CONTAINER */
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 24px; }
+        .header-inner {
+            max-width:1250px;
+            margin:auto;
+            padding:16px 24px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:25px;
+        }
 
-        .back-link { display: inline-block; color: var(--orange-dark); font-weight: 800; font-size: 13px; margin-bottom: 20px; }
-        .back-link:hover { text-decoration: underline; }
+        .logo img {
+            max-width:190px;
+            max-height:60px;
+            object-fit:contain;
+            display:block;
+        }
 
-        h1 { color: var(--navy); font-size: 32px; font-weight: 900; margin-bottom: 8px; }
-        .subtitle { color: var(--muted); font-size: 15px; margin-bottom: 30px; }
+        .nav {
+            display:flex;
+            align-items:center;
+            justify-content:flex-end;
+            gap:8px;
+            flex-wrap:wrap;
+        }
 
-        /* TABLE */
-        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; border: 1px solid var(--border); }
-        th { background: var(--navy); color: #fff; padding: 14px; text-align: left; font-size: 13px; font-weight: 800; text-transform: uppercase; }
-        td { padding: 16px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
-        .remove-btn { color: #d9534f; font-weight: 700; font-size: 13px; }
-        .remove-btn:hover { text-decoration: underline; }
+        .nav a {
+            color:var(--navy);
+            font-size:12px;
+            font-weight:800;
+            padding:10px 12px;
+            border-radius:7px;
+        }
 
-        /* EMPTY STATE BOX */
-        .empty-box { background: var(--light); border: 1px solid var(--border); border-radius: 6px; padding: 50px 20px; text-align: center; }
-        .empty-box p { color: var(--muted); font-size: 16px; margin-bottom: 20px; }
+        .nav a:hover {
+            background:var(--light);
+            color:var(--orange-dark);
+        }
 
-        /* FORM */
-        .form-card { background: var(--light); border: 1px solid var(--border); border-radius: 6px; padding: 30px; margin-top: 30px; }
-        .form-card h2 { color: var(--navy); font-size: 20px; font-weight: 800; margin-bottom: 20px; }
-        .form-card p { margin-bottom: 15px; }
-        .form-card label { display: block; font-weight: 700; font-size: 13px; color: var(--navy); margin-bottom: 5px; }
-        .form-card input, .form-card textarea, .form-card select { width: 100%; padding: 12px; border: 1px solid #ccd3da; border-radius: 4px; font-size: 14px; outline: none; }
-        .form-card input:focus, .form-card textarea:focus { border-color: var(--orange); }
+        .page {
+            max-width:1250px;
+            margin:auto;
+            padding:55px 24px 80px;
+        }
 
-        .btn-submit { display: inline-block; padding: 15px 30px; background: var(--orange); color: #fff; border: none; border-radius: 4px; font-size: 14px; font-weight: 900; cursor: pointer; transition: background .2s; }
-        .btn-submit:hover { background: var(--orange-dark); }
-        .btn-navy { display: inline-block; padding: 12px 24px; background: var(--navy); color: #fff; border-radius: 4px; font-size: 13px; font-weight: 800; }
-        .btn-navy:hover { background: var(--orange); }
+        .page-heading {
+            margin-bottom:30px;
+        }
 
-        /* FOOTER */
-        footer { background: var(--navy-dark); color: #fff; margin-top: 80px; padding: 30px 24px; text-align: center; font-size: 12px; }
+        .eyebrow {
+            color:var(--orange-dark);
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.12em;
+            text-transform:uppercase;
+            margin-bottom:10px;
+        }
+
+        h1 {
+            margin:0 0 12px;
+            color:var(--navy);
+            font-size:clamp(32px,5vw,52px);
+            line-height:1.05;
+        }
+
+        .intro {
+            max-width:720px;
+            color:var(--muted);
+            font-size:16px;
+            line-height:1.7;
+            margin:0;
+        }
+
+        .actions {
+            display:flex;
+            gap:12px;
+            flex-wrap:wrap;
+            margin-top:25px;
+        }
+
+        .button {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:46px;
+            padding:0 20px;
+            border-radius:7px;
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.04em;
+        }
+
+        .button-primary {
+            background:var(--orange);
+            color:#fff;
+        }
+
+        .button-primary:hover {
+            background:var(--orange-dark);
+        }
+
+        .button-secondary {
+            background:var(--navy);
+            color:#fff;
+        }
+
+        .button-secondary:hover {
+            background:var(--navy-dark);
+        }
+
+        .button-outline {
+            background:#fff;
+            color:var(--navy);
+            border:1px solid var(--border);
+        }
+
+        .layout {
+            display:grid;
+            grid-template-columns:minmax(0,1fr) 330px;
+            gap:28px;
+            align-items:start;
+        }
+
+        .panel {
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:12px;
+            overflow:hidden;
+        }
+
+        .panel-heading {
+            padding:20px 22px;
+            border-bottom:1px solid var(--border);
+        }
+
+        .panel-heading h2 {
+            margin:0;
+            color:var(--navy);
+            font-size:20px;
+        }
+
+        .panel-heading p {
+            margin:7px 0 0;
+            color:var(--muted);
+            font-size:13px;
+        }
+
+        .quote-item {
+            display:grid;
+            grid-template-columns:130px minmax(0,1fr) auto;
+            gap:20px;
+            padding:22px;
+            border-bottom:1px solid var(--border);
+            align-items:center;
+        }
+
+        .quote-item:last-child {
+            border-bottom:0;
+        }
+
+        .product-image {
+            width:130px;
+            height:100px;
+            background:var(--light);
+            border-radius:8px;
+            overflow:hidden;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .product-image img {
+            width:100%;
+            height:100%;
+            object-fit:contain;
+            display:block;
+        }
+
+        .product-info h3 {
+            margin:0 0 8px;
+            color:var(--navy);
+            font-size:18px;
+        }
+
+        .product-info p {
+            margin:4px 0;
+            color:var(--muted);
+            font-size:13px;
+        }
+
+        .quantity {
+            display:inline-block;
+            margin-top:10px;
+            padding:7px 10px;
+            border-radius:6px;
+            background:var(--light);
+            color:var(--navy);
+            font-size:12px;
+            font-weight:800;
+        }
+
+        .remove {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:40px;
+            padding:0 14px;
+            border:1px solid #e3bcbc;
+            border-radius:7px;
+            background:#fff;
+            color:#a52b2b;
+            font-size:11px;
+            font-weight:900;
+        }
+
+        .remove:hover {
+            background:#fff4f4;
+        }
+
+        .empty {
+            padding:55px 25px;
+            text-align:center;
+        }
+
+        .empty h2 {
+            color:var(--navy);
+            margin:0 0 10px;
+        }
+
+        .empty p {
+            color:var(--muted);
+            max-width:520px;
+            margin:0 auto 25px;
+            line-height:1.6;
+        }
+
+        .side-card {
+            background:var(--navy);
+            color:#fff;
+            border-radius:12px;
+            padding:25px;
+        }
+
+        .side-card h2 {
+            margin:0 0 12px;
+            font-size:21px;
+        }
+
+        .side-card p {
+            color:#dbe3ee;
+            font-size:13px;
+            line-height:1.65;
+            margin:0 0 20px;
+        }
+
+        .steps {
+            margin:0;
+            padding:0;
+            list-style:none;
+        }
+
+        .steps li {
+            display:flex;
+            gap:12px;
+            margin-bottom:18px;
+            color:#fff;
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .step-number {
+            width:26px;
+            height:26px;
+            min-width:26px;
+            border-radius:50%;
+            background:var(--orange);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:11px;
+            font-weight:900;
+        }
+
+        .side-actions {
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-top:25px;
+        }
+
+        .side-actions .button {
+            width:100%;
+        }
+
+        footer {
+            background:var(--navy-dark);
+            color:#bfc9d6;
+            padding:28px 24px;
+            text-align:center;
+            font-size:12px;
+        }
+
+        footer a {
+            color:#fff;
+            margin:0 8px;
+            font-weight:700;
+        }
+
+        @media (max-width:900px) {
+            .header-inner {
+                flex-direction:column;
+                align-items:center;
+            }
+
+            .nav {
+                justify-content:center;
+            }
+
+            .layout {
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width:650px) {
+            .page {
+                padding:35px 15px 55px;
+            }
+
+            .quote-item {
+                grid-template-columns:1fr;
+            }
+
+            .product-image {
+                width:100%;
+                height:180px;
+            }
+
+            .remove {
+                width:100%;
+            }
+
+            .actions {
+                flex-direction:column;
+            }
+
+            .actions .button {
+                width:100%;
+            }
+        }
     </style>
 </head>
+
 <body>
 
 <div class="topbar">
-    <div class="topbar-inner">
-        <a href="{% url 'product_list' %}">Request a Catalog</a>
-        <a href="{% url 'quote_cart' %}">Request a Quote</a>
-        <a href="{% url 'shipping' %}">Contact Us</a>
-    </div>
+    Free quote consultation • Durable custom printing • Built for business
 </div>
 
-<header class="header">
+<header>
     <div class="header-inner">
-        <a href="/" class="logo">
-            <div class="logo-main">THE LABEL GROUP</div>
-            <div class="logo-sub">INDUSTRIAL PRINTS & DECALS</div>
+
+        <a href="{% url 'home' %}" class="logo">
+            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
         </a>
-        <a href="{% url 'cart' %}" class="cart-link">VIEW CART</a>
+
+        <nav class="nav">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </nav>
+
     </div>
 </header>
 
-<nav class="nav">
-    <div class="nav-inner">
-        <div class="nav-item"><a href="/">HOME</a></div>
-        <div class="nav-item"><a href="{% url 'product_list' %}">SHOP ALL</a></div>
-        <div class="nav-item"><a href="{% url 'quote_cart' %}">CUSTOM ORDERS</a></div>
-        <div class="nav-item"><a href="{% url 'shipping' %}">SHIPPING</a></div>
-    </div>
-</nav>
+<main class="page">
 
-<div class="container">
-    <a href="/" class="back-link">&larr; Back to Home</a>
-    <h1>Request a Custom Quote</h1>
-    <p class="subtitle">Submit specifications for commercial decals, custom sizes, and quantity discounts.</p>
+    <section class="page-heading">
+        <div class="eyebrow">Commercial Product Selection</div>
 
-    {% if quote_items %}
-        <table>
-            <thead>
-                <tr>
-                    <th>Product Description</th>
-                    <th>Requested Quantity</th>
-                    <th style="text-align: right;">Action</th>
-                </tr>
-            </thead>
-            <tbody>
+        <h1>Quote Cart</h1>
+
+        <p class="intro">
+            Select the products you want priced together. Your quote cart is
+            simply a list for our team to review. No payment is required here.
+        </p>
+
+        <div class="actions">
+            <a href="{% url 'product_list' %}" class="button button-secondary">
+                SHOP ALL PRODUCTS
+            </a>
+
+            <a href="{% url 'shipping_quote' %}" class="button button-primary">
+                REQUEST A QUOTE
+            </a>
+        </div>
+    </section>
+
+    <div class="layout">
+
+        <section class="panel">
+
+            <div class="panel-heading">
+                <h2>Selected Products</h2>
+                <p>Review the products and quantities you want included in your quotation.</p>
+            </div>
+
+            {% if quote_items %}
+
                 {% for item in quote_items %}
-                <tr>
-                    <td><strong>{{ item.product.name }}</strong></td>
-                    <td>{{ item.quantity }}</td>
-                    <td style="text-align: right;"><a href="{% url 'remove_from_quote' item.product.id %}" class="remove-btn">Remove</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
 
-        <div class="form-card">
-            <h2>Customer & Shipping Information</h2>
-            <form action="{% url 'quote_cart' %}" method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                {{ form.as_p }}
-                <div style="margin-top: 25px;">
-                    <button type="submit" class="btn-submit">SUBMIT QUOTE REQUEST</button>
+                    <article class="quote-item">
+
+                        <div class="product-image">
+                            {% if item.product.image %}
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+                            {% else %}
+                                <span>No Image</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="product-info">
+
+                            <h3>{{ item.product.name }}</h3>
+
+                            {% if item.product.product_code %}
+                                <p><strong>Product Code:</strong> {{ item.product.product_code }}</p>
+                            {% endif %}
+
+                            {% if item.product.category %}
+                                <p><strong>Category:</strong> {{ item.product.category }}</p>
+                            {% endif %}
+
+                            <span class="quantity">
+                                Quantity: {{ item.quantity }}
+                            </span>
+
+                        </div>
+
+                        <div>
+                            <a
+                                href="{% url 'remove_from_quote' item.product.id %}"
+                                class="remove"
+                            >
+                                REMOVE
+                            </a>
+                        </div>
+
+                    </article>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty">
+
+                    <h2>Your quote cart is empty</h2>
+
+                    <p>
+                        Browse our product catalogue and add the products you
+                        want our team to price for you.
+                    </p>
+
+                    <a href="{% url 'product_list' %}" class="button button-primary">
+                        VIEW ALL PRODUCTS
+                    </a>
+
                 </div>
-            </form>
-        </div>
-    {% else %}
-        <div class="empty-box">
-            <p>Your quote request list is currently empty.</p>
-            <a href="{% url 'product_list' %}" class="btn-navy">BROWSE PRODUCTS CATALOGUE</a>
-        </div>
-    {% endif %}
-</div>
+
+            {% endif %}
+
+        </section>
+
+        <aside class="side-card">
+
+            <h2>What happens next?</h2>
+
+            <p>
+                The Quote Cart helps you prepare a product list before
+                requesting commercial pricing.
+            </p>
+
+            <ol class="steps">
+
+                <li>
+                    <span class="step-number">1</span>
+                    <span>Select the products you need.</span>
+                </li>
+
+                <li>
+                    <span class="step-number">2</span>
+                    <span>Review your selected products and quantities.</span>
+                </li>
+
+                <li>
+                    <span class="step-number">3</span>
+                    <span>Send the list to THE LABEL GROUP for quotation.</span>
+                </li>
+
+            </ol>
+
+            <div class="side-actions">
+
+                <a href="{% url 'shipping_quote' %}" class="button button-primary">
+                    REQUEST A QUOTE
+                </a>
+
+                <a href="{% url 'product_list' %}" class="button button-outline">
+                    VIEW ALL PRODUCTS
+                </a>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</main>
 
 <footer>
-    &copy; 2026 THE LABEL GROUP. All Rights Reserved. Industrial Identification Solutions.
+    <div>
+        © 2026 THE LABEL GROUP. All Rights Reserved.
+    </div>
+
+    <div style="margin-top:12px;">
+        <a href="{% url 'home' %}">HOME</a>
+        <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+        <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+        <a href="{% url 'shipping' %}">SHIPPING</a>
+    </div>
 </footer>
 
 </body>

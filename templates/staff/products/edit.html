@@ -1,0 +1,118 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edit Product | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--dark:#06152a;--orange:#f47b20}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7fa;color:#172033}
+header{background:var(--dark);color:white;padding:18px 30px;display:flex;justify-content:space-between;align-items:center}
+header h1{margin:0;font-size:21px}
+header a{background:var(--orange);color:white;text-decoration:none;padding:10px 16px;border-radius:6px;font-weight:bold}
+.container{max-width:1100px;margin:30px auto;padding:0 20px}
+.card{background:white;border-radius:12px;padding:30px;box-shadow:0 5px 25px rgba(0,0,0,.08)}
+h2,h3{color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.field{display:flex;flex-direction:column;gap:7px}
+.full{grid-column:1/-1}
+label{font-weight:700}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cfd6df;border-radius:7px;font-size:15px}
+textarea{min-height:120px}
+.section{border-top:1px solid #e0e5eb;margin-top:25px;padding-top:25px}
+.checks{display:flex;gap:25px;flex-wrap:wrap}
+.check{display:flex;align-items:center;gap:8px}
+.check input{width:auto}
+.current{margin:15px 0;padding:15px;background:#f5f7fa;border-radius:8px}
+.current img{width:180px;height:130px;object-fit:contain;background:white;border:1px solid #ddd;border-radius:6px}
+button{margin-top:30px;background:var(--orange);color:white;border:0;border-radius:7px;padding:13px 22px;font-weight:800;cursor:pointer}
+.help{font-size:13px;color:#687386}
+.errorlist{color:#b42318}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+<h1>THE LABEL GROUP — Edit Product</h1>
+<a href="{% url 'staff_products' %}">Back to Products</a>
+</header>
+
+<main class="container">
+<div class="card">
+<h2>Edit Product</h2>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+{{ form.non_field_errors }}
+
+<div class="section">
+<h3>Product Identity</h3>
+<div class="grid">
+<div class="field"><label>Product Name</label>{{ form.name }}{{ form.name.errors }}</div>
+<div class="field"><label>Product Number / Code</label>{{ form.product_code }}{{ form.product_code.errors }}</div>
+<div class="field"><label>Product Type</label>{{ form.product_type }}</div>
+<div class="field"><label>Brand</label>{{ form.brand }}</div>
+<div class="field"><label>Category</label>{{ form.category }}</div>
+<div class="field"><label>Industry</label>{{ form.industry }}</div>
+<div class="field full"><label>Slug</label>{{ form.slug }}</div>
+<div class="field full"><label>Description</label>{{ form.description }}</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Price & Inventory</h3>
+<div class="grid">
+<div class="field"><label>Price (USD)</label>{{ form.price }}</div>
+<div class="field"><label>Discount Price (USD)</label>{{ form.discount_price }}</div>
+<div class="field"><label>Stock</label>{{ form.stock }}</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Product Image</h3>
+
+{% if product.image %}
+<div class="current">
+<strong>Current Product Image</strong><br><br>
+<img src="{{ product.image.url }}" alt="{{ product.name }}">
+</div>
+{% else %}
+<p class="help">This product currently has no image.</p>
+{% endif %}
+
+<div class="field">
+<label>Replace Product Image</label>
+{{ form.image }}
+{{ form.image.errors }}
+<span class="help">Upload the actual image for this product.</span>
+</div>
+</div>
+
+<div class="section">
+<h3>Specifications</h3>
+<div class="grid">
+<div class="field"><label>Material</label>{{ form.material }}</div>
+<div class="field"><label>Finish</label>{{ form.finish }}</div>
+<div class="field"><label>Shape</label>{{ form.shape }}</div>
+<div class="field"><label>Printing Method</label>{{ form.printing_method }}</div>
+<div class="field full"><label>Adhesive</label>{{ form.adhesive }}</div>
+</div>
+</div>
+
+<div class="section">
+<h3>Publishing</h3>
+<div class="checks">
+<label class="check">{{ form.is_custom }} Custom Product</label>
+<label class="check">{{ form.is_available }} Available</label>
+<label class="check">{{ form.is_featured }} Featured</label>
+</div>
+</div>
+
+<button type="submit">SAVE PRODUCT CHANGES</button>
+</form>
+</div>
+</main>
+</body>
+</html>

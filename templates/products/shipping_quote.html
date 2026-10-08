@@ -1,0 +1,818 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Request a Quote | THE LABEL GROUP</title>
+
+    {% load static %}
+
+    <style>
+        :root {
+            --navy:#0b1f3a;
+            --navy-dark:#06152a;
+            --orange:#f47b20;
+            --orange-dark:#d9620d;
+            --light:#f5f7fa;
+            --border:#dfe4ea;
+            --text:#182230;
+            --muted:#687386;
+            --white:#ffffff;
+            --success:#19734a;
+        }
+
+        * {
+            box-sizing:border-box;
+        }
+
+        body {
+            margin:0;
+            font-family:Arial, Helvetica, sans-serif;
+            background:var(--light);
+            color:var(--text);
+        }
+
+        a {
+            text-decoration:none;
+        }
+
+        .topbar {
+            background:var(--navy-dark);
+            color:#fff;
+            text-align:center;
+            padding:10px 16px;
+            font-size:13px;
+            font-weight:700;
+        }
+
+        header {
+            background:#fff;
+            border-bottom:1px solid var(--border);
+            position:sticky;
+            top:0;
+            z-index:100;
+        }
+
+        .header-inner {
+            max-width:1250px;
+            margin:auto;
+            padding:16px 24px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:25px;
+        }
+
+        .logo img {
+            max-width:190px;
+            max-height:60px;
+            object-fit:contain;
+            display:block;
+        }
+
+        .nav {
+            display:flex;
+            align-items:center;
+            justify-content:flex-end;
+            gap:8px;
+            flex-wrap:wrap;
+        }
+
+        .nav a {
+            color:var(--navy);
+            font-size:12px;
+            font-weight:800;
+            padding:10px 12px;
+            border-radius:7px;
+        }
+
+        .nav a:hover {
+            background:var(--light);
+            color:var(--orange-dark);
+        }
+
+        .page {
+            max-width:1250px;
+            margin:auto;
+            padding:55px 24px 80px;
+        }
+
+        .intro {
+            max-width:850px;
+            margin-bottom:35px;
+        }
+
+        .eyebrow {
+            color:var(--orange-dark);
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.12em;
+            text-transform:uppercase;
+            margin-bottom:10px;
+        }
+
+        h1 {
+            margin:0 0 14px;
+            color:var(--navy);
+            font-size:clamp(34px,5vw,56px);
+            line-height:1.05;
+        }
+
+        .intro p {
+            margin:0;
+            color:var(--muted);
+            font-size:16px;
+            line-height:1.7;
+        }
+
+        .quick-actions {
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin-top:22px;
+        }
+
+        .button {
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:44px;
+            padding:0 18px;
+            border-radius:7px;
+            font-size:12px;
+            font-weight:900;
+            letter-spacing:.04em;
+        }
+
+        .button-primary {
+            background:var(--orange);
+            color:#fff;
+        }
+
+        .button-primary:hover {
+            background:var(--orange-dark);
+        }
+
+        .button-secondary {
+            background:var(--navy);
+            color:#fff;
+        }
+
+        .button-secondary:hover {
+            background:var(--navy-dark);
+        }
+
+        .button-light {
+            background:#fff;
+            border:1px solid var(--border);
+            color:var(--navy);
+        }
+
+        .quote-layout {
+            display:grid;
+            grid-template-columns:minmax(0,1fr) 330px;
+            gap:28px;
+            align-items:start;
+        }
+
+        .form-card {
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:12px;
+            overflow:hidden;
+        }
+
+        .form-header {
+            background:var(--navy);
+            color:#fff;
+            padding:24px;
+        }
+
+        .form-header h2 {
+            margin:0 0 7px;
+            font-size:22px;
+        }
+
+        .form-header p {
+            margin:0;
+            color:#dbe3ee;
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        form {
+            padding:28px;
+        }
+
+        .section {
+            margin-bottom:30px;
+        }
+
+        .section:last-child {
+            margin-bottom:0;
+        }
+
+        .section-title {
+            margin:0 0 6px;
+            color:var(--navy);
+            font-size:17px;
+        }
+
+        .section-description {
+            margin:0 0 18px;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.6;
+        }
+
+        .grid {
+            display:grid;
+            grid-template-columns:1fr 1fr;
+            gap:16px;
+        }
+
+        .field {
+            display:flex;
+            flex-direction:column;
+            gap:7px;
+        }
+
+        .field.full {
+            grid-column:1 / -1;
+        }
+
+        label {
+            color:var(--navy);
+            font-size:12px;
+            font-weight:900;
+        }
+
+        input,
+        textarea,
+        select {
+            width:100%;
+            border:1px solid #cfd6df;
+            border-radius:7px;
+            padding:12px 13px;
+            background:#fff;
+            color:var(--text);
+            font-family:inherit;
+            font-size:14px;
+            outline:none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color:var(--orange);
+            box-shadow:0 0 0 3px rgba(244,123,32,.12);
+        }
+
+        textarea {
+            min-height:150px;
+            resize:vertical;
+            line-height:1.6;
+        }
+
+        input[type="file"] {
+            padding:10px;
+            background:var(--light);
+        }
+
+        .required {
+            color:var(--orange-dark);
+        }
+
+        .submit-area {
+            margin-top:28px;
+            padding-top:22px;
+            border-top:1px solid var(--border);
+        }
+
+        .submit-button {
+            width:100%;
+            min-height:52px;
+            border:0;
+            border-radius:7px;
+            background:var(--orange);
+            color:#fff;
+            font-size:13px;
+            font-weight:900;
+            letter-spacing:.05em;
+            cursor:pointer;
+        }
+
+        .submit-button:hover {
+            background:var(--orange-dark);
+        }
+
+        .side {
+            display:flex;
+            flex-direction:column;
+            gap:18px;
+        }
+
+        .side-card {
+            background:#fff;
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:23px;
+        }
+
+        .side-card.dark {
+            background:var(--navy);
+            color:#fff;
+            border-color:var(--navy);
+        }
+
+        .side-card h2 {
+            margin:0 0 12px;
+            color:var(--navy);
+            font-size:20px;
+        }
+
+        .side-card.dark h2 {
+            color:#fff;
+        }
+
+        .side-card p {
+            margin:0;
+            color:var(--muted);
+            font-size:13px;
+            line-height:1.65;
+        }
+
+        .side-card.dark p {
+            color:#dbe3ee;
+        }
+
+        .steps {
+            list-style:none;
+            padding:0;
+            margin:18px 0 0;
+        }
+
+        .steps li {
+            display:flex;
+            gap:11px;
+            margin-bottom:16px;
+            font-size:13px;
+            line-height:1.5;
+        }
+
+        .number {
+            width:26px;
+            height:26px;
+            min-width:26px;
+            border-radius:50%;
+            background:var(--orange);
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:11px;
+            font-weight:900;
+        }
+
+        .side-links {
+            display:flex;
+            flex-direction:column;
+            gap:9px;
+            margin-top:18px;
+        }
+
+        .side-links a {
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            min-height:43px;
+            border-radius:7px;
+            font-size:12px;
+            font-weight:900;
+        }
+
+        .side-links .orange {
+            background:var(--orange);
+            color:#fff;
+        }
+
+        .side-links .navy {
+            background:var(--navy);
+            color:#fff;
+        }
+
+        .side-links .outline {
+            border:1px solid var(--border);
+            color:var(--navy);
+            background:#fff;
+        }
+
+        .notice {
+            margin-top:18px;
+            padding:14px;
+            border-radius:7px;
+            background:#f1f8f4;
+            color:var(--success);
+            font-size:12px;
+            line-height:1.6;
+        }
+
+        footer {
+            background:var(--navy-dark);
+            color:#bfc9d6;
+            text-align:center;
+            padding:28px 24px;
+            font-size:12px;
+        }
+
+        footer a {
+            color:#fff;
+            margin:0 8px;
+            font-weight:700;
+        }
+
+        @media (max-width:900px) {
+            .header-inner {
+                flex-direction:column;
+                align-items:center;
+            }
+
+            .nav {
+                justify-content:center;
+            }
+
+            .quote-layout {
+                grid-template-columns:1fr;
+            }
+        }
+
+        @media (max-width:650px) {
+            .page {
+                padding:35px 15px 55px;
+            }
+
+            .grid {
+                grid-template-columns:1fr;
+            }
+
+            .field.full {
+                grid-column:auto;
+            }
+
+            form {
+                padding:20px;
+            }
+
+            .quick-actions {
+                flex-direction:column;
+            }
+
+            .quick-actions .button {
+                width:100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header>
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}" class="logo">
+            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
+        </a>
+
+        <nav class="nav">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </nav>
+
+    </div>
+</header>
+
+<main class="page">
+
+    <section class="intro">
+
+        <div class="eyebrow">Commercial Quote Desk</div>
+
+        <h1>Request a Quote</h1>
+
+        <p>
+            Need pricing for a business, fleet, construction, waste,
+            government or pool project? Tell us what you need and our team
+            will review the requirements and prepare a quotation.
+        </p>
+
+        <div class="quick-actions">
+            <a href="{% url 'quote_cart' %}" class="button button-secondary">
+                VIEW QUOTE CART
+            </a>
+
+            <a href="{% url 'product_list' %}" class="button button-light">
+                SHOP PRODUCTS
+            </a>
+
+            <a href="{% url 'custom_order' %}" class="button button-light">
+                CUSTOM ORDERS
+            </a>
+        </div>
+
+    </section>
+
+    <div class="quote-layout">
+
+        <section class="form-card">
+
+            <div class="form-header">
+                <h2>Commercial Quotation Request</h2>
+                <p>
+                    Provide the information below. The more detail you provide,
+                    the easier it is for our team to prepare an accurate quote.
+                </p>
+            </div>
+
+            <form method="post" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="section">
+
+                    <h3 class="section-title">Contact Information</h3>
+
+                    <p class="section-description">
+                        Tell us who we should contact about the quotation.
+                    </p>
+
+                    <div class="grid">
+
+                        <div class="field">
+                            <label>
+                                Full Name <span class="required">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="customer_name"
+                                required
+                                autocomplete="name"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label>Company Name</label>
+                            <input
+                                type="text"
+                                name="company_name"
+                                autocomplete="organization"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label>
+                                Email Address <span class="required">*</span>
+                            </label>
+                            <input
+                                type="email"
+                                name="customer_email"
+                                required
+                                autocomplete="email"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label>
+                                Phone Number <span class="required">*</span>
+                            </label>
+                            <input
+                                type="tel"
+                                name="customer_phone"
+                                required
+                                autocomplete="tel"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="section">
+
+                    <h3 class="section-title">Delivery Location</h3>
+
+                    <p class="section-description">
+                        Provide the destination so shipping and delivery
+                        requirements can be considered.
+                    </p>
+
+                    <div class="grid">
+
+                        <div class="field full">
+                            <label>Street Address</label>
+                            <input
+                                type="text"
+                                name="street_address"
+                                autocomplete="street-address"
+                            >
+                        </div>
+
+                        <div class="field full">
+                            <label>Address Continued</label>
+                            <input
+                                type="text"
+                                name="address_continued"
+                            >
+                        </div>
+
+                        <div class="field">
+                            <label>City</label>
+                            <input type="text" name="city">
+                        </div>
+
+                        <div class="field">
+                            <label>State / County</label>
+                            <input type="text" name="state">
+                        </div>
+
+                        <div class="field">
+                            <label>Postal / ZIP Code</label>
+                            <input type="text" name="postal_code">
+                        </div>
+
+                        <div class="field">
+                            <label>Country</label>
+                            <input type="text" name="country">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="section">
+
+                    <h3 class="section-title">Project Requirements</h3>
+
+                    <p class="section-description">
+                        Describe the products, quantities, materials, sizes,
+                        applications, delivery requirements and anything else
+                        that should be considered in your quotation.
+                    </p>
+
+                    <div class="grid">
+
+                        <div class="field full">
+                            <label>
+                                Quotation Requirements
+                                <span class="required">*</span>
+                            </label>
+
+                            <textarea
+                                name="requirements"
+                                required
+                                placeholder="Example: Product codes or names, quantities, sizes, material, finish, application, delivery requirements and required timeframe."
+                            ></textarea>
+                        </div>
+
+                        <div class="field full">
+                            <label>Artwork / Reference File</label>
+
+                            <input
+                                type="file"
+                                name="uploaded_file"
+                            >
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="submit-area">
+
+                    <button type="submit" class="submit-button">
+                        SUBMIT QUOTATION REQUEST
+                    </button>
+
+                    <div class="notice">
+                        Your request will be reviewed by THE LABEL GROUP.
+                        Pricing is prepared based on the information and
+                        requirements submitted.
+                    </div>
+
+                </div>
+
+            </form>
+
+        </section>
+
+        <aside class="side">
+
+            <div class="side-card dark">
+
+                <h2>How It Works</h2>
+
+                <p>
+                    A quotation request is for customers who need pricing
+                    before placing an order.
+                </p>
+
+                <ol class="steps">
+
+                    <li>
+                        <span class="number">1</span>
+                        <span>Tell us what products or services you need.</span>
+                    </li>
+
+                    <li>
+                        <span class="number">2</span>
+                        <span>Provide quantities and project requirements.</span>
+                    </li>
+
+                    <li>
+                        <span class="number">3</span>
+                        <span>Our team reviews your request.</span>
+                    </li>
+
+                    <li>
+                        <span class="number">4</span>
+                        <span>We prepare the quotation for your project.</span>
+                    </li>
+
+                </ol>
+
+            </div>
+
+            <div class="side-card">
+
+                <h2>Choose the Right Service</h2>
+
+                <p>
+                    Use the option that best matches what you need.
+                </p>
+
+                <div class="side-links">
+
+                    <a
+                        href="{% url 'quote_cart' %}"
+                        class="orange"
+                    >
+                        VIEW QUOTE CART
+                    </a>
+
+                    <a
+                        href="{% url 'product_list' %}"
+                        class="navy"
+                    >
+                        SHOP PRODUCTS
+                    </a>
+
+                    <a
+                        href="{% url 'custom_order' %}"
+                        class="outline"
+                    >
+                        CUSTOM ORDERS
+                    </a>
+
+                    <a
+                        href="{% url 'shipping' %}"
+                        class="outline"
+                    >
+                        SHIPPING INFORMATION
+                    </a>
+
+                </div>
+
+            </div>
+
+        </aside>
+
+    </div>
+
+</main>
+
+<footer>
+
+    <div>
+        © 2026 THE LABEL GROUP. All Rights Reserved.
+    </div>
+
+    <div style="margin-top:12px;">
+        <a href="{% url 'home' %}">HOME</a>
+        <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+        <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+        <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+        <a href="{% url 'shipping' %}">SHIPPING</a>
+    </div>
+
+</footer>
+
+</body>
+</html>

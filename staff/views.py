@@ -1,4 +1,4 @@
-from django.contrib import messages
+﻿from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -44,7 +44,6 @@ def log_staff_activity(request, staff_profile, action, description, object_name=
         staff=staff_profile,
         action=action,
         description=description,
-        object_name=object_name,
         ip_address=get_client_ip(request),
     )
 
@@ -1088,4 +1087,70 @@ def staff_calendar_order_detail(request, pk):
                 [],
             ),
         },
+    )
+
+def boss_site_settings(request):
+    from products.models import SiteSettings
+
+    boss_required(request)
+    settings_obj = SiteSettings.get_settings()
+
+    if request.method == "POST":
+        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+        settings_obj.phone = request.POST.get("phone", "").strip()
+        settings_obj.email = request.POST.get("email", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+        settings_obj.facebook = request.POST.get("facebook", "").strip()
+        settings_obj.instagram = request.POST.get("instagram", "").strip()
+        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+        settings_obj.youtube = request.POST.get("youtube", "").strip()
+        settings_obj.save()
+        messages.success(request, "Website settings updated successfully.")
+        return redirect("boss_site_settings")
+
+    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+
+
+
+@staff_required
+def staff_product_image_delete(request, pk):
+    profile = get_staff_profile(request.user)
+
+    product = get_object_or_404(
+        Product,
+        pk=pk
+    )
+
+    if request.method == "POST":
+        product_name = product.name
+
+        if product.image:
+            product.image.delete(save=False)
+            product.image = None
+            product.save()
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Deleted product image: {product_name}",
+                f"Staff member deleted the current image for product '{product_name}'.",
+            )
+
+            messages.success(
+                request,
+                f"The current image for '{product_name}' was deleted successfully."
+            )
+        else:
+            messages.info(
+                request,
+                f"'{product_name}' does not currently have an image."
+            )
+
+    return redirect(
+        "staff_product_edit",
+        pk=product.pk
     )

@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.contrib.auth.models import User
 
 
@@ -748,3 +748,30 @@ class CollectionCalendarStickerOrder(models.Model):
 
     def __str__(self):
         return f"{self.company} - {self.calendar_year} - {self.quantity} stickers"
+class SiteSettings(models.Model):
+    company_name = models.CharField(max_length=200, default="THE LABEL GROUP")
+    tagline = models.CharField(max_length=255, default="INDUSTRIAL PRINTS & DECALS")
+    phone = models.CharField(max_length=100, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    whatsapp = models.CharField(max_length=100, blank=True, default="")
+    facebook = models.URLField(blank=True, default="")
+    instagram = models.URLField(blank=True, default="")
+    tiktok = models.URLField(blank=True, default="")
+    linkedin = models.URLField(blank=True, default="")
+    youtube = models.URLField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.first()
+        if not obj:
+            obj = cls.objects.create(
+                company_name="THE LABEL GROUP",
+                tagline="INDUSTRIAL PRINTS & DECALS"
+            )
+        return obj
+

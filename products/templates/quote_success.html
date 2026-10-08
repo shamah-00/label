@@ -1,4 +1,4 @@
-
+﻿
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -334,7 +334,7 @@
             <a href="{% url 'home' %}?industry=pool">Pool</a>
             <a href="{% url 'home' %}?industry=construction">Construction</a>
             <a href="{% url 'home' %}?industry=waste">Waste</a>
-            <a href="{% url 'quote_cart' %}" class="quote-link">Quote Cart</a>
+            <a href="{% url 'quote_cart' %}" class="quote-link">QUOTE CART</a>
         </nav>
     </div>
 </header>
@@ -351,7 +351,7 @@
     <div class="success-card">
 
         <div class="success-icon">
-            ✓
+            âœ“
         </div>
 
         <h2>Thank You, {{ quote_request.customer_name }}!</h2>
@@ -384,7 +384,7 @@
                 Continue Shopping
             </a>
 
-            <a href="{% url 'quote_cart' %}" class="button button-secondary">
+            <a href="{% url 'shipping_quote' %}" class="button button-secondary">
                 View Quote Cart
             </a>
         </div>
@@ -415,7 +415,7 @@
 
         <div class="footer-column">
             <h4>Customer Service</h4>
-            <a href="{% url 'quote_cart' %}">Quote Cart</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
             <a href="{% url 'home' %}">Request a Quote</a>
             <a href="/staff/login/">Staff Login</a>
         </div>
@@ -423,9 +423,11 @@
     </div>
 
     <div class="copyright">
-        © 2026 THE LABEL GROUP. All rights reserved.
+        Â© 2026 THE LABEL GROUP. All rights reserved.
     </div>
 </footer>
 
 </body>
 </html>
+
+

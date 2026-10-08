@@ -1,0 +1,901 @@
+﻿{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Shop Products | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f5f7fa;
+            --border: #e3e7ec;
+            --text: #172033;
+            --muted: #687386;
+            --white: #ffffff;
+            --success: #16794a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .topbar {
+            background: var(--navy-dark);
+            color: #fff;
+            text-align: center;
+            padding: 9px 20px;
+            font-size: 12px;
+            letter-spacing: .4px;
+        }
+
+        .site-header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-inner {
+            max-width: 1250px;
+            margin: auto;
+            padding: 15px 24px;
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            min-width: 230px;
+        }
+
+        .brand img {
+            width: 220px;
+            max-height: 58px;
+            object-fit: contain;
+        }
+
+        .main-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .main-nav a {
+            padding: 10px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            color: var(--navy);
+            border-radius: 5px;
+        }
+
+        .main-nav a:hover {
+            background: #f2f4f7;
+            color: var(--orange-dark);
+        }
+
+        .main-nav .quote-link {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .main-nav .quote-link:hover {
+            background: var(--orange-dark);
+            color: #fff;
+        }
+
+        .catalogue-hero {
+            background:
+                linear-gradient(110deg, rgba(6,21,42,.96), rgba(11,31,58,.88)),
+                url("{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}") center/cover;
+            color: #fff;
+            padding: 58px 24px;
+        }
+
+        .hero-inner {
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .eyebrow {
+            color: #ffad6d;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.7px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .catalogue-hero h1 {
+            margin: 0 0 12px;
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1;
+            max-width: 760px;
+        }
+
+        .catalogue-hero p {
+            margin: 0;
+            max-width: 700px;
+            color: #dce4ef;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .catalogue-shell {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 32px 24px 70px;
+        }
+
+        .catalogue-toolbar {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 18px rgba(6,21,42,.05);
+        }
+
+        .catalogue-count strong {
+            color: var(--navy);
+            font-size: 18px;
+        }
+
+        .catalogue-count span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 8px;
+            width: min(430px, 100%);
+        }
+
+        .search-form input {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid #ccd3dc;
+            border-radius: 6px;
+            padding: 12px 13px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-form input:focus {
+            border-color: var(--orange);
+        }
+
+        .search-form button {
+            border: 0;
+            background: var(--navy);
+            color: #fff;
+            border-radius: 6px;
+            padding: 0 18px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .category-panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(6,21,42,.04);
+        }
+
+        .category-title {
+            margin: 0 0 13px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+
+        .category {
+            border: 1px solid #d7dde5;
+            background: #fff;
+            color: var(--navy);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .2px;
+            transition: .18s ease;
+        }
+
+        .category:hover {
+            border-color: var(--orange);
+            color: var(--orange-dark);
+            transform: translateY(-1px);
+        }
+
+        .category.active {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #fff;
+        }
+
+        .results-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 0 0 15px;
+            gap: 15px;
+        }
+
+        .results-heading h2 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--navy);
+        }
+
+        .results-heading span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .product-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(6,21,42,.10);
+        }
+
+        .product-image {
+            height: 285px;
+            background: #f8fafc;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+        }
+
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain !important;
+            display: block;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 25px;
+            color: #7a8595;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .product-content {
+            padding: 17px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .product-category {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--orange-dark);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 7px;
+        }
+
+        .product-name {
+            color: var(--navy);
+            font-size: 16px;
+            line-height: 1.35;
+            margin: 0 0 8px;
+        }
+
+        .product-code {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .product-price {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-top: auto;
+            padding-top: 7px;
+        }
+
+        .quote-note {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .product-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            min-height: 40px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .3px;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--navy);
+            color: var(--navy);
+            background: #fff;
+        }
+
+        .btn-outline:hover {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .btn-orange {
+            background: var(--orange);
+            border: 1px solid var(--orange);
+            color: #fff;
+        }
+
+        .btn-orange:hover {
+            background: var(--orange-dark);
+            border-color: var(--orange-dark);
+        }
+
+        .empty-state {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            padding: 65px 25px;
+        }
+
+        .empty-state h2 {
+            margin: 0 0 8px;
+            color: var(--navy);
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+
+        .empty-state a {
+            display: inline-flex;
+            padding: 12px 20px;
+            background: var(--orange);
+            color: #fff;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        footer {
+            background: var(--navy-dark);
+            color: #fff;
+            padding: 35px 24px;
+        }
+
+        .footer-inner {
+            max-width: 1250px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .footer-brand span {
+            display: block;
+            margin-top: 5px;
+            font-size: 10px;
+            color: #aeb9c9;
+            letter-spacing: 1.2px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .footer-links a:hover {
+            color: #ffad6d;
+        }
+
+        @media (max-width: 1050px) {
+            .product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .categories {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .header-inner {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .brand {
+                justify-content: center;
+            }
+
+            .main-nav {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .catalogue-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-form {
+                width: 100%;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .categories {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .product-image { height: 230px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .categories {
+                grid-template-columns: 1fr;
+            }
+
+            .product-actions {
+                grid-template-columns: 1fr;
+            }
+
+            .main-nav a {
+                font-size: 10px;
+                padding: 8px;
+            }
+        }
+    <style id="tlg-final-catalogue-fix">
+html{scroll-padding-top:120px}
+body{overflow-x:hidden}
+.product-grid{align-items:stretch}
+.product-card{height:100%;overflow:hidden}
+.product-image{height:320px!important;min-height:320px!important;width:100%;padding:8px!important;background:#fff!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important}
+.product-image img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important;margin:0 auto!important}
+header,.site-header,.main-header,.header{z-index:1000}
+.catalogue,.products-section,.product-grid,.page-content,main{scroll-margin-top:120px}
+@media(max-width:768px){
+.product-image{height:285px!important;min-height:285px!important;padding:6px!important}
+.product-image img{width:100%!important;height:100%!important;object-fit:contain!important}
+}
+@media(max-width:480px){
+.product-image{height:270px!important;min-height:270px!important;padding:5px!important}
+.product-image img{width:100%!important;height:100%!important;object-fit:contain!important}
+}
+</style></style>
+
+<style>
+/* THE LABEL GROUP - large product imagery */
+.product-image {
+    height: 390px !important;
+    min-height: 390px !important;
+    padding: 10px !important;
+}
+
+.product-image img {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center !important;
+}
+
+@media (max-width: 900px) {
+    .product-image {
+        height: 340px !important;
+        min-height: 340px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .product-image {
+        height: 300px !important;
+        min-height: 300px !important;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header class="site-header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}" class="brand">
+            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP" loading="lazy" decoding="async">
+        </a>
+
+        <nav class="main-nav">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="{% url 'shipping_quote' %}" class="quote-link">REQUEST A QUOTE</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </nav>
+
+    </div>
+</header>
+
+<section class="catalogue-hero">
+    <div class="hero-inner">
+        <div class="eyebrow">Industrial Prints & Decals</div>
+        <h1>Shop the THE LABEL GROUP catalogue.</h1>
+        <p>
+            Explore durable identification, warning, compliance and
+            commercial printing products built for demanding working environments.
+        </p>
+    </div>
+</section>
+
+<main class="catalogue-shell">
+
+    <div class="catalogue-toolbar">
+
+        <div class="catalogue-count">
+            <strong>{{ product_count|default:products|length }} products</strong><br>
+            <span>
+                {% if search_query %}
+                    Results for "{{ search_query }}"
+                {% elif selected_industry %}
+                    Showing selected category
+                {% else %}
+                    Browse the complete catalogue
+                {% endif %}
+            </span>
+        </div>
+
+        <form method="get" action="{% url 'product_list' %}" class="search-form">
+            {% if selected_industry %}
+                <input type="hidden" name="industry" value="{{ selected_industry }}">
+            {% endif %}
+
+            <input
+                type="search"
+                name="search"
+                value="{{ search_query|default:'' }}"
+                placeholder="Search products, codes or brands..."
+            >
+
+            <button type="submit">SEARCH</button>
+        </form>
+
+    </div>
+
+    <section class="category-panel">
+
+        <div class="category-title">Browse by industry</div>
+
+        <div class="categories">
+
+            <a
+                class="category {% if selected_industry == 'motor' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=motor"
+            >
+                TRUCK & MOTOR
+            </a>
+
+            <a
+                class="category {% if selected_industry == 'waste' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=waste"
+            >
+                WASTE COMPANIES
+            </a>
+
+            <a
+                class="category {% if selected_industry == 'construction' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=construction"
+            >
+                CONSTRUCTION
+            </a>
+
+            <a
+                class="category {% if selected_industry == 'pool' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=pool"
+            >
+                POOL COMPANIES
+            </a>
+
+            <a
+                class="category {% if selected_industry == 'government' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=government"
+            >
+                GOVERNMENT CONTRACTORS
+            </a>
+
+            <a
+                class="category {% if selected_industry == 'other' %}active{% endif %}"
+                href="{% url 'product_list' %}?industry=other"
+            >
+                OTHER PRODUCTS
+            </a>
+
+        </div>
+
+    </section>
+
+    <div class="results-heading">
+        <h2>
+            {% if selected_industry %}
+                {{ selected_industry|title }} Products
+            {% else %}
+                All Products
+            {% endif %}
+        </h2>
+
+        <span>
+            Professional industrial printing & identification
+        </span>
+    </div>
+
+    {% if products %}
+
+        <section class="product-grid">
+
+            {% for product in products %}
+
+                <article class="product-card">
+
+                    <a href="{% url 'product_detail' product.id %}" class="product-image">
+
+                        {% if product.image %}
+
+                            <img
+                                src="{{ product.image.url }}"
+                                alt="{{ product.name }}"
+                             loading="lazy" decoding="async">
+
+                        {% elif product.category == "pool" %}
+
+                            <img
+                                src="{% static 'products/pool decal.jpeg' %}"
+                                alt="Pool products"
+                             loading="lazy" decoding="async">
+
+                        {% elif product.category == "government" %}
+
+                            <img
+                                src="{% static 'products/government contractor.jpeg' %}"
+                                alt="Government contractor products"
+                             loading="lazy" decoding="async">
+
+                        {% elif product.category == "construction" %}
+
+                            <img
+                                src="{% static 'products/construction.jpeg' %}"
+                                alt="Construction products"
+                             loading="lazy" decoding="async">
+
+                        {% elif product.category == "waste" %}
+
+                            <img
+                                src="{% static 'products/waste and company.jpeg' %}"
+                                alt="Waste company products"
+                             loading="lazy" decoding="async">
+
+                        {% elif product.category == "motor" or product.category == "truck" %}
+
+                            <img
+                                src="{% static 'products/truck and motors.jpeg' %}"
+                                alt="Truck and motor products"
+                             loading="lazy" decoding="async">
+
+                        {% else %}
+
+                            <div class="image-placeholder">
+                                Product Image<br>
+                                Coming Soon
+                            </div>
+
+                        {% endif %}
+
+                    </a>
+
+                    <div class="product-content">
+
+                        <div class="product-category">
+                            {{ product.category|default:"Industrial Product" }}
+                        </div>
+
+                        <h3 class="product-name">
+                            {{ product.name }}
+                        </h3>
+
+                        {% if product.product_code %}
+                            <div class="product-code">
+                                Product Code: {{ product.product_code }}
+                            </div>
+                        {% endif %}
+
+                        {% if product.price %}
+                            <div class="product-price">
+                                ${{ product.price|floatformat:2 }}
+                            </div>
+                        {% else %}
+                            <div class="product-price">
+                                Request a Quote
+                            </div>
+
+                            <div class="quote-note">
+                                Pricing available from THE LABEL GROUP.
+                            </div>
+                        {% endif %}
+
+                        <div class="product-actions">
+
+                            <a
+                                href="{% url 'product_detail' product.id %}"
+                                class="btn btn-outline"
+                            >
+                                VIEW PRODUCT
+                            </a>
+
+                            <a
+                                href="{% url 'add_to_quote' product.id %}"
+                                class="btn btn-orange"
+                            >
+                                ADD TO QUOTE
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </article>
+
+            {% endfor %}
+
+        </section>
+
+    {% else %}
+
+        <section class="empty-state">
+
+            <h2>No products found</h2>
+
+            <p>
+                We couldn't find products matching your search or selected category.
+            </p>
+
+            <a href="{% url 'product_list' %}">
+                VIEW ALL PRODUCTS
+            </a>
+
+        </section>
+
+    {% endif %}
+
+</main>
+
+<footer>
+    <div class="footer-inner">
+
+        <div class="footer-brand">
+            THE LABEL GROUP
+            <span>INDUSTRIAL PRINTS & DECALS</span>
+        </div>
+
+        <div class="footer-links">
+            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="{% url 'shipping_quote' %}">REQUEST A QUOTE</a>
+        </div>
+
+    </div>
+</footer>
+
+</body>
+</html>
+
+

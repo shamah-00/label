@@ -1,0 +1,165 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Orders | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--dark:#06152a;--orange:#f47b20;--orange-dark:#d9620d;--light:#f5f7fa}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:var(--light);color:#172033}
+header{background:var(--navy);padding:18px 6%;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.logo{height:58px;width:auto;object-fit:contain;background:white;padding:5px;border-radius:6px}
+nav a{color:white;text-decoration:none;margin-left:20px;font-weight:bold;font-size:14px}
+nav a:hover{color:#f47b20}
+.hero{background:linear-gradient(135deg,var(--dark),var(--navy));color:white;text-align:center;padding:60px 20px}
+.hero h1{font-size:42px;margin:0 0 12px}
+.hero p{font-size:18px;max-width:700px;margin:auto;line-height:1.6}
+.container{max-width:1000px;margin:40px auto;padding:0 20px}
+.card{background:white;border-radius:14px;padding:35px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.field{display:flex;flex-direction:column;gap:8px}
+.full{grid-column:1/-1}
+label{font-weight:bold;color:var(--navy)}
+input,textarea{width:100%;padding:13px;border:1px solid #d5dbe3;border-radius:7px;font-size:15px}
+textarea{min-height:150px;resize:vertical}
+input:focus,textarea:focus{outline:2px solid rgba(244,123,32,.25);border-color:var(--orange)}
+button{border:0;background:var(--orange);color:white;padding:15px 28px;border-radius:7px;font-weight:bold;font-size:16px;cursor:pointer}
+button:hover{background:var(--orange-dark)}
+.note{background:#fff7ef;border-left:4px solid var(--orange);padding:15px;margin-bottom:25px;line-height:1.5}
+.back{display:inline-block;margin-top:20px;color:var(--navy);font-weight:bold;text-decoration:none}
+footer{background:var(--dark);color:white;text-align:center;padding:25px;margin-top:50px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.hero h1{font-size:32px}nav a{display:inline-block;margin:6px}}
+</style>
+<style id="tlg-navigation-cleanup">
+.tlg-main-nav {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    padding:14px 20px;
+    background:#06152a;
+}
+
+.tlg-main-nav a {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:10px 16px;
+    border-radius:8px;
+    color:#ffffff;
+    text-decoration:none;
+    font-size:13px;
+    font-weight:800;
+    letter-spacing:.04em;
+    transition:.2s ease;
+}
+
+.tlg-main-nav a:hover {
+    background:#f47b20;
+    color:#ffffff;
+}
+
+@media (max-width:700px) {
+    .tlg-main-nav {
+        gap:6px;
+        padding:10px;
+    }
+
+    .tlg-main-nav a {
+        flex:1 1 140px;
+        font-size:12px;
+    }
+}
+</style>
+</head>
+<body>
+<header>
+<a href="/"><img class="logo" src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP"></a>
+<nav class="tlg-main-nav">
+    <a href="{% url 'home' %}">HOME</a>
+    <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+    <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+    <a href="{% url 'shipping' %}">SHIPPING</a>
+    <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+    <a href="/staff/login/">STAFF LOGIN</a>
+</nav>
+</header>
+
+<section class="hero">
+<h1>Request a Custom Order</h1>
+<p>Tell THE LABEL GROUP what you need. Submit your specifications and our team will review your project and prepare a custom quote.</p>
+</section>
+
+<main class="container">
+<div class="card">
+<div class="note"><strong>Need something made to your specifications?</strong><br>Complete the form below. You can describe your size, material, quantity, finish, artwork and any other requirements.</div>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<div class="grid">
+<div class="field">
+<label for="customer_name">Full Name *</label>
+<input id="customer_name" name="customer_name" required>
+</div>
+<div class="field">
+<label for="company_name">Company Name</label>
+<input id="company_name" name="company_name">
+</div>
+<div class="field">
+<label for="customer_email">Email Address *</label>
+<input id="customer_email" type="email" name="customer_email" required>
+</div>
+<div class="field">
+<label for="customer_phone">Phone Number *</label>
+<input id="customer_phone" name="customer_phone" required>
+</div>
+<div class="field full">
+<label for="street_address">Street Address</label>
+<input id="street_address" name="street_address">
+</div>
+<div class="field">
+<label for="address_continued">Address Continued</label>
+<input id="address_continued" name="address_continued">
+</div>
+<div class="field">
+<label for="city">City</label>
+<input id="city" name="city">
+</div>
+<div class="field">
+<label for="state">State / County</label>
+<input id="state" name="state">
+</div>
+<div class="field">
+<label for="postal_code">Postal / ZIP Code</label>
+<input id="postal_code" name="postal_code">
+</div>
+<div class="field">
+<label for="country">Country</label>
+<input id="country" name="country" value="Kenya">
+</div>
+<div class="field full">
+<label for="requirements">Custom Order Requirements *</label>
+<textarea id="requirements" name="requirements" required placeholder="Tell us what you need: product type, dimensions, quantity, material, finish, colors, artwork requirements, application surface and any other details."></textarea>
+</div>
+<div class="field full">
+<label for="uploaded_file">Upload Artwork / Reference File</label>
+<input id="uploaded_file" type="file" name="uploaded_file">
+</div>
+<div class="full">
+<button type="submit">SUBMIT CUSTOM ORDER REQUEST</button>
+</div>
+</div>
+</form>
+
+<a class="back" href="/">← Back to THE LABEL GROUP</a>
+</div>
+</main>
+
+<footer>© 2026 THE LABEL GROUP. All Rights Reserved. Industrial Identification Solutions.</footer>
+</body>
+</html>
+
