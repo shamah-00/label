@@ -21,3 +21,9 @@ update_project.py
 Thumbs.db
 
 templates/products/*_backup_*.html
+*.before-*
+*.broken-*
+*.backup-*
+*_backup_*.html
+*_before_*.html
+ups_checkout_inspect.py
