@@ -73,6 +73,35 @@ select{width:100%;padding:13px;border:1px solid #d5dae2;border-radius:9px;backgr
 
 <div class="card">
 <h2>Staff Management</h2>
+
+<section style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;margin:22px 0;">
+  <h2>Requested Products</h2>
+  {% if quote.items.all %}
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="text-align:left;background:#f4f7fb;">
+            <th style="padding:12px;">Product</th>
+            <th style="padding:12px;">Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in quote.items.all %}
+          <tr style="border-top:1px solid #e2e8f0;">
+            <td style="padding:12px;">{{ item.product }}</td>
+            <td style="padding:12px;">{{ item.quantity|default:"?" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="2" style="padding:12px;">No linked products were saved with this request.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <p>Product line items may not have been attached to this quotation.</p>
+  {% endif %}
+</section>
+
 <form method="post">
 {% csrf_token %}
 <div class="grid">

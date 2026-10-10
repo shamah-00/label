@@ -615,7 +615,7 @@ header,.site-header,.main-header,.header{z-index:1000}
 
         <nav class="main-nav">
             <a href="{% url 'home' %}">HOME</a>
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            
             <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
             <a href="{% url 'shipping' %}">SHIPPING</a>
             <a href="{% url 'quote_cart' %}">QUOTE CART</a>
@@ -840,10 +840,10 @@ header,.site-header,.main-header,.header{z-index:1000}
                             </a>
 
                             <a
-                                href="{% url 'add_to_quote' product.id %}"
+                                href="{% url 'add_to_cart' product.id %}"
                                 class="btn btn-orange"
                             >
-                                ADD TO QUOTE
+                                ADD TO CART
                             </a>
 
                         </div>
@@ -885,7 +885,7 @@ header,.site-header,.main-header,.header{z-index:1000}
         </div>
 
         <div class="footer-links">
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            
             <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
             <a href="{% url 'shipping' %}">SHIPPING</a>
             <a href="{% url 'quote_cart' %}">QUOTE CART</a>
@@ -897,5 +897,8 @@ header,.site-header,.main-header,.header{z-index:1000}
 
 </body>
 </html>
+
+
+
 
 

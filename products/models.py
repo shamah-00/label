@@ -1,4 +1,5 @@
-﻿from django.db import models
+﻿from django.utils.text import slugify
+from django.db import models
 from django.contrib.auth.models import User
 
 
@@ -199,6 +200,24 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
+    def save(self, *args, **kwargs):
+        from django.db import IntegrityError, transaction
+
+        base_slug = (self.slug or "").strip()
+        if not base_slug:
+            base_slug = slugify(getattr(self, "name", "") or getattr(self, "title", "") or "product")
+        base_slug = base_slug or "product"
+
+        candidate = base_slug
+        counter = 2
+
+        ProductModel = self.__class__
+        while ProductModel.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+            candidate = f"{base_slug}-{counter}"
+            counter += 1
+
+        self.slug = candidate
+        return super().save(*args, **kwargs)
 
 class Order(models.Model):
 
@@ -775,3 +794,23 @@ class SiteSettings(models.Model):
             )
         return obj
 
+
+
+    def get_intro_description(self):
+        if not self.description:
+            return ""
+        return self.description.split('\n\n')[0].strip()
+
+    def get_spec_table(self):
+        specs = []
+        if not self.description:
+            return specs
+        lines = self.description.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line.startswith('-'):
+                line = line[1:].strip()
+            if ':' in line:
+                parts = line.split(':', 1)
+                specs.append({'key': parts[0].strip(), 'value': parts[1].strip()})
+        return specs

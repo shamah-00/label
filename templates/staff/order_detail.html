@@ -1,0 +1,230 @@
+﻿{% extends "staff/base.html" %}
+{% block content %}
+<div id="order-detail-page" class="container" style="max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h2>Order #{{ order.id }}</h2>
+    <hr>
+    <h4>Customer Details</h4>
+    <p><strong>Name:</strong> {{ order.customer_name }}</p>
+    <p><strong>Email:</strong> {{ order.customer_email }}</p>
+    <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+    
+    <h4 style="margin-top: 20px;">Shipping & Order Info</h4>
+    <p><strong>Status:</strong> <span class="badge" style="background: {% if order.status == 'completed' %}#28a745{% else %}#ffc107{% endif %}; color: white; padding: 4px 8px; border-radius: 4px;">{{ order.status|title }}</span></p>
+    <p><strong>Order Total:</strong> USD {{ order.total|default:"0.00" }}</p>
+
+<h3 style="margin-top: 28px;">Products Ordered</h3>
+{% if order.items.all %}
+<div style="overflow-x: auto;">
+<table style="width:100%; border-collapse:collapse; margin-top:12px;">
+    <thead>
+        <tr style="background:#0b1f3a; color:white;">
+            <th style="padding:12px; text-align:left;">Product</th>
+            <th style="padding:12px; text-align:center;">Quantity</th>
+            <th style="padding:12px; text-align:right;">Unit Price</th>
+            <th style="padding:12px; text-align:right;">Line Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in order.items.all %}
+        <tr style="border-bottom:1px solid #ddd;">
+            <td style="padding:12px;">{{ item.product_name }}</td>
+            <td style="padding:12px; text-align:center;">{{ item.quantity }}</td>
+            <td style="padding:12px; text-align:right;">USD {{ item.unit_price|floatformat:2 }}</td>
+            <td style="padding:12px; text-align:right;">USD {{ item.total_price|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="padding:12px;">No order items were found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% else %}
+<p>Order items are not available.</p>
+{% endif %}
+    
+    <div style="margin-top: 30px;">
+        {% if order.status != 'completed' %}
+            <form method="POST" id="order-action-form">
+                {% csrf_token %}
+                <button type="submit" id="submit-btn" style="background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">Mark as Completed</button>
+            </form>
+        {% else %}
+            <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; font-weight: bold;">
+                ? Order Successfully Handled & Completed
+            </div>
+        {% endif %}
+    </div>
+
+    <p style="margin-top: 30px;"><a href="{% url 'staff_orders' %}" style="color: #007bff; text-decoration: none;">&larr; Back to Orders List</a></p>
+</div>
+
+<script>
+document.getElementById('order-action-form')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('submit-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerText = 'Processing...';
+    }
+});
+</script>
+
+<style>
+/* THE-LABEL-GROUP-ORDER-DESIGN */
+body {
+    background: #eef2f7 !important;
+    color: #263449;
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+
+#order-detail-page {
+    box-sizing: border-box;
+    width: calc(100% - 32px);
+    max-width: 1050px !important;
+    margin: 35px auto !important;
+    padding: 32px !important;
+    background: #ffffff !important;
+    color: #263449 !important;
+    border: 1px solid #dce4ef;
+    border-top: 6px solid #f47b20;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 38px rgba(11, 31, 58, 0.10) !important;
+    line-height: 1.65;
+}
+
+#order-detail-page h1,
+#order-detail-page h2 {
+    color: #ffffff !important;
+    background: #0b1f3a !important;
+    padding: 22px 25px !important;
+    border-radius: 10px;
+    border-left: 6px solid #f47b20;
+    margin: 0 0 25px !important;
+    font-size: clamp(23px, 4vw, 32px) !important;
+    letter-spacing: .2px;
+}
+
+#order-detail-page h3,
+#order-detail-page h4 {
+    color: #0b1f3a !important;
+    border-bottom: 2px solid #f47b20;
+    padding-bottom: 10px;
+    margin-top: 28px;
+    margin-bottom: 15px;
+}
+
+#order-detail-page p {
+    padding: 12px 16px;
+    margin: 8px 0;
+    background: #f6f8fc;
+    border: 1px solid #e4eaf2;
+    border-radius: 8px;
+    overflow-wrap: anywhere;
+}
+
+#order-detail-page strong {
+    color: #0b1f3a;
+}
+
+#order-detail-page table {
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+    overflow: hidden;
+    border: 1px solid #dce4ef;
+    border-radius: 10px;
+    background: white;
+}
+
+#order-detail-page th {
+    background: #0b1f3a !important;
+    color: #ffffff !important;
+    padding: 14px 12px !important;
+    text-align: left;
+    border-bottom: 3px solid #f47b20;
+}
+
+#order-detail-page td {
+    padding: 14px 12px !important;
+    border-bottom: 1px solid #e4eaf2;
+    color: #263449;
+}
+
+#order-detail-page tbody tr:nth-child(even) {
+    background: #f6f8fc;
+}
+
+#order-detail-page tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#order-detail-page button[type="submit"] {
+    background: #f47b20 !important;
+    color: #ffffff !important;
+    padding: 13px 24px !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(244, 123, 32, .22);
+    transition: background .2s ease, transform .2s ease;
+}
+
+#order-detail-page button[type="submit"]:hover {
+    background: #d9620d !important;
+    transform: translateY(-1px);
+}
+
+#order-detail-page a {
+    color: #0b5cab;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+#order-detail-page a:hover {
+    color: #f47b20;
+    text-decoration: underline;
+}
+
+#order-detail-page form {
+    margin-top: 24px;
+}
+
+#order-detail-page div[style*="d4edda"] {
+    background: #e7f7ed !important;
+    color: #17653a !important;
+    border: 1px solid #a9dfbd;
+    border-left: 5px solid #219653;
+    border-radius: 9px !important;
+    padding: 16px 20px !important;
+}
+
+@media (max-width: 600px) {
+    #order-detail-page {
+        width: calc(100% - 20px);
+        margin: 12px auto !important;
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+
+    #order-detail-page h1,
+    #order-detail-page h2 {
+        padding: 17px !important;
+    }
+
+    #order-detail-page table {
+        font-size: 13px;
+    }
+
+    #order-detail-page th,
+    #order-detail-page td {
+        padding: 9px 7px !important;
+    }
+
+    #order-detail-page button[type="submit"] {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+

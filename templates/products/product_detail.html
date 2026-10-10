@@ -1,12 +1,10 @@
-﻿{% load static %}
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>{{ product.name }} | THE LABEL GROUP</title>
+    <meta name="description" content="{{ product.name }} industrial prints and decals from THE LABEL GROUP.">
 
     <style>
         :root {
@@ -14,836 +12,552 @@
             --navy-dark: #06152a;
             --orange: #f47b20;
             --orange-dark: #d9620d;
-            --light: #f5f7fa;
-            --border: #e1e6ec;
-            --text: #172033;
-            --muted: #687386;
-            --white: #ffffff;
+            --text: #253247;
+            --muted: #68768a;
+            --border: #e2e8f0;
+            --surface: #ffffff;
+            --background: #f4f7fb;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: var(--light);
             color: var(--text);
+            background: var(--background);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
         }
 
-        a {
-            text-decoration: none;
-            color: inherit;
-        }
+        a { color: inherit; text-decoration: none; }
 
-        .topbar {
+        .announcement {
+            padding: 9px 16px;
             background: var(--navy-dark);
             color: #fff;
             text-align: center;
-            padding: 9px 20px;
             font-size: 12px;
-            letter-spacing: .4px;
+            letter-spacing: .5px;
         }
 
-        header {
+        .site-header {
             background: #fff;
             border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 50;
         }
 
         .header-inner {
-            max-width: 1250px;
+            max-width: 1240px;
             margin: auto;
-            padding: 15px 24px;
+            padding: 18px 24px;
             display: flex;
             align-items: center;
-            gap: 28px;
+            justify-content: space-between;
+            gap: 24px;
         }
 
         .brand {
-            min-width: 230px;
             display: flex;
-            align-items: center;
-        }
-
-        .brand img {
-            width: 185px;
-            max-height: 58px;
-            object-fit: contain;
-        }
-
-        .nav {
-            flex: 1;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .nav a {
-            padding: 10px 12px;
+            flex-direction: column;
             color: var(--navy);
-            font-size: 12px;
             font-weight: 800;
-            border-radius: 5px;
+            line-height: 1.2;
+            letter-spacing: .7px;
         }
 
-        .nav a:hover {
-            background: #f1f4f7;
-            color: var(--orange-dark);
-        }
+        .brand-name { font-size: 22px; }
 
-        .nav .quote {
-            background: var(--orange);
-            color: #fff;
-        }
-
-        .nav .quote:hover {
-            background: var(--orange-dark);
-            color: #fff;
-        }
-
-        .page {
-            max-width: 1250px;
-            margin: auto;
-            padding: 30px 24px 70px;
-        }
-
-        .breadcrumb {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            flex-wrap: wrap;
+        .brand-subtitle {
+            margin-top: 5px;
             color: var(--muted);
-            font-size: 12px;
-            margin-bottom: 22px;
+            font-size: 10px;
+            letter-spacing: 1.5px;
         }
 
-        .breadcrumb a {
-            color: var(--navy);
+        .navigation {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px 22px;
+            font-size: 13px;
             font-weight: 700;
         }
 
-        .breadcrumb a:hover {
-            color: var(--orange-dark);
+        .navigation a:hover { color: var(--orange-dark); }
+
+        .nav-cta {
+            padding: 10px 15px;
+            color: #fff !important;
+            background: var(--orange);
+            border-radius: 6px;
         }
+
+        .container {
+            max-width: 1240px;
+            margin: auto;
+            padding: 26px 24px 48px;
+        }
+
+        .breadcrumbs {
+            margin-bottom: 22px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .breadcrumbs a { color: var(--navy); }
+        .breadcrumbs span { margin: 0 8px; color: #9aa5b5; }
 
         .product-layout {
             display: grid;
-            grid-template-columns: minmax(0, 1.05fr) minmax(380px, .95fr);
-            gap: 30px;
+            grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
             align-items: start;
+            gap: 28px;
+        }
+
+        .image-card, .details-card, .specs-card {
+            min-width: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 5px 22px rgba(11, 31, 58, .045);
         }
 
         .image-card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 5px 22px rgba(6,21,42,.05);
+            padding: 22px;
+            position: sticky;
+            top: 20px;
         }
 
         .product-image {
-            min-height: 520px;
-            padding: 35px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8fafc;
-        }
-
-        .product-image img {
-            width: 100%;
-            height: 450px;
-            object-fit: contain !important;
             display: block;
-        }
-
-        .placeholder {
             width: 100%;
-            min-height: 430px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: var(--muted);
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .placeholder strong {
-            color: var(--navy);
-            font-size: 17px;
-            margin-bottom: 7px;
-        }
-
-        .image-note {
-            border-top: 1px solid var(--border);
-            padding: 13px 18px;
-            color: var(--muted);
-            font-size: 11px;
-            text-align: center;
-        }
-
-        .details {
+            height: auto;
+            max-height: 590px;
+            aspect-ratio: 1 / 1;
+            object-fit: contain;
+            border-radius: 8px;
             background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 22px rgba(6,21,42,.05);
         }
+
+        .image-placeholder {
+            min-height: 320px;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .details-card { padding: 28px; }
 
         .eyebrow {
+            margin: 0 0 8px;
             color: var(--orange-dark);
             font-size: 11px;
-            font-weight: 900;
-            letter-spacing: 1.3px;
+            font-weight: 800;
+            letter-spacing: 1.6px;
             text-transform: uppercase;
-            margin-bottom: 10px;
         }
 
         h1 {
-            color: var(--navy);
-            font-size: clamp(30px, 4vw, 46px);
-            line-height: 1.08;
             margin: 0 0 12px;
+            color: var(--navy);
+            font-size: clamp(27px, 3vw, 38px);
+            line-height: 1.2;
+            overflow-wrap: anywhere;
         }
 
-        .product-code {
-            color: var(--muted);
-            font-size: 12px;
+        .product-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
             margin-bottom: 22px;
         }
 
-        .price-box {
+        .meta-chip {
+            padding: 6px 10px;
+            color: #435168;
+            background: #f1f5f9;
+            border-radius: 5px;
+            font-size: 12px;
+        }
+
+        .price-area {
+            margin: 18px 0;
+            padding: 18px 0;
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
-            padding: 20px 0;
-            margin-bottom: 23px;
+        }
+
+        .price-label {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
         }
 
         .price {
             color: var(--navy);
             font-size: 30px;
-            font-weight: 900;
+            font-weight: 800;
+            line-height: 1.3;
         }
 
-        .quote-price {
+        .availability {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 2px 0 20px;
+            color: #187447;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .availability::before {
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #22a06b;
+            border-radius: 50%;
+        }
+
+        .availability.unavailable { color: #a43c32; }
+        .availability.unavailable::before { background: #d14343; }
+
+        .quote-form {
+            padding-top: 2px;
+        }
+
+        .quote-form label {
+            display: block;
+            margin-bottom: 7px;
             color: var(--navy);
-            font-size: 23px;
-            font-weight: 900;
+            font-size: 13px;
+            font-weight: 700;
         }
 
-        .price-note {
-            color: var(--muted);
-            font-size: 11px;
-            margin-top: 5px;
-        }
-
-        .description {
-            color: #4e596a;
-            font-size: 14px;
-            line-height: 1.7;
-            margin-bottom: 24px;
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 25px;
+        .quote-form input {
+            width: 110px;
+            min-height: 44px;
+            margin-bottom: 14px;
+            padding: 10px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font: inherit;
         }
 
         .button {
-            min-height: 48px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            text-align: center;
+            min-height: 46px;
+            padding: 12px 20px;
+            border: 0;
             border-radius: 6px;
-            padding: 10px 14px;
-            font-size: 11px;
-            font-weight: 900;
-            letter-spacing: .3px;
-        }
-
-        .button-orange {
             background: var(--orange);
-            border: 1px solid var(--orange);
             color: #fff;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: background .2s ease, transform .2s ease;
         }
 
-        .button-orange:hover {
+        .button:hover {
             background: var(--orange-dark);
-            border-color: var(--orange-dark);
+            transform: translateY(-1px);
         }
 
-        .button-navy {
-            background: var(--navy);
-            border: 1px solid var(--navy);
-            color: #fff;
+        .quote-note {
+            margin-top: 16px;
+            color: var(--muted);
+            font-size: 12px;
         }
 
-        .button-navy:hover {
-            background: var(--navy-dark);
-        }
-
-        .button-outline {
-            background: #fff;
-            border: 1px solid var(--navy);
-            color: var(--navy);
-        }
-
-        .button-outline:hover {
-            background: var(--navy);
-            color: #fff;
-        }
-
-        .spec-section {
-            border-top: 1px solid var(--border);
-            padding-top: 22px;
-        }
-
-        .spec-section h2 {
-            margin: 0 0 14px;
-            color: var(--navy);
-            font-size: 17px;
-        }
-
-        .spec-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            border: 1px solid var(--border);
-            border-radius: 7px;
+        .specs-card {
+            margin-top: 24px;
             overflow: hidden;
         }
 
-        .spec {
-            padding: 13px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .spec:nth-child(odd) {
-            border-right: 1px solid var(--border);
-        }
-
-        .spec:nth-last-child(-n+2) {
-            border-bottom: 0;
-        }
-
-        .spec-label {
-            color: var(--muted);
-            font-size: 10px;
+        .specs-heading {
+            margin: 0;
+            padding: 17px 20px;
+            color: #fff;
+            background: var(--navy);
+            font-size: 17px;
             font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            margin-bottom: 4px;
         }
 
-        .spec-value {
+        .specs {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .specs th, .specs td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            vertical-align: top;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .specs tr:last-child th,
+        .specs tr:last-child td { border-bottom: 0; }
+
+        .specs th {
+            width: 36%;
             color: var(--navy);
-            font-size: 13px;
+            background: #f8fafc;
             font-weight: 700;
-            min-height: 16px;
         }
 
-        .service-strip {
-            margin-top: 30px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
+        .specs td {
+            color: #435168;
+            white-space: pre-line;
         }
 
-        .service {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 20px;
-        }
-
-        .service strong {
-            display: block;
-            color: var(--navy);
+        .custom-note {
+            margin-top: 26px;
+            padding: 17px 20px;
+            border-left: 4px solid var(--orange);
+            border-radius: 5px;
+            background: #fff7ed;
+            color: #754018;
             font-size: 13px;
-            margin-bottom: 7px;
-        }
-
-        .service span {
-            color: var(--muted);
-            font-size: 11px;
-            line-height: 1.6;
-        }
-
-        .bottom-actions {
-            margin-top: 25px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
         }
 
         footer {
+            padding: 24px 18px;
             background: var(--navy-dark);
-            color: #fff;
-            padding: 35px 24px;
+            color: #dbe4ef;
+            text-align: center;
+            font-size: 12px;
         }
 
-        .footer-inner {
-            max-width: 1250px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .footer-brand {
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .footer-brand span {
-            display: block;
-            margin-top: 5px;
-            color: #aeb9c9;
-            font-size: 10px;
-            letter-spacing: 1.2px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        .footer-links a:hover {
-            color: #ffad6d;
-        }
-
-        @media (max-width: 900px) {
+        @media (max-width: 800px) {
             .header-inner {
+                align-items: flex-start;
                 flex-direction: column;
-                align-items: stretch;
+                gap: 16px;
             }
 
-            .brand {
-                justify-content: center;
-            }
+            .navigation { justify-content: flex-start; }
 
-            .nav {
-                justify-content: center;
-            }
+            .container { padding: 20px 14px 36px; }
 
             .product-layout {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
+                gap: 18px;
+            }
+
+            .image-card {
+                position: static;
+                padding: 14px;
             }
 
             .product-image {
-                min-height: 400px;
+                max-height: 420px;
+                aspect-ratio: 4 / 3;
             }
 
-            .service-strip {
-                grid-template-columns: 1fr;
-            }
+            .details-card { padding: 21px; }
+
+            .specs-card { margin-top: 18px; }
         }
 
-        @media (max-width: 600px) {
-            .page {
-                padding: 20px 15px 50px;
-            }
-
-            .details {
-                padding: 22px;
-            }
-
-            .product-image {
-                min-height: 320px;
-                padding: 20px;
-            }
-
-            .product-image img {
-                height: 300px;
-            }
-
-            .actions {
-                grid-template-columns: 1fr;
-            }
-
-            .spec-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .spec:nth-child(odd) {
-                border-right: 0;
-            }
-
-            .spec:nth-last-child(-n+2) {
-                border-bottom: 1px solid var(--border);
-            }
-
-            .spec:last-child {
-                border-bottom: 0;
-            }
+        @media (max-width: 420px) {
+            .brand-name { font-size: 19px; }
+            .navigation { gap: 10px 14px; }
+            .specs th, .specs td { padding: 10px 8px; font-size: 11px; }
+            .specs th { width: 39%; }
         }
     </style>
-
-<style>
-/* THE LABEL GROUP - large product detail imagery */
-.product-detail-image,
-.product-image-large,
-.detail-image,
-.product-photo {
-    min-height: 560px !important;
-}
-
-.product-detail-image img,
-.product-image-large img,
-.detail-image img,
-.product-photo img {
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 540px !important;
-    object-fit: contain !important;
-    object-position: center !important;
-}
-
-@media (max-width: 700px) {
-    .product-detail-image,
-    .product-image-large,
-    .detail-image,
-    .product-photo {
-        min-height: 380px !important;
-    }
-
-    .product-detail-image img,
-    .product-image-large img,
-    .detail-image img,
-    .product-photo img {
-        height: 360px !important;
-    }
-}
-</style>
-
 </head>
 
 <body>
-
-<div class="topbar">
-    Free quote consultation • Durable custom printing • Built for business
-</div>
-
-<header>
-    <div class="header-inner">
-
-        <a href="{% url 'home' %}" class="brand">
-            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
-        </a>
-
-        <nav class="nav">
-            <a href="{% url 'home' %}">HOME</a>
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
-            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
-            <a href="{% url 'shipping' %}">SHIPPING</a>
-            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
-            <a href="{% url 'shipping_quote' %}" class="quote">REQUEST A QUOTE</a>
-            <a href="/staff/login/">STAFF LOGIN</a>
-        </nav>
-
-    </div>
-</header>
-
-<main class="page">
-
-    <div class="breadcrumb">
-        <a href="{% url 'product_list' %}">Shop Products</a>
-        <span>›</span>
-        <span>{{ product.name }}</span>
+    <div class="announcement">
+        Professional Industrial Printing &bull; Durable Custom Labels &bull; Request a Quote
     </div>
 
-    <section class="product-layout">
+    <header class="site-header">
+        <div class="header-inner">
+            <a class="brand" href="/products/" aria-label="THE LABEL GROUP home">
+                <span class="brand-name">THE LABEL GROUP</span>
+                <span class="brand-subtitle">INDUSTRIAL PRINTS &amp; DECALS</span>
+            </a>
 
-        <div class="image-card">
+            <nav class="navigation" aria-label="Main navigation">
+                
+                <a href="/products/">Continue Shopping</a>
+                
+            </nav>
+        </div>
+    </header>
 
-            <div class="product-image">
+    <main class="container">
+        <div class="breadcrumbs">
+            <a href="/products/">Shop</a>
+            <span>/</span>
+            {{ product.name }}
+        </div>
 
+        <div class="product-layout">
+            <section class="image-card" aria-label="Product image">
                 {% if product.image %}
-
                     <img
+                        class="product-image"
                         src="{{ product.image.url }}"
                         alt="{{ product.name }}"
+                        onerror="this.style.display='none';"
                     >
-
-                {% elif product.id <= 20 %}
-
-                    <img
-                        src="{% static 'products/truck and motors.jpeg' %}"
-                        alt="Truck and Motor products"
-                    >
-
-                {% elif product.id <= 40 %}
-
-                    <img
-                        src="{% static 'products/waste and company.jpeg' %}"
-                        alt="Waste company products"
-                    >
-
-                {% elif product.id <= 60 %}
-
-                    <img
-                        src="{% static 'products/construction.jpeg' %}"
-                        alt="Construction products"
-                    >
-
-                {% elif product.id <= 80 %}
-
-                    <img
-                        src="{% static 'products/pool decal.jpeg' %}"
-                        alt="Pool company products"
-                    >
-
-                {% elif product.id <= 100 %}
-
-                    <img
-                        src="{% static 'products/government contractor.jpeg' %}"
-                        alt="Government contractor products"
-                    >
-
                 {% else %}
-
-                    <div class="placeholder">
-                        <strong>PRODUCT IMAGE</strong>
-                        Image coming soon
-                    </div>
-
                 {% endif %}
+            </section>
 
-            </div>
+            <div class="product-information">
+                <section class="details-card">
+                    <p class="eyebrow">Industrial Prints &amp; Decals</p>
+                    <h1>{{ product.name }}</h1>
 
-            <div class="image-note">
-                Product images are displayed in full to preserve the original design and proportions.
-            </div>
-
-        </div>
-
-        <div class="details">
-
-            <div class="eyebrow">
-                THE LABEL GROUP PRODUCT
-            </div>
-
-            <h1>{{ product.name }}</h1>
-
-            {% if product.product_code %}
-                <div class="product-code">
-                    Product Code: <strong>{{ product.product_code }}</strong>
-                </div>
-            {% else %}
-                <div class="product-code">
-                    Product ID: <strong>{{ product.id }}</strong>
-                </div>
-            {% endif %}
-
-            <div class="price-box">
-
-                {% if product.discount_price %}
-
-                    <div class="price">
-                        ${{ product.discount_price|floatformat:2 }}
+                    <div class="product-meta">
+                        <span class="meta-chip">
+                            Code: {{ product.product_code|default:"Not specified" }}
+                        </span>
+                        {% if product.industry %}
+                            <span class="meta-chip">{{ product.industry }}</span>
+                        {% endif %}
                     </div>
 
-                    {% if product.price %}
-                        <div class="price-note">
-                            Original price: ${{ product.price|floatformat:2 }}
-                        </div>
+                    <div class="price-area">
+                        <span class="price-label">Product price (USD)</span>
+                        {% if product.discount_price %}
+                            <div class="price">${{ product.discount_price|floatformat:2 }}</div>
+                        {% elif product.price %}
+                            <div class="price">${{ product.price|floatformat:2 }}</div>
+                        {% else %}
+                            <div class="price" style="font-size:22px;">Request a quote</div>
+                        {% endif %}
+                    </div>
+
+                    {% if product.is_available %}
+                        <div class="availability">Available to order</div>
+
+                        <form class="quote-form" method="post" action="{% url 'add_to_cart' product.id %}">
+                            {% csrf_token %}
+                            <label for="quantity">Quantity</label>
+                            <input
+                                id="quantity"
+                                type="number"
+                                name="quantity"
+                                min="1"
+                                value="1"
+                                required
+                            >
+                            <br>
+                            <button class="button" type="submit">Add to Cart</button>
+                        </form>
+                    {% else %}
+                        <div class="availability unavailable">Currently unavailable</div>
                     {% endif %}
 
-                {% elif product.price %}
+                    <p class="quote-note">
+                        Need a custom size, material or quantity? Request a quote for your specific application.
+                    </p>
+                </section>
 
-                    <div class="price">
-                        ${{ product.price|floatformat:2 }}
-                    </div>
+                <section class="specs-card" aria-labelledby="specifications-heading">
+                    <h2 class="specs-heading" id="specifications-heading">Product Specifications</h2>
 
-                {% else %}
-
-                    <div class="quote-price">
-                        Request a Quote
-                    </div>
-
-                    <div class="price-note">
-                        Contact THE LABEL GROUP for current commercial pricing.
-                    </div>
-
-                {% endif %}
-
-            </div>
-
-            <div class="description">
-                {{ product.description|default:"Professional industrial printing and identification product from THE LABEL GROUP. Contact us for specifications, quantities and commercial quotation requirements." }}
-            </div>
-
-            <div class="actions">
-
-                <a
-                    href="{% url 'add_to_quote' product.id %}"
-                    class="button button-orange"
-                >
-                    ADD TO QUOTE
-                </a>
-
-                <a
-                    href="{% url 'shipping_quote' %}"
-                    class="button button-navy"
-                >
-                    REQUEST A QUOTE
-                </a>
-
-            </div>
-
-            <div class="spec-section">
-
-                <h2>Product Specifications</h2>
-
-                <div class="spec-grid">
-
-                    <div class="spec">
-                        <div class="spec-label">Category</div>
-                        <div class="spec-value">
-                            {{ product.category|default:"Industrial Product" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Brand</div>
-                        <div class="spec-value">
-                            {{ product.brand|default:"THE LABEL GROUP" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Material</div>
-                        <div class="spec-value">
-                            {{ product.material|default:"Available on request" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Finish</div>
-                        <div class="spec-value">
-                            {{ product.finish|default:"Available on request" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Shape</div>
-                        <div class="spec-value">
-                            {{ product.shape|default:"Available on request" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Printing Method</div>
-                        <div class="spec-value">
-                            {{ product.printing_method|default:"Available on request" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Adhesive</div>
-                        <div class="spec-value">
-                            {{ product.adhesive|default:"Available on request" }}
-                        </div>
-                    </div>
-
-                    <div class="spec">
-                        <div class="spec-label">Custom Product</div>
-                        <div class="spec-value">
-                            {% if product.is_custom %}
-                                Available
-                            {% else %}
-                                Standard Product
+                    <table class="specs">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Product Code</th>
+                                <td>{{ product.product_code|default:"Not specified" }}</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Product Name</th>
+                                <td>{{ product.name }}</td>
+                            </tr>
+                            {% if product.category %}
+                                <tr>
+                                    <th scope="row">Category</th>
+                                    <td>{{ product.category }}</td>
+                                </tr>
                             {% endif %}
-                        </div>
-                    </div>
-
-                </div>
-
+                            {% if product.industry %}
+                                <tr>
+                                    <th scope="row">Industry</th>
+                                    <td>{{ product.industry }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if product.material %}
+                                {% if product.material %}
+{% if product.material and 'available on request' not in product.material|lower %}
+<tr>
+                                    <th scope="row">Ideal Material</th>
+                                    <td>{{ product.material }}</td>
+                                </tr>
+{% endif %}
+{% endif %}
+                            {% endif %}
+                            {% if product.finish %}
+                                {% if product.finish %}
+{% if product.finish and 'available on request' not in product.finish|lower %}
+<tr>
+                                    <th scope="row">Finish</th>
+                                    <td>{{ product.finish }}</td>
+                                </tr>
+{% endif %}
+{% endif %}
+                            {% endif %}
+                            {% if product.shape %}
+                                {% if product.shape %}
+{% if product.shape and 'available on request' not in product.shape|lower %}
+<tr>
+                                    <th scope="row">Shape</th>
+                                    <td>{{ product.shape }}</td>
+                                </tr>
+{% endif %}
+{% endif %}
+                            {% endif %}
+                            {% if product.printing_method %}
+                                {% if product.printing_method %}
+{% if product.printing_method and 'available on request' not in product.printing_method|lower %}
+<tr>
+                                    <th scope="row">Printing Method</th>
+                                    <td>{{ product.printing_method }}</td>
+                                </tr>
+{% endif %}
+{% endif %}
+                            {% endif %}
+                            {% if product.adhesive %}
+                                {% if product.adhesive %}
+{% if product.adhesive and 'available on request' not in product.adhesive|lower %}
+<tr>
+                                    <th scope="row">Adhesive</th>
+                                    <td>{{ product.adhesive }}</td>
+                                </tr>
+{% endif %}
+{% endif %}
+                            {% endif %}
+                            {% if product.description %}
+                                <tr>
+                                    <th scope="row">Description &amp; Buyer Notes</th>
+                                    <td>{{ product.description }}</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </section>
             </div>
-
-            <div class="bottom-actions">
-
-                <a
-                    href="{% url 'product_list' %}"
-                    class="button button-outline"
-                >
-                    ← BACK TO PRODUCTS
-                </a>
-
-                <a
-                    href="{% url 'quote_cart' %}"
-                    class="button button-outline"
-                >
-                    VIEW QUOTE CART
-                </a>
-
-            </div>
-
         </div>
+    </main>
 
-    </section>
-
-    <section class="service-strip">
-
-        <div class="service">
-            <strong>Commercial Printing</strong>
-            <span>
-                Built for businesses, contractors, fleets and industrial operations.
-            </span>
-        </div>
-
-        <div class="service">
-            <strong>Need Something Custom?</strong>
-            <span>
-                Submit your requirements through our Custom Orders service.
-            </span>
-        </div>
-
-        <div class="service">
-            <strong>Need a Large Quantity?</strong>
-            <span>
-                Request a commercial quotation for your specific quantity and requirements.
-            </span>
-        </div>
-
-    </section>
-
-</main>
-
-<footer>
-    <div class="footer-inner">
-
-        <div class="footer-brand">
-            THE LABEL GROUP
-            <span>INDUSTRIAL PRINTS & DECALS</span>
-        </div>
-
-        <div class="footer-links">
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
-            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
-            <a href="{% url 'shipping' %}">SHIPPING</a>
-            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
-            <a href="{% url 'shipping_quote' %}">REQUEST A QUOTE</a>
-        </div>
-
-    </div>
-</footer>
-
+    <footer>
+        &copy; THE LABEL GROUP &mdash; Industrial Prints &amp; Decals
+    </footer>
 </body>
 </html>
+
+
+

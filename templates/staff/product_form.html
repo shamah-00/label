@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1008,6 +1008,7 @@
                 without deleting this product.
             </div>
 
+            {% if product and product.pk %}
             <form
                 method="post"
                 action="{% url 'staff_product_image_delete' product.pk %}"
@@ -1022,6 +1023,7 @@
                     DELETE CURRENT IMAGE
                 </button>
             </form>
+            {% endif %}
 
         </div>
 
@@ -1143,6 +1145,7 @@
         The product G017 and all its other information will remain.
     </div>
 
+    {% if product and product.pk %}
     <form
         method="post"
         action="{% url 'staff_product_image_delete' product.pk %}"
@@ -1157,6 +1160,7 @@
             DELETE IMAGE
         </button>
     </form>
+    {% endif %}
 
 </div>
 

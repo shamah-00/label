@@ -1,379 +1,379 @@
-
-<style id="label-group-dashboard-readability">
-.staff-dashboard, .dashboard, .dashboard-content {
-    font-size: 16px;
-}
-.staff-dashboard h1, .dashboard h1, .dashboard-content h1 {
-    font-size: clamp(28px, 3vw, 38px);
-    line-height: 1.2;
-}
-.staff-dashboard h2, .dashboard h2, .dashboard-content h2 {
-    font-size: 23px;
-}
-.staff-dashboard .stat-value, .dashboard .stat-value,
-.staff-dashboard .stat-number, .dashboard .stat-number {
-    font-size: 32px;
-    font-weight: 800;
-}
-.staff-dashboard .stat-label, .dashboard .stat-label,
-.staff-dashboard small, .dashboard small {
-    font-size: 14px;
-}
-</style>
-{% extends "staff/base.html" %}
-{% block content %}
-
-<style id="label-group-dashboard-polish">
-:root {
-    --lg-navy: #0b1f3a;
-    --lg-deep: #06152a;
-    --lg-orange: #f47b20;
-    --lg-orange-dark: #d9620d;
-    --lg-bg: #f3f6fa;
-    --lg-border: #e3e9f1;
-    --lg-muted: #64748b;
-}
-body {
-    background: var(--lg-bg);
-}
-main, .main-content, .dashboard, .content, .container {
-    box-sizing: border-box;
-}
-h1, h2, h3, h4 {
-    color: var(--lg-navy);
-    letter-spacing: -0.025em;
-}
-h1 {
-    font-size: clamp(1.65rem, 3vw, 2.35rem);
-    line-height: 1.2;
-}
-h2 { font-size: 1.25rem; }
-h3, h4 { font-size: 1rem; }
-p { line-height: 1.65; }
-a {
-    transition: background .18s ease, color .18s ease,
-                border-color .18s ease, transform .18s ease;
-}
-a:focus-visible, button:focus-visible {
-    outline: 3px solid rgba(244,123,32,.45);
-    outline-offset: 3px;
-}
-.dashboard-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    margin: 18px 0 24px;
-}
-.dashboard-logout {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    min-height: 42px;
-    padding: 10px 17px;
-    border: 1px solid var(--lg-orange);
-    border-radius: 10px;
-    background: var(--lg-orange);
-    color: #fff !important;
-    font-size: .92rem;
-    font-weight: 750;
-    text-decoration: none !important;
-    box-shadow: 0 5px 14px rgba(244,123,32,.18);
-}
-.dashboard-logout:hover {
-    background: var(--lg-orange-dark);
-    border-color: var(--lg-orange-dark);
-    color: #fff !important;
-    transform: translateY(-1px);
-}
-.dashboard-profile {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 10px 15px;
-    border: 1px solid var(--lg-border);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--lg-navy) !important;
-    font-weight: 700;
-    text-decoration: none !important;
-}
-.dashboard-profile:hover {
-    border-color: var(--lg-orange);
-}
-.dashboard-stat, .stat-card, .metric-card, .summary-card,
-.dashboard-card, .overview-card, .pipeline-card, .quick-link,
-.activity-card, .quote-card, .card {
-    border-color: var(--lg-border);
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(11,31,58,.045);
-}
-.dashboard-stat:hover, .stat-card:hover, .metric-card:hover,
-.summary-card:hover, .dashboard-card:hover, .overview-card:hover {
-    border-color: rgba(244,123,32,.45);
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-th {
-    color: var(--lg-navy);
-    background: #f6f8fb;
-    font-weight: 750;
-}
-td, th {
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--lg-border);
-    text-align: left;
-}
-@media (max-width: 700px) {
-    .dashboard-actions { align-items: stretch; }
-    .dashboard-logout, .dashboard-profile { flex: 1 1 140px; }
-    table { display: block; overflow-x: auto; }
-}
-</style>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operations Dashboard | THE LABEL GROUP</title>
 <style>
-.dashboard { color:#17263c; max-width:1500px; margin:auto; }
-.dashboard * { box-sizing:border-box; }
-.dashboard .hero {
-    position:relative; overflow:hidden; display:flex; justify-content:space-between;
-    align-items:center; gap:24px; padding:35px; border-radius:20px;
-    background:linear-gradient(115deg,#06152a,#0b1f3a 68%,#17416a);
-    color:#fff; margin-bottom:28px;
+:root {
+    --navy:#0b1f3a;
+    --navy2:#06152a;
+    --orange:#f47b20;
+    --orange2:#d9620d;
+    --bg:#f3f6fb;
+    --white:#fff;
+    --text:#243248;
+    --muted:#718096;
+    --border:#e4e9f0;
+    --green:#16835b;
+    --shadow:0 5px 22px rgba(11,31,58,.06);
 }
-.dashboard .hero:after {
-    content:"TLG"; position:absolute; right:35px; top:-22px;
-    font-size:130px; font-weight:900; color:rgba(255,255,255,.045);
-    pointer-events:none;
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px}
+a{text-decoration:none;color:inherit}
+button,a{ -webkit-tap-highlight-color:transparent }
+.layout{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}
+.sidebar{background:var(--navy);color:#fff;padding:25px 16px;display:flex;flex-direction:column;gap:25px}
+.brand{padding:0 10px 22px;border-bottom:1px solid rgba(255,255,255,.14)}
+.brand-mark{font-size:25px;font-weight:900;letter-spacing:1px}
+.brand-mark span{color:var(--orange)}
+.brand-sub{font-size:10px;letter-spacing:2px;color:#c8d3e2;margin-top:7px}
+.portal-label{font-size:10px;font-weight:800;letter-spacing:1.6px;color:#9fb0c8;padding:0 12px;margin:0 0 8px}
+.nav-group{display:flex;flex-direction:column;gap:6px}
+.nav-link{display:flex;align-items:center;gap:12px;padding:12px;border-radius:9px;color:#dce5f1;font-weight:700;transition:.18s}
+.nav-link .ico{width:23px;text-align:center;font-size:17px}
+.nav-link:hover{background:rgba(255,255,255,.09);color:#fff}
+.nav-link.active{background:var(--orange);color:#fff;box-shadow:0 5px 14px rgba(244,123,32,.22)}
+.sidebar-bottom{margin-top:auto;padding:15px 11px 0;border-top:1px solid rgba(255,255,255,.14)}
+.sidebar-bottom p{color:#aebdd0;font-size:12px;line-height:1.7}
+.sidebar-bottom a{display:block;color:#fff;font-weight:700;padding:9px 0}
+.main{min-width:0}
+.topbar{height:66px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 30px}
+.breadcrumb{font-size:12px;color:var(--muted)}
+.breadcrumb strong{color:var(--navy)}
+.user-chip{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--navy)}
+.avatar{width:36px;height:36px;border-radius:50%;background:#fff0e5;color:var(--orange2);display:grid;place-items:center;font-weight:900}
+.content{max-width:1500px;margin:auto;padding:30px}
+.welcome{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:25px}
+.eyebrow{font-size:11px;color:var(--orange2);font-weight:900;letter-spacing:1.6px;text-transform:uppercase;margin-bottom:8px}
+h1{font-size:clamp(25px,3vw,34px);letter-spacing:-.8px;color:var(--navy);margin:0 0 10px;font-weight:900}
+h2{color:var(--navy);font-size:18px;margin:0;font-weight:850}
+h3{color:var(--navy);font-size:15px;margin:0}
+.subtitle{color:var(--muted);line-height:1.7;margin:0;max-width:700px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:11px 16px;border-radius:8px;font-size:12px;font-weight:850;transition:.18s;border:1px solid transparent;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn-orange{background:var(--orange);color:#fff}
+.btn-orange:hover{background:var(--orange2);color:#fff}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover{background:var(--navy2);color:#fff}
+.btn-light{background:#fff;border-color:var(--border);color:var(--navy)}
+.btn-light:hover{border-color:var(--orange);color:var(--orange2)}
+.section{margin-top:28px}
+.section-head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:15px}
+.section-head p{color:var(--muted);margin:6px 0 0;font-size:12px}
+.text-link{font-weight:850;color:var(--orange2);font-size:12px;white-space:nowrap}
+.text-link:hover{text-decoration:underline}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.stat{position:relative;background:#fff;border:1px solid var(--border);border-radius:13px;padding:20px;box-shadow:var(--shadow);overflow:hidden}
+.stat:before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:var(--navy)}
+.stat.orange:before{background:var(--orange)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stat-label{font-size:12px;color:var(--muted);font-weight:750}
+.stat-icon{width:38px;height:38px;border-radius:10px;background:#edf2f8;color:var(--navy);display:grid;place-items:center;font-size:18px}
+.stat.orange .stat-icon{background:#fff0e5;color:var(--orange2)}
+.stat-number{font-size:32px;font-weight:900;letter-spacing:-1px;color:var(--navy);margin:16px 0 8px}
+.stat-note{font-size:11px;color:var(--muted);margin-bottom:15px}
+.stat .text-link{display:inline-block;padding-top:12px;border-top:1px solid var(--border);width:100%}
+.panel{background:#fff;border:1px solid var(--border);border-radius:13px;padding:22px;box-shadow:var(--shadow);min-width:0}
+.pipeline{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.stage{padding:17px 14px;border:1px solid var(--border);border-radius:10px;background:#fbfcfe}
+.stage-label{font-size:11px;color:var(--muted);font-weight:750}
+.stage-count{font-size:26px;color:var(--navy);font-weight:900;margin-top:9px}
+.stage-dot{width:8px;height:8px;display:inline-block;border-radius:50%;background:var(--orange);margin-right:5px}
+.stage:nth-child(2) .stage-dot{background:#5579ba}
+.stage:nth-child(3) .stage-dot{background:#8b67c7}
+.stage:nth-child(4) .stage-dot{background:#d68a23}
+.stage:nth-child(5) .stage-dot{background:var(--green)}
+.columns{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+.panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:17px}
+.panel-head p{margin:6px 0 0;font-size:12px;color:var(--muted)}
+.quote-list,.activity-list{display:flex;flex-direction:column}
+.quote-item,.activity-item{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #edf0f5}
+.quote-item:first-child,.activity-item:first-child{border-top:0;padding-top:0}
+.round-icon{width:39px;height:39px;flex:0 0 39px;display:grid;place-items:center;border-radius:10px;background:#fff0e5;color:var(--orange2);font-weight:900}
+.item-main{min-width:0;flex:1}
+.item-title{font-size:13px;color:var(--navy);font-weight:850;overflow-wrap:anywhere}
+.item-sub{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.5}
+.pill{display:inline-flex;align-items:center;padding:5px 9px;border-radius:20px;background:#fff0e5;color:#98410a;font-size:10px;font-weight:900;white-space:nowrap}
+.activity-mark{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;border-radius:50%;background:#edf2f8;color:var(--navy);font-weight:900}
+.activity-item .item-title{font-size:12px}
+.activity-item .item-sub{font-size:11px}
+.quick-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.quick-card{display:flex;align-items:flex-start;gap:13px;padding:18px;background:#fff;border:1px solid var(--border);border-radius:11px;transition:.18s}
+.quick-card:hover{border-color:#f5b27f;box-shadow:var(--shadow);transform:translateY(-2px)}
+.quick-icon{width:42px;height:42px;flex:0 0 42px;border-radius:10px;display:grid;place-items:center;background:var(--navy);color:#fff;font-size:19px}
+.quick-card:nth-child(even) .quick-icon{background:var(--orange)}
+.quick-title{font-weight:900;color:var(--navy);font-size:13px}
+.quick-desc{font-size:11px;color:var(--muted);line-height:1.6;margin-top:6px}
+.quick-go{display:inline-block;color:var(--orange2);font-weight:900;font-size:11px;margin-top:12px}
+.admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:17px}
+.admin-stat{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:17px}
+.admin-stat span{display:block;color:var(--muted);font-size:11px;font-weight:750}
+.admin-stat strong{display:block;font-size:25px;color:var(--navy);margin-top:7px}
+.admin-links{display:flex;flex-wrap:wrap;gap:10px}
+.empty{padding:25px 10px;text-align:center;color:var(--muted);font-size:12px}
+.footer{text-align:center;color:#8a96a8;font-size:11px;padding:28px 10px 8px}
+@media(max-width:1150px){
+ .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .pipeline{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .columns{grid-template-columns:1fr}
+ .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
-.dashboard .eyebrow { color:#ffb779; text-transform:uppercase; letter-spacing:2px; font-size:10px; font-weight:800; }
-.dashboard .hero h1 { font-size:clamp(27px,3vw,39px); letter-spacing:-1px; margin:12px 0; color:#fff; }
-.dashboard .hero p { color:#c7d4e4; max-width:550px; line-height:1.8; margin:0; font-size:13px; }
-.dashboard .actions { display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:1; }
-.dashboard .btn {
-    display:inline-block; text-decoration:none; padding:13px 16px; border-radius:9px;
-    background:#f47b20; color:white; font-size:12px; font-weight:800;
+@media(max-width:760px){
+ .layout{grid-template-columns:1fr}
+ .sidebar{padding:14px;gap:14px}
+ .brand{padding:4px 7px 14px}
+ .brand-mark{font-size:21px}
+ .nav-group{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .portal-label{padding:0 5px}
+ .sidebar-bottom{display:none}
+ .topbar{height:54px;padding:0 16px}
+ .content{padding:19px 14px}
+ .welcome{align-items:flex-start;flex-direction:column}
+ .actions{width:100%}
+ .actions .btn{flex:1}
+ .stats{gap:10px}
+ .stat{padding:15px}
+ .stat-number{font-size:27px}
+ .pipeline{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .quick-grid{grid-template-columns:1fr}
+ .panel{padding:17px}
 }
-.dashboard .btn.alt { background:rgba(255,255,255,.08); border:1px solid #52647b; }
-.dashboard .section-heading { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:27px 0 15px; }
-.dashboard .section-heading h2 { margin:0; font-size:18px; color:#0b1f3a; }
-.dashboard .section-heading p { color:#8290a4; font-size:12px; margin:6px 0 0; }
-.dashboard .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
-.dashboard .stat {
-    background:#fff; border:1px solid #e8edf4; border-radius:16px; padding:22px;
-    box-shadow:0 8px 28px rgba(11,31,58,.045); min-width:0;
-    transition:transform .2s,box-shadow .2s;
-}
-.dashboard .stat:hover { transform:translateY(-3px); box-shadow:0 14px 32px rgba(11,31,58,.09); }
-.dashboard .stat-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.dashboard .stat-label { color:#78879b; font-size:12px; font-weight:700; }
-.dashboard .stat-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:12px; background:#fff0e4; color:#d9620d; font-size:18px; }
-.dashboard .stat-icon.blue { background:#edf2ff; color:#3468c8; }
-.dashboard .stat-icon.green { background:#e8f8f0; color:#16845b; }
-.dashboard .stat-icon.purple { background:#f1edff; color:#7957c8; }
-.dashboard .stat-number { color:#0b1f3a; font-size:35px; font-weight:900; letter-spacing:-1px; margin:17px 0 12px; }
-.dashboard .stat-foot { padding-top:12px; border-top:1px solid #edf1f6; color:#8794a6; font-size:11px; }
-.dashboard a.text-link { color:#d9620d; font-weight:800; text-decoration:none; }
-.dashboard .pipeline,.dashboard .panel { background:#fff; border:1px solid #e8edf4; border-radius:16px; box-shadow:0 8px 28px rgba(11,31,58,.04); }
-.dashboard .pipeline { padding:23px; }
-.dashboard .pipeline h3,.dashboard .panel h3 { color:#0b1f3a; margin:0; font-size:15px; }
-.dashboard .muted { color:#8290a4; font-size:11px; margin:7px 0 0; }
-.dashboard .pipeline-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin-top:23px; }
-.dashboard .stage { background:#f7f9fc; border:1px solid #edf1f6; border-radius:11px; padding:14px; }
-.dashboard .stage:before { content:""; display:block; height:4px; width:30px; border-radius:4px; background:#f47b20; margin-bottom:12px; }
-.dashboard .stage:nth-child(2):before { background:#3468c8; }
-.dashboard .stage:nth-child(3):before { background:#7957c8; }
-.dashboard .stage:nth-child(4):before { background:#168f91; }
-.dashboard .stage:nth-child(5):before { background:#16845b; }
-.dashboard .stage span { display:block; color:#8290a4; font-size:11px; line-height:1.5; }
-.dashboard .stage strong { display:block; color:#0b1f3a; font-size:24px; margin-top:7px; }
-.dashboard .columns { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:18px; margin-top:20px; }
-.dashboard .panel { overflow:hidden; min-width:0; }
-.dashboard .panel-head { padding:20px 22px; border-bottom:1px solid #e8edf4; display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.dashboard .panel-body { padding:0 22px; }
-.dashboard .quote-row,.dashboard .activity-row { display:flex; align-items:center; gap:12px; padding:16px 0; border-bottom:1px solid #edf1f6; }
-.dashboard .quote-row:last-child,.dashboard .activity-row:last-child { border-bottom:0; }
-.dashboard .round-icon { width:38px; height:38px; flex:0 0 38px; border-radius:11px; display:grid; place-items:center; background:#fff0e4; color:#d9620d; font-weight:900; }
-.dashboard .quote-info { flex:1; min-width:0; }
-.dashboard .quote-name { color:#0b1f3a; font-weight:800; font-size:12px; overflow-wrap:anywhere; }
-.dashboard .quote-meta { color:#8290a4; font-size:10px; margin-top:5px; }
-.dashboard .status { display:inline-block; border-radius:7px; padding:6px 8px; font-size:10px; font-weight:800; background:#edf2f7; color:#536278; text-transform:capitalize; }
-.dashboard .status-new { background:#fff0e4; color:#b85108; }
-.dashboard .status-approved,.dashboard .status-completed { background:#e5f7ee; color:#16734f; }
-.dashboard .status-reviewing,.dashboard .status-quoted { background:#edf2ff; color:#285db3; }
-.dashboard .status-in-production { background:#f1edff; color:#6e4cb9; }
-.dashboard .activity-row { align-items:flex-start; }
-.dashboard .activity-copy { color:#536278; font-size:11px; line-height:1.7; overflow-wrap:anywhere; }
-.dashboard .activity-copy strong { color:#0b1f3a; }
-.dashboard .activity-time { color:#9aa5b4; font-size:10px; margin-top:5px; }
-.dashboard .empty { padding:30px 15px; text-align:center; color:#8290a4; font-size:12px; line-height:1.8; }
-.dashboard .empty strong { display:block; color:#0b1f3a; margin-bottom:5px; }
-.dashboard .quick-links { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
-.dashboard .quick-link { display:flex; align-items:center; gap:12px; padding:18px; background:#fff; border:1px solid #e8edf4; border-radius:13px; text-decoration:none; transition:.2s; }
-.dashboard .quick-link:hover { border-color:#f4b17c; transform:translateY(-2px); }
-.dashboard .quick-link strong { display:block; color:#0b1f3a; font-size:12px; }
-.dashboard .quick-link small { display:block; color:#8290a4; font-size:10px; margin-top:5px; line-height:1.5; }
-.dashboard .arrow { margin-left:auto; color:#d9620d; font-size:18px; }
-@media(max-width:1100px) {
-    .dashboard .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .dashboard .columns { grid-template-columns:1fr; }
-}
-@media(max-width:700px) {
-    .dashboard .hero { padding:25px; flex-direction:column; align-items:flex-start; }
-    .dashboard .hero:after { font-size:85px; right:10px; }
-    .dashboard .pipeline-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
-    .dashboard .stage:last-child { grid-column:span 2; }
-    .dashboard .quick-links { grid-template-columns:1fr; }
-}
-@media(max-width:430px) {
-    .dashboard .stats { grid-template-columns:1fr; }
-    .dashboard .quote-row { align-items:flex-start; flex-wrap:wrap; }
+@media(max-width:420px){
+ .stats{grid-template-columns:1fr 1fr}
+ .stat-label{font-size:10px}
+ .stat-icon{width:30px;height:30px}
+ .admin-grid{grid-template-columns:1fr 1fr}
+ .stage{padding:13px 10px}
+ .section-head{align-items:flex-start}
 }
 </style>
-
-<div class="dashboard">
-
-    <section class="hero">
-        <div>
-            <div class="eyebrow">THE LABEL GROUP · OPERATIONS</div>
-            <h1>Welcome back, {{ request.user.first_name|default:request.user.username|title }}</h1>
-
-<div class="dashboard-actions">
-    <a class="dashboard-profile" href="/staff/profile/">My Profile</a>
-    <a class="dashboard-logout" href="{% url 'staff_logout' %}"
-       aria-label="Log out of The Label Group staff account">
-       &#10140; Log Out
-    </a>
-</div>
-
-            <p>Your business operations at a glance. Manage products, review customer requests and keep orders moving from enquiry to delivery.</p>
-        </div>
-        <div class="actions">
-            <a class="btn" href="/staff/orders/">Manage orders ↗</a>
-            <a class="btn alt" href="/staff/quotes/">Review quotes ↗</a>
-        </div>
-    </section>
-
-    <div class="section-heading">
-        <div><h2>Business at a glance</h2><p>Your catalogue and customer workflow, all in one place.</p></div>
-        <a class="text-link" href="/staff/products/">Open catalogue ↗</a>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+    <div class="brand">
+        <div class="brand-mark">THE LABEL <span>GROUP</span></div>
+        <div class="brand-sub">INDUSTRIAL PRINTS &amp; DECALS</div>
     </div>
 
-    <section class="stats">
-        <article class="stat">
-            <div class="stat-top"><span class="stat-label">Total products</span><span class="stat-icon">▦</span></div>
-            <div class="stat-number">{{ total_products|default:0 }}</div>
-            <div class="stat-foot"><a class="text-link" href="/staff/products/">Manage catalogue →</a></div>
-        </article>
-        <article class="stat">
-            <div class="stat-top"><span class="stat-label">Available products</span><span class="stat-icon green">✓</span></div>
-            <div class="stat-number">{{ available_products|default:0 }}</div>
-            <div class="stat-foot">Marked available in your catalogue</div>
-        </article>
-        <article class="stat">
-            <div class="stat-top"><span class="stat-label">Quote requests</span><span class="stat-icon blue">▤</span></div>
-            <div class="stat-number">{{ total_quotes|default:0 }}</div>
-            <div class="stat-foot"><a class="text-link" href="/staff/quotes/">{{ new_quotes|default:0 }} new · Review requests →</a></div>
-        </article>
-        <article class="stat">
-            <div class="stat-top"><span class="stat-label">Total orders</span><span class="stat-icon purple">▣</span></div>
-            <div class="stat-number">{{ total_orders|default:0 }}</div>
-            <div class="stat-foot"><a class="text-link" href="/staff/orders/">Open order management →</a></div>
-        </article>
-    </section>
-
-    <div class="section-heading">
-        <div><h2>Quote pipeline</h2><p>Follow each request through its current stage.</p></div>
-        <a class="text-link" href="/staff/quotes/">View requests ↗</a>
+    <div>
+        <div class="portal-label">WORKSPACE</div>
+        <nav class="nav-group">
+            <a class="nav-link active" href="/staff/"><span class="ico">▦</span> Dashboard</a>
+            <a class="nav-link" href="{% url 'staff_products' %}"><span class="ico">▤</span> Products</a>
+            <a class="nav-link" href="{% url 'staff_orders' %}"><span class="ico">▣</span> Orders</a>
+            <a class="nav-link" href="{% url 'staff_quotes' %}"><span class="ico">▧</span> Quote requests</a>
+            <a class="nav-link" href="{% url 'staff_customers' %}"><span class="ico">♙</span> Customers</a>
+            <a class="nav-link" href="/staff/calendar-orders/"><span class="ico">▦</span> Order calendar</a>
+        </nav>
     </div>
 
-    <section class="pipeline">
-        <h3>Request progress</h3>
-        <p class="muted">Live counts from your existing dashboard data.</p>
-        <div class="pipeline-grid">
-            <div class="stage"><span>New requests</span><strong>{{ new_quotes|default:0 }}</strong></div>
-            <div class="stage"><span>Under review</span><strong>{{ reviewing_quotes|default:0 }}</strong></div>
-            <div class="stage"><span>Quotes prepared</span><strong>{{ quoted_quotes|default:0 }}</strong></div>
-            <div class="stage"><span>In production</span><strong>{{ production_quotes|default:0 }}</strong></div>
-            <div class="stage"><span>Completed</span><strong>{{ completed_quotes|default:0 }}</strong></div>
-        </div>
-    </section>
-
-    <section class="columns">
-        <div class="panel">
-            <div class="panel-head">
-                <div><h3>Recent quote requests</h3><p class="muted">Latest customer enquiries.</p></div>
-                <a class="text-link" href="/staff/quotes/">View all →</a>
-            </div>
-            <div class="panel-body">
-                {% for quote in recent_quotes %}
-                <div class="quote-row">
-                    <div class="round-icon">Q</div>
-                    <div class="quote-info">
-                        <div class="quote-name">{{ quote.company_name|default:quote.customer_name|default:"Quote request" }}</div>
-                        <div class="quote-meta">Request #{{ quote.pk }}{% if quote.created_at %} · {{ quote.created_at|date:"M j, Y" }}{% endif %}</div>
-                    </div>
-                    <span class="status status-{{ quote.status|default:'new'|slugify }}">{{ quote.get_status_display|default:quote.status|default:"New" }}</span>
-                </div>
-                {% empty %}
-                <div class="empty"><strong>No recent quote requests</strong>New customer enquiries will appear here.</div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-head">
-                <div><h3>Team activity</h3><p class="muted">Recent actions recorded by the portal.</p></div>
-                {% if request.user.is_superuser %}<a class="text-link" href="/staff/activity-log/">Full log →</a>{% endif %}
-            </div>
-            <div class="panel-body">
-                {% for activity in recent_activity %}
-                <div class="activity-row">
-                    <div class="round-icon">↗</div>
-                    <div class="activity-copy">
-                        {% if activity.staff.user.get_full_name %}<strong>{{ activity.staff.user.get_full_name }}</strong>{% elif activity.staff.user.username %}<strong>{{ activity.staff.user.username }}</strong>{% endif %}
-                        {{ activity.description|default:activity.description|default:activity.action|default:"Activity recorded" }}
-                        <div class="activity-time">{% if activity.created_at %}{{ activity.created_at|date:"M j, Y · H:i" }}{% elif activity.timestamp %}{{ activity.timestamp|date:"M j, Y · H:i" }}{% endif %}</div>
-                    </div>
-                </div>
-                {% empty %}
-                <div class="empty"><strong>No activity to display yet</strong>Recorded staff actions will appear here.</div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
-
-    <div class="section-heading">
-        <div><h2>Quick access</h2><p>Jump straight to your daily tools.</p></div>
+    {% if user.is_superuser %}
+    <div>
+        <div class="portal-label">ADMINISTRATION</div>
+        <nav class="nav-group">
+            <a class="nav-link" href="{% url 'boss_staff_management' %}"><span class="ico">♧</span> Staff management</a>
+            <a class="nav-link" href="{% url 'staff_activity_log' %}"><span class="ico">◷</span> Activity log</a>
+        </nav>
     </div>
-
-    <section class="quick-links">
-        <a class="quick-link" href="/staff/products/"><span class="stat-icon">▦</span><span><strong>Product catalogue</strong><small>Manage products and availability</small></span><span class="arrow">→</span></a>
-        <a class="quick-link" href="/staff/customers/"><span class="stat-icon blue">♙</span><span><strong>Customer directory</strong><small>Access customer records</small></span><span class="arrow">→</span></a>
-        <a class="quick-link" href="/staff/orders/"><span class="stat-icon green">▣</span><span><strong>Order management</strong><small>Review and process orders</small></span><span class="arrow">→</span></a>
-    </section>
-
-    {% if request.user.is_superuser %}
-    <div class="section-heading">
-        <div><h2>Administrator overview</h2><p>Staff access and additional workflow totals.</p></div>
-    </div>
-    <section class="stats">
-        <article class="stat"><div class="stat-top"><span class="stat-label">Approved staff</span><span class="stat-icon green">✓</span></div><div class="stat-number">{{ approved_staff|default:0 }}</div><div class="stat-foot">Staff with approved access</div></article>
-        <article class="stat"><div class="stat-top"><span class="stat-label">Pending staff</span><span class="stat-icon">!</span></div><div class="stat-number">{{ pending_staff|default:0 }}</div><div class="stat-foot">Applications awaiting review</div></article>
-        <article class="stat"><div class="stat-top"><span class="stat-label">Approved quotes</span><span class="stat-icon blue">✓</span></div><div class="stat-number">{{ approved_quotes|default:0 }}</div><div class="stat-foot">Requests marked approved</div></article>
-        <article class="stat"><div class="stat-top"><span class="stat-label">Quoted requests</span><span class="stat-icon purple">▤</span></div><div class="stat-number">{{ quoted_quotes|default:0 }}</div><div class="stat-foot">Quotes prepared for customers</div></article>
-    </section>
-    <section class="quick-links" style="margin-top:16px">
-        <a class="quick-link" href="/staff/staff-management/"><span class="stat-icon">♧</span><span><strong>Staff management</strong><small>Review applications and access</small></span><span class="arrow">→</span></a>
-        <a class="quick-link" href="/staff/activity-log/"><span class="stat-icon blue">◷</span><span><strong>Activity log</strong><small>Review recorded staff actions</small></span><span class="arrow">→</span></a>
-        <a class="quick-link" href="/staff/calendar-orders/"><span class="stat-icon green">▦</span><span><strong>Order calendar</strong><small>View scheduled orders</small></span><span class="arrow">→</span></a>
-    </section>
     {% endif %}
 
+    <div class="sidebar-bottom">
+        <div class="portal-label">ACCOUNT</div>
+        <a href="{% url 'staff_profile' %}">♙ &nbsp; My profile</a>
+        <a href="{% url 'staff_logout' %}">↪ &nbsp; Sign out</a>
+        <p>Professional printing.<br>Reliable operations.</p>
+    </div>
+</aside>
+
+<main class="main">
+    <header class="topbar">
+        <div class="breadcrumb">THE LABEL GROUP &nbsp; / &nbsp; <strong>Operations</strong></div>
+        <div class="user-chip">
+            <div class="avatar">{{ user.username|default:"S"|slice:":1"|upper }}</div>
+            <span>{{ profile.full_name|default:user.username|default:"Staff member" }}</span>
+        </div>
+    </header>
+
+    <div class="content">
+        <section class="welcome">
+            <div>
+                <div class="eyebrow">Operations control centre</div>
+                <h1>Welcome back, {{ profile.full_name|default:user.username|default:"Team" }}</h1>
+                <p class="subtitle">Your business operations at a glance. Manage products, review customer requests and keep orders moving from enquiry to delivery.</p>
+            </div>
+            <div class="actions">
+                <a class="btn btn-navy" href="{% url 'staff_orders' %}">Manage orders ↗</a>
+                <a class="btn btn-orange" href="{% url 'staff_quotes' %}">Review quotes ↗</a>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <h2>Business at a glance</h2>
+                    <p>Your catalogue and customer workflow, all in one place.</p>
+                </div>
+                <a class="btn btn-light" href="{% url 'staff_products' %}">＋ Open catalogue</a>
+            </div>
+
+            <div class="stats">
+                <article class="stat">
+                    <div class="stat-top"><span class="stat-label">Total products</span><span class="stat-icon">▦</span></div>
+                    <div class="stat-number">{{ total_products|default:products_count|default:0 }}</div>
+                    <div class="stat-note">Products recorded in your catalogue</div>
+                    <a class="text-link" href="{% url 'staff_products' %}">Manage catalogue →</a>
+                </article>
+                <article class="stat orange">
+                    <div class="stat-top"><span class="stat-label">Available products</span><span class="stat-icon">✓</span></div>
+                    <div class="stat-number">{{ available_products|default:available_products_count|default:0 }}</div>
+                    <div class="stat-note">Marked available in your catalogue</div>
+                    <a class="text-link" href="{% url 'staff_products' %}">Review availability →</a>
+                </article>
+                <article class="stat orange">
+                    <div class="stat-top"><span class="stat-label">Quote requests</span><span class="stat-icon">▤</span></div>
+                    <div class="stat-number">{{ total_quotes|default:quotes_count|default:0 }}</div>
+                    <div class="stat-note">{{ new_quotes|default:0 }} new requests awaiting review</div>
+                    <a class="text-link" href="{% url 'staff_quotes' %}">Review requests →</a>
+                </article>
+                <article class="stat">
+                    <div class="stat-top"><span class="stat-label">Total orders</span><span class="stat-icon">▣</span></div>
+                    <div class="stat-number">{{ total_orders|default:orders_count|default:0 }}</div>
+                    <div class="stat-note">Orders in the system</div>
+                    <a class="text-link" href="{% url 'staff_orders' %}">Open order management →</a>
+                </article>
+            </div>
+        </section>
+
+        <section class="section panel">
+            <div class="panel-head">
+                <div>
+                    <h2>Quote pipeline</h2>
+                    <p>Track each request through its current stage.</p>
+                </div>
+                <a class="btn btn-orange" href="{% url 'staff_quotes' %}">View all requests ↗</a>
+            </div>
+            <div class="pipeline">
+                <div class="stage"><div class="stage-label"><span class="stage-dot"></span>New requests</div><div class="stage-count">{{ new_quotes|default:0 }}</div></div>
+                <div class="stage"><div class="stage-label"><span class="stage-dot"></span>Under review</div><div class="stage-count">{{ reviewing_quotes|default:0 }}</div></div>
+                <div class="stage"><div class="stage-label"><span class="stage-dot"></span>Quotes prepared</div><div class="stage-count">{{ quoted_quotes|default:0 }}</div></div>
+                <div class="stage"><div class="stage-label"><span class="stage-dot"></span>In production</div><div class="stage-count">{{ production_quotes|default:0 }}</div></div>
+                <div class="stage"><div class="stage-label"><span class="stage-dot"></span>Completed</div><div class="stage-count">{{ completed_quotes|default:0 }}</div></div>
+            </div>
+        </section>
+
+        <section class="section columns">
+            <div class="panel">
+                <div class="panel-head">
+                    <div><h2>Recent quote requests</h2><p>Latest customer enquiries.</p></div>
+                    <a class="text-link" href="{% url 'staff_quotes' %}">View all →</a>
+                </div>
+                <div class="quote-list">
+                    {% for quote in recent_quotes %}
+                    <div class="quote-item">
+                        <div class="round-icon">Q{{ quote.id }}</div>
+                        <div class="item-main">
+                            <div class="item-title">{{ quote.company_name|default:quote.customer_name }}</div>
+                            <div class="item-sub">Request #{{ quote.id }} · {{ quote.created_at|date:"M d, Y" }}<br>{{ quote.customer_name }}</div>
+                        </div>
+                        <span class="pill">{{ quote.get_status_display }}</span>
+                        <a class="text-link" href="/staff/quotes/{{ quote.id }}/">Open →</a>
+                    </div>
+                    {% empty %}
+                    <div class="empty">No quote requests to display yet.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <div><h2>Team activity</h2><p>Recent actions recorded by the portal.</p></div>
+                    <a class="text-link" href="{% url 'staff_activity_log' %}">Full log →</a>
+                </div>
+                <div class="activity-list">
+                    {% for activity in recent_activity %}
+                    <div class="activity-item">
+                        <div class="activity-mark">↗</div>
+                        <div class="item-main">
+                            <div class="item-title">{% if activity.staff and activity.staff.user %}{{ activity.staff.user.username }}{% else %}Staff member{% endif %}</div>
+                            <div class="item-sub">{{ activity.description|default:activity.action }}<br>{{ activity.created_at|date:"M d, Y · H:i" }}</div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty">No recent activity recorded.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head">
+                <div><h2>Quick access</h2><p>Jump straight to the tools you use every day.</p></div>
+            </div>
+            <div class="quick-grid">
+                <a class="quick-card" href="{% url 'staff_products' %}">
+                    <div class="quick-icon">▦</div><div><div class="quick-title">Product catalogue</div><div class="quick-desc">Manage products, specifications and availability.</div><span class="quick-go">Manage products →</span></div>
+                </a>
+                <a class="quick-card" href="{% url 'staff_customers' %}">
+                    <div class="quick-icon">♙</div><div><div class="quick-title">Customer directory</div><div class="quick-desc">Access customer records and contact information.</div><span class="quick-go">Open customers →</span></div>
+                </a>
+                <a class="quick-card" href="{% url 'staff_orders' %}">
+                    <div class="quick-icon">▣</div><div><div class="quick-title">Order management</div><div class="quick-desc">Review orders and keep fulfilment moving.</div><span class="quick-go">Manage orders →</span></div>
+                </a>
+            </div>
+        </section>
+
+        {% if user.is_superuser %}
+        <section class="section panel">
+            <div class="panel-head">
+                <div><h2>Administrator control centre</h2><p>Staff access, approvals and additional workflow totals.</p></div>
+                <span class="pill">BOSS ACCESS</span>
+            </div>
+            <div class="admin-grid">
+                <div class="admin-stat"><span>Approved staff</span><strong>{{ approved_staff|default:0 }}</strong></div>
+                <div class="admin-stat"><span>Pending applications</span><strong>{{ pending_staff|default:0 }}</strong></div>
+                <div class="admin-stat"><span>Approved quotes</span><strong>{{ approved_quotes|default:approved_quotes_count|default:0 }}</strong></div>
+                <div class="admin-stat"><span>Quotes prepared</span><strong>{{ quoted_quotes|default:0 }}</strong></div>
+            </div>
+            <div class="admin-links">
+                <a class="btn btn-orange" href="{% url 'boss_staff_management' %}">♧ Manage staff &amp; approvals</a>
+                <a class="btn btn-navy" href="{% url 'staff_activity_log' %}">◷ Review activity log</a>
+                <a class="btn btn-light" href="/staff/calendar-orders/">▦ Open order calendar</a>
+            </div>
+        </section>
+        {% endif %}
+
+        <div class="footer">THE LABEL GROUP &nbsp;•&nbsp; Professional Industrial Prints &amp; Decals</div>
+    </div>
+</main>
 </div>
-{% endblock %}
+
+<div style="margin:24px 0;padding:20px;background:#0b1f3a;border-radius:12px;color:white;">
+  <h2 style="margin:0 0 8px;">Staff Control Center</h2>
+  <p>Review your team, staff applications, approvals and recorded activity.</p>
+  <a href="{% url 'boss_staff_management' %}"
+     style="display:inline-block;background:#f47b20;color:white;padding:12px 18px;margin:5px;border-radius:7px;text-decoration:none;font-weight:bold;">
+     Manage Staff
+  </a>
+  <a href="{% url 'staff_activity_log' %}"
+     style="display:inline-block;background:white;color:#0b1f3a;padding:12px 18px;margin:5px;border-radius:7px;text-decoration:none;font-weight:bold;">
+     View Staff &amp; Their Work
+  </a>
+</div>
 
 
+<section style="margin:24px auto;padding:22px;max-width:1200px;background:#fff;border:1px solid #e5e7eb;border-radius:14px;">
+  <h2 style="margin:0 0 8px;color:#0b1f3a;">Boss Controls</h2>
+  <p style="margin:0 0 16px;color:#526174;">Manage staff access, review staff activity, and update website settings.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:12px;">
+    <a style="display:inline-block;padding:12px 16px;border-radius:8px;background:#f47b20;color:#fff;text-decoration:none;font-weight:700;" href="{% url 'boss_staff_management' %}">Staff Management</a>
+    <a style="display:inline-block;padding:12px 16px;border-radius:8px;background:#0b1f3a;color:#fff;text-decoration:none;font-weight:700;" href="{% url 'staff_activity_log' %}">Activity Log</a>
+    <a style="display:inline-block;padding:12px 16px;border-radius:8px;background:#0b1f3a;color:#fff;text-decoration:none;font-weight:700;" href="{% url 'boss_site_settings' %}">Website Settings</a>
+    <a style="display:inline-block;padding:12px 16px;border-radius:8px;background:#0b1f3a;color:#fff;text-decoration:none;font-weight:700;" href="{% url 'owner_create_staff' %}">Create Staff Account</a>
+  </div>
+</section>
+
+</body>
+</html>

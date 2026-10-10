@@ -1,8 +1,8 @@
-{% extends "base.html" %}
-
+﻿<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Order Confirmation | THE LABEL GROUP</title></head><body>
 {% block title %}Order Confirmed | THE LABEL GROUP{% endblock %}
 
-{% block content %}
+
 
 <div style="
     max-width: 900px;
@@ -10,7 +10,7 @@
     padding: 70px 20px;
 ">
 
-```
+
 <div style="
     text-align: center;
     background: #ffffff;
@@ -32,7 +32,7 @@
         font-size: 35px;
         font-weight: 700;
     ">
-        ✓
+        âœ“
     </div>
 
     <h1 style="
@@ -201,25 +201,25 @@
     ">
 
         <a
-            href="{% url 'home' %}"
-            style="
-                display: inline-block;
-                padding: 14px 25px;
-                border-radius: 8px;
-                background: #f28c28;
-                color: white;
-                text-decoration: none;
-                font-weight: 700;
-            "
-        >
-            Continue Shopping
-        </a>
+    href="{% url 'home' %}"
+    style="display:inline-block;padding:14px 25px;border-radius:8px;background:#0b1f3a;color:white;text-decoration:none;font-weight:700;"
+>
+    HOME
+</a>
+
+<a
+    href="{% url 'product_list' %}"
+    style="display:inline-block;padding:14px 25px;border-radius:8px;background:#f28c28;color:white;text-decoration:none;font-weight:700;"
+>
+    CONTINUE SHOPPING
+</a>
 
     </div>
 
 </div>
-```
+
 
 </div>
 
-{% endblock %}
+
+</body></html>

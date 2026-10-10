@@ -879,6 +879,29 @@
 }
 </style>
 
+
+<style>
+/* THE LABEL GROUP compact layout improvements */
+.industry-grid,.industries-grid,.industry-cards,.category-grid{
+    gap:16px !important;
+}
+.industry-section,.industries-section,.category-section,
+section.industry-section,section.industries-section{
+    margin-top:24px !important;
+    margin-bottom:28px !important;
+    padding-top:20px !important;
+    padding-bottom:20px !important;
+}
+.industry-card,.industry-item,.category-card{
+    min-width:0;
+}
+@media(max-width:768px){
+    .industry-grid,.industries-grid,.industry-cards,.category-grid{
+        gap:12px !important;
+    }
+}
+</style>
+
 </head>
 
 <body>
@@ -896,7 +919,7 @@
 
         <nav class="nav">
             <a href="{% url 'home' %}">HOME</a>
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            
             <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
             <a href="{% url 'shipping' %}">SHIPPING</a>
             <a href="{% url 'quote_cart' %}">QUOTE CART</a>
@@ -927,9 +950,7 @@
             </p>
 
             <div class="buttons">
-                <a href="{% url 'product_list' %}" class="btn btn-orange">
-                    SHOP PRODUCTS
-                </a>
+                
 
                 <a href="{% url 'shipping_quote' %}" class="btn btn-white">
                     REQUEST A QUOTE
@@ -1351,6 +1372,7 @@
 
 </body>
 </html>
+
 
 
 

@@ -1,4 +1,4 @@
-﻿from django.contrib import messages
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -155,7 +155,33 @@ def staff_dashboard(request):
         profile.last_activity = timezone.now()
         profile.save(update_fields=["last_activity"])
 
+    recent_quotes = QuoteRequest.objects.order_by("-created_at")[:8]
+    recent_activity = StaffActivityLog.objects.select_related(
+        "staff", "staff__user"
+    ).order_by("-id")[:8]
+
+    approved_staff_count = StaffProfile.objects.filter(
+        approved=True, status="approved"
+    ).count()
+    pending_staff_count = StaffProfile.objects.exclude(
+        approved=True, status="approved"
+    ).count()
+
     context = {
+        "total_products": products_count,
+        "available_products": available_products_count,
+        "total_orders": orders_count,
+        "total_quotes": quotes_count,
+        "new_quotes": new_quotes_count,
+        "reviewing_quotes": reviewing_quotes_count,
+        "quoted_quotes": quoted_count,
+        "approved_quotes": approved_quotes_count,
+        "production_quotes": in_production_count,
+        "completed_quotes": completed_quotes_count,
+        "approved_staff": approved_staff_count,
+        "pending_staff": pending_staff_count,
+        "recent_quotes": recent_quotes,
+        "recent_activity": recent_activity,
         "profile": profile,
         "products_count": products_count,
         "available_products_count": available_products_count,
@@ -310,311 +336,6 @@ def staff_orders(request):
         },
     )
 
-
-@staff_required
-def staff_order_detail(request, pk):
-    order = get_object_or_404(
-        Order,
-        pk=pk,
-    )
-
-    return render(
-        request,
-        "staff/order_detail.html",
-        {
-            "order": order,
-        },
-    )
-
-
-@staff_required
-def staff_quotes(request):
-    quotes = QuoteRequest.objects.all().order_by("-created_at")
-
-    return render(
-        request,
-        "staff/quotes.html",
-        {
-            "quotes": quotes,
-        },
-    )
-
-
-@staff_required
-def staff_quote_detail(request, pk):
-    quote = get_object_or_404(
-        QuoteRequest,
-        pk=pk,
-    )
-
-    if request.method == "POST":
-        status = request.POST.get("status")
-        staff_notes = request.POST.get("staff_notes", "")
-
-        if status:
-            quote.status = status
-
-        if hasattr(quote, "staff_notes"):
-            quote.staff_notes = staff_notes
-
-        quote.save()
-
-        profile = get_staff_profile(request.user)
-
-        log_staff_activity(
-            request,
-            profile,
-            "update",
-            f"Updated quote #{quote.pk}",
-            f"Quote #{quote.pk}",
-        )
-
-        messages.success(
-            request,
-            "Quote updated successfully.",
-        )
-
-        return redirect(
-            "staff_quote_detail",
-            pk=quote.pk,
-        )
-
-    return render(
-        request,
-        "staff/quote_detail.html",
-        {
-            "quote": quote,
-            "status_choices": getattr(
-                QuoteRequest,
-                "STATUS_CHOICES",
-                [],
-            ),
-        },
-    )
-
-
-def staff_login(request):
-    if request.user.is_authenticated:
-        if request.user.is_superuser:
-            return redirect("staff_dashboard")
-
-        profile = get_staff_profile(request.user)
-
-        if profile and profile.approved and profile.status == "approved":
-            if request.user.is_active:
-                return redirect("staff_dashboard")
-
-            logout(request)
-
-            messages.error(
-                request,
-                "This staff account has been deactivated or removed. Please contact the Boss.",
-            )
-
-    if request.method == "POST":
-        username = request.POST.get("username", "").strip()
-        password = request.POST.get("password", "")
-
-        user = authenticate(
-            request,
-            username=username,
-            password=password,
-        )
-
-        if user is not None:
-            if not user.is_active:
-                messages.error(
-                    request,
-                    "This staff account has been deactivated or removed. Please contact the Boss.",
-                )
-                return redirect("staff_login")
-
-            if user.is_superuser:
-                login(request, user)
-
-                log_staff_activity(
-                    request,
-                    None,
-                    "login",
-                    "Boss logged into the staff system.",
-                    "Staff Login",
-                )
-
-                return redirect("staff_dashboard")
-
-            profile = get_staff_profile(user)
-
-            if not profile:
-                messages.error(
-                    request,
-                    "No staff profile was found for this account.",
-                )
-                return redirect("staff_login")
-
-            if not profile.approved or profile.status != "approved":
-                messages.error(
-                    request,
-                    "Your staff account is awaiting Boss approval.",
-                )
-                return redirect("staff_login")
-
-            login(request, user)
-
-            profile.last_activity = timezone.now()
-            profile.save(update_fields=["last_activity"])
-
-            log_staff_activity(
-                request,
-                profile,
-                "login",
-                "Staff member logged into the staff system.",
-                "Staff Login",
-            )
-
-            return redirect("staff_dashboard")
-
-        messages.error(
-            request,
-            "Invalid username or password.",
-        )
-
-    return render(
-        request,
-        "staff/login.html",
-    )
-
-
-@login_required
-def staff_logout(request):
-    profile = get_staff_profile(request.user)
-
-    if profile:
-        log_staff_activity(
-            request,
-            profile,
-            "logout",
-            "Staff member logged out.",
-            "Staff Logout",
-        )
-
-    logout(request)
-
-    messages.success(
-        request,
-        "You have been logged out successfully.",
-    )
-
-    return redirect("staff_login")
-
-
-@staff_required
-def staff_profile(request):
-    profile = get_staff_profile(request.user)
-
-    return render(
-        request,
-        "staff/profile.html",
-        {
-            "profile": profile,
-        },
-    )
-
-
-def staff_register(request):
-    if request.user.is_authenticated:
-        return redirect("staff_dashboard")
-
-    if request.method == "POST":
-        form = StaffRegistrationForm(request.POST)
-
-        if form.is_valid():
-            user = form.save(commit=False)
-
-            password = form.cleaned_data.get("password1")
-
-            if password:
-                user.set_password(password)
-
-            user.is_active = True
-            user.is_staff = False
-            user.save()
-
-            profile = StaffProfile.objects.create(
-                user=user,
-                approved=False,
-                status="pending",
-            )
-
-            messages.success(
-                request,
-                "Your staff account has been created and is waiting for Boss approval.",
-            )
-
-            return redirect(
-                "staff_registration_success"
-            )
-    else:
-        form = StaffRegistrationForm()
-
-    return render(
-        request,
-        "staff/register.html",
-        {
-            "form": form,
-        },
-    )
-
-
-def staff_registration_success(request):
-    return render(
-        request,
-        "staff/registration_success.html",
-    )
-
-
-@boss_required
-def boss_staff_management(request):
-    staff_members = (
-        StaffProfile.objects
-        .select_related("user")
-        .order_by("-joined_at")
-    )
-
-    pending_staff = staff_members.filter(
-        status="pending",
-        approved=False,
-    )
-
-    approved_staff = staff_members.filter(
-        status="approved",
-        approved=True,
-    )
-
-    deactivated_staff = approved_staff.filter(
-        user__is_active=False,
-    )
-
-    active_staff = approved_staff.filter(
-        user__is_active=True,
-    )
-
-    removed_staff = staff_members.filter(
-        status="rejected",
-    )
-
-    return render(
-        request,
-        "staff/boss/staff.html",
-        {
-            "staff_members": staff_members,
-            "pending_staff": pending_staff,
-            "approved_staff": approved_staff,
-            "active_staff": active_staff,
-            "deactivated_staff": deactivated_staff,
-            "removed_staff": removed_staff,
-            "rejected_staff": removed_staff,
-        },
-    )
 
 
 @boss_required
@@ -1019,19 +740,31 @@ def staff_activity_log(request):
 
 @staff_required
 def staff_calendar_orders(request):
-    orders = (
-        CollectionCalendarStickerOrder.objects
-        .all()
-        .order_by("-created_at")
-    )
+    from django.db.models import Q
+    from products.models import Order, CollectionCalendarStickerOrder
 
-    return render(
-        request,
-        "staff/calendar_orders.html",
-        {
-            "orders": orders,
-        },
-    )
+    search = request.GET.get("search", "").strip()
+    orders = Order.objects.all().order_by("-created_at")
+    calendar_orders = CollectionCalendarStickerOrder.objects.all().order_by("-created_at")
+
+    if search:
+        orders = orders.filter(
+            Q(customer_name__icontains=search) |
+            Q(customer_email__icontains=search) |
+            Q(status__icontains=search)
+        )
+        calendar_orders = calendar_orders.filter(
+            Q(name__icontains=search) |
+            Q(company__icontains=search) |
+            Q(email__icontains=search) |
+            Q(status__icontains=search)
+        )
+
+    return render(request, "staff/calendar_orders.html", {
+        "orders": orders,
+        "calendar_orders": calendar_orders,
+        "search": search,
+    })
 
 
 @staff_required
@@ -1089,10 +822,10 @@ def staff_calendar_order_detail(request, pk):
         },
     )
 
+@boss_required
 def boss_site_settings(request):
     from products.models import SiteSettings
 
-    boss_required(request)
     settings_obj = SiteSettings.get_settings()
 
     if request.method == "POST":
@@ -1154,3 +887,334 @@ def staff_product_image_delete(request, pk):
         "staff_product_edit",
         pk=product.pk
     )
+
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+
+def staff_login(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user.is_staff:
+                login(request, user)
+                return redirect("staff_dashboard")
+            else:
+                form.add_error(None, "You do not have staff permissions.")
+    else:
+        form = AuthenticationForm()
+    return render(request, "staff/login.html", {"form": form})
+
+from django.contrib.auth import logout
+
+def staff_logout(request):
+    logout(request)
+    return redirect("staff_login")
+
+from django.contrib.auth.forms import UserCreationForm
+
+def staff_register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True
+            user.save()
+            return redirect("staff_login")
+    else:
+        form = UserCreationForm()
+    return render(request, "staff/register.html", {"form": form})
+
+def staff_registration_success(request):
+    return render(request, "staff/registration_success.html", {})
+
+@staff_required
+def staff_profile(request):
+    return render(request, "staff/profile.html", {"user": request.user})
+
+
+def _label_group_customer_records():
+    """
+    Build one customer directory from existing orders and quote requests.
+    This does not create or modify database records.
+    """
+    from types import SimpleNamespace
+    from products.models import Order, QuoteRequest
+
+    records = {}
+
+    def value(obj, *names):
+        for name in names:
+            result = getattr(obj, name, None)
+            if result not in (None, ""):
+                return str(result).strip()
+        return ""
+
+    def add_record(obj, source_type):
+        name = value(obj, "customer_name", "full_name", "name")
+        email = value(obj, "customer_email", "email").lower()
+        phone = value(obj, "customer_phone", "phone", "telephone")
+        address = value(obj, "shipping_address", "address")
+
+        if not (name or email or phone):
+            return
+
+        key = email or phone or name.casefold()
+        if not key:
+            return
+
+        if key not in records:
+            records[key] = {
+                "name": name or email or phone,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "total_orders": 0,
+                "total_quotes": 0,
+                "sources": set(),
+            }
+
+        customer = records[key]
+
+        if name and not customer["name"]:
+            customer["name"] = name
+        if email and not customer["email"]:
+            customer["email"] = email
+        if phone and not customer["phone"]:
+            customer["phone"] = phone
+        if address and not customer["address"]:
+            customer["address"] = address
+
+        customer["sources"].add(source_type)
+
+        if source_type == "order":
+            customer["total_orders"] += 1
+        elif source_type == "quote":
+            customer["total_quotes"] += 1
+
+    for order in Order.objects.all().iterator():
+        add_record(order, "order")
+
+    for quote in QuoteRequest.objects.all().iterator():
+        add_record(quote, "quote")
+
+    customers = []
+
+    for item in records.values():
+        item["sources"] = ", ".join(sorted(item["sources"]))
+        customers.append(SimpleNamespace(
+            name=item["name"],
+            full_name=item["name"],
+            customer_name=item["name"],
+            email=item["email"],
+            customer_email=item["email"],
+            phone=item["phone"],
+            customer_phone=item["phone"],
+            address=item["address"],
+            total_orders=item["total_orders"],
+            total_quotes=item["total_quotes"],
+            sources=item["sources"],
+        ))
+
+    return sorted(customers, key=lambda customer: customer.name.lower())
+
+
+@staff_required
+def staff_quotes(request):
+    from django.db.models import Q
+    from products.models import QuoteRequest
+
+    quotes = QuoteRequest.objects.all().order_by("-pk")
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        filters = Q()
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+            and not getattr(field, "many_to_many", False)
+        }
+
+        for field in ("customer_name", "customer_email", "customer_phone",
+                      "company_name", "status"):
+            if field in field_names:
+                filters |= Q(**{field + "__icontains": search})
+
+        if filters:
+            quotes = quotes.filter(filters)
+
+    return render(request, "staff/quotes.html", {
+        "quotes": quotes,
+        "search_query": search,
+    })
+
+
+@staff_required
+def staff_customers(request):
+    from products.models import Order, QuoteRequest
+
+    search = request.GET.get("search", "").strip()
+    people = {}
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company)
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (not person["last_seen"] or created > person["last_seen"]):
+                person["last_seen"] = created
+
+        person["orders_count" if kind == "order" else "quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            getattr(obj, "customer_name", ""),
+            getattr(obj, "customer_email", ""),
+            getattr(obj, "customer_phone", ""),
+            "", "order", obj
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            getattr(obj, "customer_name", ""),
+            getattr(obj, "customer_email", ""),
+            getattr(obj, "customer_phone", ""),
+            getattr(obj, "company_name", ""),
+            "quote", obj
+        )
+
+    customers = list(people.values())
+    if search:
+        term = search.casefold()
+        customers = [
+            p for p in customers
+            if any(term in str(p.get(f, "") or "").casefold()
+                   for f in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"] or datetime.min.replace(tzinfo=None),
+        reverse=True
+    )
+    return render(request, "staff/customers.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "search": search,
+    })
+
+
+@staff_required
+def staff_quote_detail(request, pk):
+    from django.shortcuts import get_object_or_404
+    from products.models import QuoteRequest
+
+    quote = get_object_or_404(QuoteRequest, pk=pk)
+
+    if request.method == "POST":
+        from django.contrib import messages
+
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+        }
+
+        new_status = request.POST.get("status", "").strip()
+        if new_status and "status" in field_names:
+            valid_statuses = {
+                str(choice[0])
+                for choice in getattr(
+                    QuoteRequest, "STATUS_CHOICES", ()
+                )
+            }
+
+            if not valid_statuses or new_status in valid_statuses:
+                quote.status = new_status
+                quote.save(update_fields=["status"])
+                messages.success(request, "Quote status updated.")
+            else:
+                messages.error(request, "Please select a valid quote status.")
+
+        return redirect("staff_quote_detail", pk=quote.pk)
+
+    return render(request, "staff/quote_detail.html", {
+        "quote": quote,
+        "quote_id": quote.pk,
+    })
+
+
+def boss_staff_management(request):
+    from django.contrib import messages
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from django.shortcuts import render, redirect
+
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "Boss access is required.")
+        return redirect("/staff/")
+
+    User = get_user_model()
+    search = request.GET.get("search", "").strip()
+
+    staff_members = User.objects.filter(
+        is_staff=True
+    ).order_by("-date_joined")
+
+    if search:
+        staff_members = staff_members.filter(
+            Q(username__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search)
+        )
+
+    context = {
+        "staff_members": staff_members,
+        "search_query": search,
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "active_staff_count": User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).count(),
+    }
+
+    return render(
+        request,
+        "staff/boss/staff_management.html",
+        context
+    )
+
+
+@staff_required
+def staff_order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == "POST":
+        if order.status != "completed":
+            order.status = "completed"
+            order.save()
+        return redirect("staff_order_detail", pk=pk)
+    return render(request, "staff/order_detail.html", {"order": order})

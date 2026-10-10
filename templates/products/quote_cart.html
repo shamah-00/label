@@ -1,590 +1,136 @@
-﻿<!DOCTYPE html>
+﻿{% load static %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Quote Cart | THE LABEL GROUP</title>
-
-    {% load static %}
-
     <style>
         :root {
-            --navy:#0b1f3a;
-            --navy-dark:#06152a;
-            --orange:#f47b20;
-            --orange-dark:#d9620d;
-            --light:#f5f7fa;
-            --border:#dfe4ea;
-            --text:#182230;
-            --muted:#687386;
-            --white:#ffffff;
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f4f7fb;
+            --border: #dce3ec;
+            --muted: #64748b;
         }
-
-        * {
-            box-sizing:border-box;
-        }
-
+        * { box-sizing: border-box; }
         body {
-            margin:0;
-            font-family:Arial, Helvetica, sans-serif;
-            background:var(--light);
-            color:var(--text);
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--navy);
         }
-
-        a {
-            text-decoration:none;
-        }
-
-        .topbar {
-            background:var(--navy-dark);
-            color:#fff;
-            text-align:center;
-            padding:10px 16px;
-            font-size:13px;
-            font-weight:700;
-        }
-
         header {
-            background:#fff;
-            border-bottom:1px solid var(--border);
-            position:sticky;
-            top:0;
-            z-index:100;
+            background: var(--navy);
+            color: white;
+            padding: 20px max(5%, calc((100% - 1120px) / 2));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
         }
-
-        .header-inner {
-            max-width:1250px;
-            margin:auto;
-            padding:16px 24px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:25px;
-        }
-
-        .logo img {
-            max-width:190px;
-            max-height:60px;
-            object-fit:contain;
-            display:block;
-        }
-
-        .nav {
-            display:flex;
-            align-items:center;
-            justify-content:flex-end;
-            gap:8px;
-            flex-wrap:wrap;
-        }
-
-        .nav a {
-            color:var(--navy);
-            font-size:12px;
-            font-weight:800;
-            padding:10px 12px;
-            border-radius:7px;
-        }
-
-        .nav a:hover {
-            background:var(--light);
-            color:var(--orange-dark);
-        }
-
-        .page {
-            max-width:1250px;
-            margin:auto;
-            padding:55px 24px 80px;
-        }
-
-        .page-heading {
-            margin-bottom:30px;
-        }
-
-        .eyebrow {
-            color:var(--orange-dark);
-            font-size:12px;
-            font-weight:900;
-            letter-spacing:.12em;
-            text-transform:uppercase;
-            margin-bottom:10px;
-        }
-
-        h1 {
-            margin:0 0 12px;
-            color:var(--navy);
-            font-size:clamp(32px,5vw,52px);
-            line-height:1.05;
-        }
-
-        .intro {
-            max-width:720px;
-            color:var(--muted);
-            font-size:16px;
-            line-height:1.7;
-            margin:0;
-        }
-
-        .actions {
-            display:flex;
-            gap:12px;
-            flex-wrap:wrap;
-            margin-top:25px;
-        }
-
-        .button {
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            min-height:46px;
-            padding:0 20px;
-            border-radius:7px;
-            font-size:12px;
-            font-weight:900;
-            letter-spacing:.04em;
-        }
-
-        .button-primary {
-            background:var(--orange);
-            color:#fff;
-        }
-
-        .button-primary:hover {
-            background:var(--orange-dark);
-        }
-
-        .button-secondary {
-            background:var(--navy);
-            color:#fff;
-        }
-
-        .button-secondary:hover {
-            background:var(--navy-dark);
-        }
-
-        .button-outline {
-            background:#fff;
-            color:var(--navy);
-            border:1px solid var(--border);
-        }
-
-        .layout {
-            display:grid;
-            grid-template-columns:minmax(0,1fr) 330px;
-            gap:28px;
-            align-items:start;
-        }
-
+        .brand { font-weight: 800; letter-spacing: 1px; }
+        header a { color: white; text-decoration: none; font-size: 14px; }
+        main { max-width: 1050px; margin: 36px auto; padding: 0 20px; }
+        .intro { margin-bottom: 24px; }
+        h1 { margin: 0 0 10px; font-size: clamp(27px, 4vw, 38px); }
+        p { line-height: 1.6; }
+        .muted { color: var(--muted); }
         .panel {
-            background:#fff;
-            border:1px solid var(--border);
-            border-radius:12px;
-            overflow:hidden;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 8px 28px rgba(11,31,58,.05);
         }
-
-        .panel-heading {
-            padding:20px 22px;
-            border-bottom:1px solid var(--border);
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
         }
-
-        .panel-heading h2 {
-            margin:0;
-            color:var(--navy);
-            font-size:20px;
-        }
-
-        .panel-heading p {
-            margin:7px 0 0;
-            color:var(--muted);
-            font-size:13px;
-        }
-
-        .quote-item {
-            display:grid;
-            grid-template-columns:130px minmax(0,1fr) auto;
-            gap:20px;
-            padding:22px;
-            border-bottom:1px solid var(--border);
-            align-items:center;
-        }
-
-        .quote-item:last-child {
-            border-bottom:0;
-        }
-
-        .product-image {
-            width:130px;
-            height:100px;
-            background:var(--light);
-            border-radius:8px;
-            overflow:hidden;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-        }
-
-        .product-image img {
-            width:100%;
-            height:100%;
-            object-fit:contain;
-            display:block;
-        }
-
-        .product-info h3 {
-            margin:0 0 8px;
-            color:var(--navy);
-            font-size:18px;
-        }
-
-        .product-info p {
-            margin:4px 0;
-            color:var(--muted);
-            font-size:13px;
-        }
-
-        .quantity {
-            display:inline-block;
-            margin-top:10px;
-            padding:7px 10px;
-            border-radius:6px;
-            background:var(--light);
-            color:var(--navy);
-            font-size:12px;
-            font-weight:800;
-        }
-
+        .item:last-child { border-bottom: 0; }
+        .item-name { font-weight: 700; }
+        .quantity { color: var(--muted); font-size: 14px; margin-top: 7px; }
         .remove {
-            display:inline-flex;
-            align-items:center;
-            justify-content:center;
-            min-height:40px;
-            padding:0 14px;
-            border:1px solid #e3bcbc;
-            border-radius:7px;
-            background:#fff;
-            color:#a52b2b;
-            font-size:11px;
-            font-weight:900;
+            color: #b42318;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            white-space: nowrap;
         }
-
-        .remove:hover {
-            background:#fff4f4;
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
         }
-
-        .empty {
-            padding:55px 25px;
-            text-align:center;
+        .button {
+            display: inline-block;
+            padding: 13px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            border: 0;
+            cursor: pointer;
+            font-size: 14px;
         }
-
-        .empty h2 {
-            color:var(--navy);
-            margin:0 0 10px;
-        }
-
-        .empty p {
-            color:var(--muted);
-            max-width:520px;
-            margin:0 auto 25px;
-            line-height:1.6;
-        }
-
-        .side-card {
-            background:var(--navy);
-            color:#fff;
-            border-radius:12px;
-            padding:25px;
-        }
-
-        .side-card h2 {
-            margin:0 0 12px;
-            font-size:21px;
-        }
-
-        .side-card p {
-            color:#dbe3ee;
-            font-size:13px;
-            line-height:1.65;
-            margin:0 0 20px;
-        }
-
-        .steps {
-            margin:0;
-            padding:0;
-            list-style:none;
-        }
-
-        .steps li {
-            display:flex;
-            gap:12px;
-            margin-bottom:18px;
-            color:#fff;
-            font-size:13px;
-            line-height:1.5;
-        }
-
-        .step-number {
-            width:26px;
-            height:26px;
-            min-width:26px;
-            border-radius:50%;
-            background:var(--orange);
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-size:11px;
-            font-weight:900;
-        }
-
-        .side-actions {
-            display:flex;
-            flex-direction:column;
-            gap:10px;
-            margin-top:25px;
-        }
-
-        .side-actions .button {
-            width:100%;
-        }
-
-        footer {
-            background:var(--navy-dark);
-            color:#bfc9d6;
-            padding:28px 24px;
-            text-align:center;
-            font-size:12px;
-        }
-
-        footer a {
-            color:#fff;
-            margin:0 8px;
-            font-weight:700;
-        }
-
-        @media (max-width:900px) {
-            .header-inner {
-                flex-direction:column;
-                align-items:center;
-            }
-
-            .nav {
-                justify-content:center;
-            }
-
-            .layout {
-                grid-template-columns:1fr;
-            }
-        }
-
-        @media (max-width:650px) {
-            .page {
-                padding:35px 15px 55px;
-            }
-
-            .quote-item {
-                grid-template-columns:1fr;
-            }
-
-            .product-image {
-                width:100%;
-                height:180px;
-            }
-
-            .remove {
-                width:100%;
-            }
-
-            .actions {
-                flex-direction:column;
-            }
-
-            .actions .button {
-                width:100%;
-            }
+        .primary { background: var(--orange); color: white; }
+        .primary:hover { background: var(--orange-dark); }
+        .secondary { background: #e9eef5; color: var(--navy); }
+        .empty { text-align: center; padding: 38px 12px; }
+        footer { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
+        @media (max-width: 600px) {
+            main { margin-top: 24px; }
+            .panel { padding: 17px; }
+            .item { align-items: flex-start; }
         }
     </style>
 </head>
-
 <body>
-
-<div class="topbar">
-    Free quote consultation • Durable custom printing • Built for business
-</div>
-
 <header>
-    <div class="header-inner">
-
-        <a href="{% url 'home' %}" class="logo">
-            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
-        </a>
-
-        <nav class="nav">
-            <a href="{% url 'home' %}">HOME</a>
-            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
-            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
-            <a href="{% url 'shipping' %}">SHIPPING</a>
-            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
-            <a href="/staff/login/">STAFF LOGIN</a>
-        </nav>
-
-    </div>
+    <div class="brand">THE LABEL GROUP</div>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        &nbsp;&nbsp;
+        
+    </nav>
 </header>
-
-<main class="page">
-
-    <section class="page-heading">
-        <div class="eyebrow">Commercial Product Selection</div>
-
-        <h1>Quote Cart</h1>
-
-        <p class="intro">
-            Select the products you want priced together. Your quote cart is
-            simply a list for our team to review. No payment is required here.
-        </p>
-
-        <div class="actions">
-            <a href="{% url 'product_list' %}" class="button button-secondary">
-                SHOP ALL PRODUCTS
-            </a>
-
-            <a href="{% url 'shipping_quote' %}" class="button button-primary">
-                REQUEST A QUOTE
-            </a>
-        </div>
-    </section>
-
-    <div class="layout">
-
-        <section class="panel">
-
-            <div class="panel-heading">
-                <h2>Selected Products</h2>
-                <p>Review the products and quantities you want included in your quotation.</p>
-            </div>
-
-            {% if quote_items %}
-
-                {% for item in quote_items %}
-
-                    <article class="quote-item">
-
-                        <div class="product-image">
-                            {% if item.product.image %}
-                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
-                            {% else %}
-                                <span>No Image</span>
-                            {% endif %}
-                        </div>
-
-                        <div class="product-info">
-
-                            <h3>{{ item.product.name }}</h3>
-
-                            {% if item.product.product_code %}
-                                <p><strong>Product Code:</strong> {{ item.product.product_code }}</p>
-                            {% endif %}
-
-                            {% if item.product.category %}
-                                <p><strong>Category:</strong> {{ item.product.category }}</p>
-                            {% endif %}
-
-                            <span class="quantity">
-                                Quantity: {{ item.quantity }}
-                            </span>
-
-                        </div>
-
-                        <div>
-                            <a
-                                href="{% url 'remove_from_quote' item.product.id %}"
-                                class="remove"
-                            >
-                                REMOVE
-                            </a>
-                        </div>
-
-                    </article>
-
-                {% endfor %}
-
-            {% else %}
-
-                <div class="empty">
-
-                    <h2>Your quote cart is empty</h2>
-
-                    <p>
-                        Browse our product catalogue and add the products you
-                        want our team to price for you.
-                    </p>
-
-                    <a href="{% url 'product_list' %}" class="button button-primary">
-                        VIEW ALL PRODUCTS
-                    </a>
-
+<main>
+    <div class="intro">
+        <h1>Your quote cart</h1>
+        <p class="muted">Review the products and quantities you want priced. You can submit your delivery details and requirements on the next step.</p>
+    </div>
+    <section class="panel">
+        {% if quote_items %}
+            {% for item in quote_items %}
+                <div class="item">
+                    <div>
+                        <div class="item-name">{{ item.product }}</div>
+                        <div class="quantity">Requested quantity: {{ item.quantity }}</div>
+                    </div>
+                    <a class="remove" href="{% url 'remove_from_quote' item.product.id %}">Remove</a>
                 </div>
-
-            {% endif %}
-
-        </section>
-
-        <aside class="side-card">
-
-            <h2>What happens next?</h2>
-
-            <p>
-                The Quote Cart helps you prepare a product list before
-                requesting commercial pricing.
-            </p>
-
-            <ol class="steps">
-
-                <li>
-                    <span class="step-number">1</span>
-                    <span>Select the products you need.</span>
-                </li>
-
-                <li>
-                    <span class="step-number">2</span>
-                    <span>Review your selected products and quantities.</span>
-                </li>
-
-                <li>
-                    <span class="step-number">3</span>
-                    <span>Send the list to THE LABEL GROUP for quotation.</span>
-                </li>
-
-            </ol>
-
-            <div class="side-actions">
-
-                <a href="{% url 'shipping_quote' %}" class="button button-primary">
-                    REQUEST A QUOTE
-                </a>
-
-                <a href="{% url 'product_list' %}" class="button button-outline">
-                    VIEW ALL PRODUCTS
-                </a>
-
+            {% endfor %}
+            <div class="actions">
+                <a class="button primary" href="{% url 'custom_order' %}">Continue to quote request</a>
+                <a class="button secondary" href="{% url 'product_list' %}">Add more products</a>
             </div>
-
-        </aside>
-
-    </div>
-
+        {% else %}
+            <div class="empty">
+                <h2>Your quote cart is empty</h2>
+                <p class="muted">Browse our products and add the items you would like us to quote.</p>
+                <a class="button primary" href="{% url 'product_list' %}">Browse products</a>
+            </div>
+        {% endif %}
+    </section>
 </main>
-
-<footer>
-    <div>
-        © 2026 THE LABEL GROUP. All Rights Reserved.
-    </div>
-
-    <div style="margin-top:12px;">
-        <a href="{% url 'home' %}">HOME</a>
-        <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
-        <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
-        <a href="{% url 'shipping' %}">SHIPPING</a>
-    </div>
-</footer>
-
+<footer>Â© {% now "Y" %} THE LABEL GROUP Â· Industrial Prints &amp; Decals</footer>
 </body>
 </html>
+
