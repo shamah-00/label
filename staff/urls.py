@@ -1,4 +1,4 @@
-﻿from django.urls import path
+from django.urls import path
 from . import views
 
 urlpatterns = [
@@ -11,14 +11,12 @@ urlpatterns = [
     
     # Products
     path("products/", views.staff_products, name="staff_products"),
-    path("products/", views.staff_products, name="staff_product_list"),
     path("products/add/", views.staff_product_add, name="staff_product_add"),
     path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
     path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
     
     # Customers
     path("customers/", views.staff_customers, name="staff_customers"),
-    path("customers/", views.staff_customers, name="staff_customer_list"),
     
     # Orders
     path("orders/", views.staff_orders, name="staff_orders"),
@@ -26,7 +24,6 @@ urlpatterns = [
     
     # Quotes
     path("quotes/", views.staff_quotes, name="staff_quotes"),
-    path("quotes/", views.staff_quotes, name="staff_quote_list"),
     path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
     
     # Calendar Orders
