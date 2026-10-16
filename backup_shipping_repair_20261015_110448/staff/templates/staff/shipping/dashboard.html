@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width:1200px;margin:35px auto;padding:20px">
+  <h1>The Label Group Shipping Management</h1>
+  <p>Manage shipment details and purchase shipping labels through Shippo.</p>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div style="padding:12px;margin:10px 0;border-radius:6px;border:1px solid #ddd" role="status">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% for shipment in shipments %}
+    <section style="border:1px solid #ddd;border-radius:10px;padding:20px;margin:18px 0">
+      <h2 style="margin-top:0">Order #{{ shipment.order_id }}</h2>
+      <p><strong>Customer:</strong> {{ shipment.order.customer_name }}</p>
+      <p><strong>Email:</strong> {{ shipment.order.customer_email }}</p>
+      <p><strong>Destination:</strong>
+        {{ shipment.order.shipping_address }},
+        {{ shipment.order.shipping_city }},
+        {{ shipment.order.shipping_state }}
+        {{ shipment.order.shipping_postal_code }},
+        {{ shipment.order.shipping_country }}
+      </p>
+      <p><strong>Shipment status:</strong> {{ shipment.get_status_display }}</p>
+      <p><strong>Carrier:</strong> {{ shipment.carrier|default:"Not set" }}</p>
+      <p><strong>Tracking number:</strong> {{ shipment.tracking_number|default:"Not available" }}</p>
+      <p><strong>Estimated delivery:</strong> {{ shipment.estimated_delivery|default:"Not set" }}</p>
+
+      {% if shipment.label_url %}
+        <p><strong>Purchased label:</strong>
+          <a href="{{ shipment.label_url }}" target="_blank" rel="noopener noreferrer">Open / print shipping label</a>
+        </p>
+      {% endif %}
+      {% if shipment.tracking_url %}
+        <p><a href="{{ shipment.tracking_url }}" target="_blank" rel="noopener noreferrer">Track shipment with carrier</a></p>
+      {% endif %}
+      {% if shipment.shippo_transaction_id %}
+        <p><small>Shippo transaction: {{ shipment.shippo_transaction_id }}</small></p>
+      {% endif %}
+
+      <hr>
+      <h3>Purchase a Shippo label</h3>
+      {% if shipment.label_url %}
+        <p>A label URL is already saved for this shipment. Check it before making another purchase.</p>
+      {% else %}
+        <form method="post" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+          {% csrf_token %}
+          <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+          <input type="hidden" name="action" value="purchase_label">
+          <div style="flex:1;min-width:260px">
+            <label for="rate-{{ shipment.id }}">Shippo rate ID</label>
+            <input id="rate-{{ shipment.id }}" name="shippo_rate_id"
+              value="{{ shipment.shippo_rate_id }}"
+              placeholder="Paste the rate ID for this order"
+              required maxlength="200" style="display:block;width:100%;box-sizing:border-box;padding:10px">
+          </div>
+          <button type="submit" style="padding:11px 16px;background:#f47b20;color:#fff;border:0;border-radius:5px;cursor:pointer"
+            onclick="return confirm('This can purchase a real shipping label and charge your Shippo account. Continue only after verifying the rate and shipment details.');">
+            Purchase label
+          </button>
+        </form>
+      {% endif %}
+
+      <hr>
+      <h3>Update shipment details</h3>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+        <input type="hidden" name="action" value="update">
+
+        <label>Status</label>
+        <select name="status" style="display:block;width:100%;padding:9px;margin:5px 0 12px">
+          {% for value,label in status_choices %}
+            <option value="{{ value }}" {% if shipment.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+
+        <label>Carrier</label>
+        <input name="carrier" value="{{ shipment.carrier }}" maxlength="100"
+          style="display:block;width:100%;box-sizing:border-box;padding:9px;margin:5px 0 12px">
+
+        <label>Shipping method</label>
+        <input name="shipping_method" value="{{ shipment.shipping_method }}" maxlength="100"
+          style="display:block;width:100%;box-sizing:border-box;padding:9px;margin:5px 0 12px">
+
+        <label>Tracking number</label>
+        <input name="tracking_number" value="{{ shipment.tracking_number }}" maxlength="200"
+          style="display:block;width:100%;box-sizing:border-box;padding:9px;margin:5px 0 12px">
+
+        <label>Notes</label>
+        <textarea name="notes" rows="2"
+          style="display:block;width:100%;box-sizing:border-box;padding:9px;margin:5px 0 12px">{{ shipment.notes }}</textarea>
+
+        <button type="submit" style="padding:10px 16px;background:#0b1f3a;color:#fff;border:0;border-radius:5px;cursor:pointer">
+          Save shipment
+        </button>
+      </form>
+    </section>
+  {% empty %}
+    <p>No shipments recorded yet. Shipments must be linked to existing orders.</p>
+  {% endfor %}
+</div>
+{% endblock %}

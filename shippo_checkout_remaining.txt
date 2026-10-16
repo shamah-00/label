@@ -1,0 +1,326 @@
+﻿  700:                 {
+  701:                     "product_id": item["product"].pk,
+  702:                     "quantity": item["quantity"],
+  703:                     "unit_price": str(item["unit_price"]),
+  704:                 }
+  705:                 for item in items
+  706:             ],
+  707:             "packages": packages,
+  708:         }
+  709:         encoded = json.dumps(
+  710:             payload,
+  711:             sort_keys=True,
+  712:             separators=(",", ":"),
+  713:         ).encode("utf-8")
+  714:         return hashlib.sha256(encoded).hexdigest()
+  715: 
+  716:     def get_shippo_rates(address, packages):
+  717:         import logging
+  718: 
+  719:         logger = logging.getLogger(__name__)
+  720:         token = os.getenv("SHIPPO_API_KEY", "").strip()
+  721: 
+  722:         if not token:
+  723:             raise ValueError(
+  724:                 "Shipping-rate service is not configured. Please contact us "
+  725:                 "for a shipping quote."
+  726:             )
+  727: 
+  728:         origin = {
+  729:             "name": "The Label Group LLC",
+  730:             "street1": "580 St. James Avenue",
+  731:             "city": "Springfield",
+  732:             "state": "MA",
+  733:             "zip": "01109",
+  734:             "country": "US",
+  735:             "phone": "413-731-6700",
+  736:             "email": "labelgroup@comcast.net",
+  737:         }
+  738: 
+  739:         shipment = {
+  740:             "address_from": origin,
+  741:             "address_to": address,
+  742:             "parcels": packages,
+  743:             "async": False,
+  744:         }
+  745: 
+  746:         try:
+  747:             response = requests.post(
+  748:                 "https://api.goshippo.com/shipments/",
+  749:                 headers={
+  750:                     "Authorization": "ShippoToken " + token,
+  751:                     "Content-Type": "application/json",
+  752:                 },
+  753:                 json=shipment,
+  754:                 timeout=35,
+  755:             )
+  756:         except requests.RequestException as exc:
+  757:             logger.warning(
+  758:                 "Shippo connection failure; exception_type=%s",
+  759:                 type(exc).__name__,
+  760:             )
+  761:             raise ValueError(
+  762:                 "We could not connect to the shipping service. "
+  763:                 "Please try again or request a shipping quote."
+  764:             )
+  765: 
+  766:         try:
+  767:             data = response.json()
+  768:         except (ValueError, requests.exceptions.JSONDecodeError):
+  769:             data = {}
+  770: 
+  771:         messages = data.get("messages", []) if isinstance(data, dict) else []
+  772:         message_codes = []
+  773:         for message in messages:
+  774:             if isinstance(message, dict):
+  775:                 code = str(message.get("code", "")).strip()
+  776:                 if code:
+  777:                     message_codes.append(code[:80])
+  778: 
+  779:         if not response.ok:
+  780:             logger.warning(
+  781:                 "Shippo shipment rejected; http_status=%s; "
+  782:                 "response_keys=%s; message_codes=%s",
+  783:                 response.status_code,
+  784:                 sorted(data.keys()) if isinstance(data, dict) else [],
+  785:                 message_codes[:10],
+  786:             )
+  787:             raise ValueError(
+  788:                 "The shipping provider could not calculate rates for this "
+  789:                 "address and package. Check the address and measurements, "
+  790:                 "then try again."
+  791:             )
+  792: 
+  793:         raw_rates = data.get("rates", []) if isinstance(data, dict) else []
+  794:         results = []
+  795:         rejected = 0
+  796: 
+  797:         for rate in raw_rates:
+  798:             try:
+  799:                 rate_id = str(rate.get("object_id", "")).strip()
+  800:                 amount = Decimal(str(rate.get("amount", "")))
+  801:                 currency = str(rate.get("currency", "USD")).upper()
+  802: 
+  803:                 if not rate_id or amount < ZERO or currency != "USD":
+  804:                     rejected += 1
+  805:                     continue
+  806: 
+  807:                 results.append({
+  808:                     "object_id": rate_id,
+  809:                     "provider": str(rate.get("provider", "Carrier")),
+  810:                     "service": str(rate.get("servicelevel", {}).get(
+  811:                         "name", "Shipping service"
+  812:                     )),
+  813:                     "amount": str(amount),
+  814:                     "currency": currency,
+  815:                     "estimated_days": rate.get("estimated_days"),
+  816:                 })
+  817:             except (InvalidOperation, TypeError, AttributeError):
+  818:                 rejected += 1
+  819:                 continue
+  820: 
+  821:         logger.warning(
+  822:             "Shippo shipment result; http_status=%s; shipment_status=%s; "
+  823:             "package_count=%s; raw_rate_count=%s; accepted_rate_count=%s; "
+  824:             "rejected_rate_count=%s; message_codes=%s",
+  825:             response.status_code,
+  826:             str(data.get("object_status", "unknown"))[:40]
+  827:                 if isinstance(data, dict) else "unknown",
+  828:             len(packages),
+  829:             len(raw_rates),
+  830:             len(results),
+  831:             rejected,
+  832:             message_codes[:10],
+  833:         )
+  834: 
+  835:         return results
+  836: 
+  837:     items = get_items()
+  838:     subtotal = sum(
+  839:         (item["subtotal"] for item in items),
+  840:         ZERO,
+  841:     )
+  842: 
+  843:     if not items:
+  844:         messages.error(
+  845:             request,
+  846:             "Your cart is empty or its products are unavailable.",
+  847:         )
+  848:         return redirect("cart")
+  849: 
+  850:     if request.method != "POST":
+  851:         return render_checkout(items, subtotal)
+  852: 
+  853:     action = request.POST.get("action", "").strip()
+  854:     if not action:
+  855:         action = (
+  856:             "place_order"
+  857:             if request.POST.get("shipping_rate_id", "").strip()
+  858:             else "get_rates"
+  859:         )
+  860: 
+  861:     customer_name = request.POST.get("customer_name", "").strip()
+  862:     customer_email = request.POST.get("customer_email", "").strip()
+  863:     customer_phone = request.POST.get("customer_phone", "").strip()
+  864:     street = request.POST.get("shipping_address", "").strip()
+  865:     city = request.POST.get("shipping_city", "").strip()
+  866:     state = request.POST.get("shipping_state", "").strip()
+  867:     postal_code = request.POST.get("shipping_postal_code", "").strip()
+  868:     country = country_code(request.POST.get("shipping_country", ""))
+  869:     notes = request.POST.get("notes", "").strip()
+  870: 
+  871:     required = {
+  872:         "full name": customer_name,
+  873:         "email address": customer_email,
+  874:         "phone number": customer_phone,
+  875:         "street address": street,
+  876:         "city": city,
+  877:         "postal code": postal_code,
+  878:         "country": country,
+  879:     }
+  880:     missing_fields = [label for label, value in required.items() if not value]
+  881: 
+  882:     if missing_fields:
+  883:         return render_checkout(
+  884:             items,
+  885:             subtotal,
+  886:             error="Please complete: " + ", ".join(missing_fields) + ".",
+  887:         )
+  888: 
+  889:     address = {
+  890:         "name": customer_name,
+  891:         "street1": street,
+  892:         "city": city,
+  893:         "state": state,
+  894:         "zip": postal_code,
+  895:         "country": country,
+  896:         "phone": customer_phone,
+  897:         "email": customer_email,
+  898:     }
+  899: 
+  900:     try:
+  901:         packages = build_packages(items)
+  902:     except ValueError as exc:
+  903:         request.session.pop(SESSION_RATES, None)
+  904:         request.session.pop(SESSION_SIGNATURE, None)
+  905:         request.session.pop(SESSION_TIME, None)
+  906:         return render_checkout(items, subtotal, error=str(exc))
+  907: 
+  908:     signature = checkout_signature(address, items, packages)
+  909:     cached_rates = request.session.get(SESSION_RATES, [])
+  910:     cached_signature = request.session.get(SESSION_SIGNATURE)
+  911:     cached_time = request.session.get(SESSION_TIME, 0)
+  912:     cache_valid = (
+  913:         cached_signature == signature
+  914:         and time.time() - float(cached_time or 0) <= 900
+  915:         and isinstance(cached_rates, list)
+  916:         and bool(cached_rates)
+  917:     )
+  918: 
+  919:     if action == "get_rates":
+  920:         try:
+  921:             rates = get_shippo_rates(address, packages)
+  922:         except ValueError as exc:
+  923:             request.session.pop(SESSION_RATES, None)
+  924:             request.session.pop(SESSION_SIGNATURE, None)
+  925:             request.session.pop(SESSION_TIME, None)
+  926:             return render_checkout(items, subtotal, error=str(exc))
+  927: 
+  928:         if not rates:
+  929:             request.session.pop(SESSION_RATES, None)
+  930:             request.session.pop(SESSION_SIGNATURE, None)
+  931:             request.session.pop(SESSION_TIME, None)
+  932:             return render_checkout(
+  933:                 items,
+  934:                 subtotal,
+  935:                 error=(
+  936:                     "No shipping services were returned. Check the delivery "
+  937:                     "address and package measurements, or request a quote."
+  938:                 ),
+  939:             )
+  940: 
+  941:         request.session[SESSION_RATES] = rates
+  942:         request.session[SESSION_SIGNATURE] = signature
+  943:         request.session[SESSION_TIME] = time.time()
+  944:         request.session.modified = True
+  945: 
+  946:         return render_checkout(items, subtotal, rates=rates)
+  947: 
+  948:     if action != "place_order":
+  949:         return render_checkout(
+  950:             items,
+  951:             subtotal,
+  952:             error="Please calculate shipping before placing your order.",
+  953:         )
+  954: 
+  955:     if not cache_valid:
+  956:         request.session.pop(SESSION_RATES, None)
+  957:         request.session.pop(SESSION_SIGNATURE, None)
+  958:         request.session.pop(SESSION_TIME, None)
+  959:         return render_checkout(
+  960:             items,
+  961:             subtotal,
+  962:             error=(
+  963:                 "Your shipping rates have expired or your address/cart changed. "
+  964:                 "Calculate shipping again and select a service."
+  965:             ),
+  966:         )
+  967: 
+  968:     selected_id = request.POST.get("shipping_rate_id", "").strip()
+  969:     selected_rate = next(
+  970:         (
+  971:             rate for rate in cached_rates
+  972:             if rate.get("object_id") == selected_id
+  973:         ),
+  974:         None,
+  975:     )
+  976: 
+  977:     if not selected_rate:
+  978:         return render_checkout(
+  979:             items,
+  980:             subtotal,
+  981:             rates=cached_rates,
+  982:             error="Select one of the available shipping services.",
+  983:         )
+  984: 
+  985:     try:
+  986:         shipping_cost = Decimal(str(selected_rate["amount"]))
+  987:     except (InvalidOperation, KeyError, TypeError):
+  988:         return render_checkout(
+  989:             items,
+  990:             subtotal,
+  991:             rates=cached_rates,
+  992:             error="The selected shipping price is invalid. Calculate rates again.",
+  993:         )
+  994: 
+  995:     if shipping_cost < ZERO:
+  996:         return render_checkout(
+  997:             items,
+  998:             subtotal,
+  999:             rates=cached_rates,
+ 1000:             error="The selected shipping price is invalid.",
+ 1001:         )
+ 1002: 
+ 1003:     total = subtotal + shipping_cost
+ 1004:     service_note = (
+ 1005:         "Shipping provider: {}. Service: {}. "
+ 1006:         "Shippo rate ID: {}. Shipping amount: ${} USD."
+ 1007:     ).format(
+ 1008:         selected_rate.get("provider", ""),
+ 1009:         selected_rate.get("service", ""),
+ 1010:         selected_rate.get("object_id", ""),
+ 1011:         format(shipping_cost, ".2f"),
+ 1012:     )
+ 1013:     combined_notes = "\n".join(part for part in (notes, service_note) if part)
+ 1014: 
+ 1015:     try:
+ 1016:         with transaction.atomic():
+ 1017:             order = Order.objects.create(
+ 1018:                 customer_name=customer_name,
+ 1019:                 customer_email=customer_email,
+ 1020:                 customer_phone=customer_phone,
+ 1021:                 shipping_address=street,
+ 1022:                 shipping_city=city,
+ 1023:                 shipping_state=state,
+ 1024:                 shipping_postal_code=postal_code,
+ 1025:                 shipping_country=country,

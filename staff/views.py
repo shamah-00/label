@@ -163,8 +163,8 @@ def staff_dashboard(request):
     approved_staff_count = StaffProfile.objects.filter(
         approved=True, status="approved"
     ).count()
-    pending_staff_count = StaffProfile.objects.exclude(
-        approved=True, status="approved"
+    pending_staff_count = StaffProfile.objects.filter(
+        approved=False, status="pending"
     ).count()
 
     context = {
@@ -304,37 +304,154 @@ def staff_product_edit(request, pk):
 
 @staff_required
 def staff_customers(request):
-    customers = (
-        Order.objects
-        .values(
-            "customer_name",
-            "customer_email",
-            "customer_phone",
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
         )
-        .distinct()
-        .order_by("customer_name")
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
     )
 
-    return render(
-        request,
-        "staff/customers.html",
-        {
-            "customers": customers,
-        },
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
     )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
 
 
 @staff_required
 def staff_orders(request):
-    orders = Order.objects.all().order_by("-created_at")
+    from django.db.models import Q, Sum
+    from decimal import Decimal
+    from products.models import Order
 
-    return render(
-        request,
-        "staff/orders.html",
-        {
-            "orders": orders,
-        },
-    )
+    all_orders = Order.objects.all().order_by("-created_at")
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(Order._meta.get_field("status").choices)
+
+    if search:
+        condition = (
+            Q(customer_name__icontains=search)
+            | Q(customer_email__icontains=search)
+            | Q(customer_phone__icontains=search)
+            | Q(shipping_city__icontains=search)
+            | Q(shipping_country__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search))
+        all_orders = all_orders.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        all_orders = all_orders.filter(status=status_filter)
+
+    all_orders = all_orders.prefetch_related("items")
+    status_cards = []
+    for key, label in status_choices:
+        status_cards.append({
+            "key": key,
+            "label": label,
+            "count": Order.objects.filter(status=key).count(),
+        })
+
+    totals = Order.objects.aggregate(value=Sum("total"))
+    total_value = totals["value"] or Decimal("0.00")
+    active_statuses = [
+        key for key, _ in status_choices
+        if key not in ("completed", "cancelled")
+    ]
+
+    return render(request, "staff/orders/list.html", {
+        "orders": all_orders,
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "status_cards": status_cards,
+        "total_orders": Order.objects.count(),
+        "active_orders": Order.objects.filter(status__in=active_statuses).count(),
+        "completed_orders": Order.objects.filter(status="completed").count(),
+        "total_value": total_value,
+    })
+
 
 
 
@@ -740,87 +857,113 @@ def staff_activity_log(request):
 
 @staff_required
 def staff_calendar_orders(request):
-    from django.db.models import Q
+    from django.db.models import Q, Sum
     from products.models import Order, CollectionCalendarStickerOrder
 
     search = request.GET.get("search", "").strip()
-    orders = Order.objects.all().order_by("-created_at")
-    calendar_orders = CollectionCalendarStickerOrder.objects.all().order_by("-created_at")
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(
+        CollectionCalendarStickerOrder._meta.get_field("status").choices
+    )
+
+    jobs = CollectionCalendarStickerOrder.objects.all().order_by(
+        "-created_at", "-pk"
+    )
 
     if search:
-        orders = orders.filter(
-            Q(customer_name__icontains=search) |
-            Q(customer_email__icontains=search) |
-            Q(status__icontains=search)
+        condition = (
+            Q(name__icontains=search)
+            | Q(company__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(title__icontains=search)
+            | Q(status__icontains=search)
         )
-        calendar_orders = calendar_orders.filter(
-            Q(name__icontains=search) |
-            Q(company__icontains=search) |
-            Q(email__icontains=search) |
-            Q(status__icontains=search)
-        )
+        if search.isdigit():
+            condition |= Q(pk=int(search)) | Q(calendar_year=int(search))
+        jobs = jobs.filter(condition)
 
-    return render(request, "staff/calendar_orders.html", {
-        "orders": orders,
-        "calendar_orders": calendar_orders,
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        jobs = jobs.filter(status=status_filter)
+
+    summary = jobs.aggregate(quantity=Sum("quantity"))
+    total_quantity = summary["quantity"] or 0
+    years = jobs.values_list("calendar_year", flat=True).distinct().count()
+    completed_keys = {"completed", "cancelled"}
+    active_count = jobs.exclude(status__in=completed_keys).count()
+
+    return render(request, "staff/calendar_orders/list.html", {
+        "calendar_orders": jobs,
+        "recent_orders": Order.objects.all().order_by("-created_at")[:8],
         "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "total_calendar_orders": jobs.count(),
+        "total_quantity": total_quantity,
+        "active_calendar_orders": active_count,
+        "year_count": years,
     })
+
 
 
 @staff_required
 def staff_calendar_order_detail(request, pk):
-    order = get_object_or_404(
-        CollectionCalendarStickerOrder,
-        pk=pk,
-    )
+    from django.contrib import messages
+    from products.models import CollectionCalendarStickerOrder
+
+    calendar_order = get_object_or_404(CollectionCalendarStickerOrder, pk=pk)
+    status_field = CollectionCalendarStickerOrder._meta.get_field("status")
+    status_choices = [
+        (str(key), str(label)) for key, label in status_field.choices if str(key)
+    ]
+    if not status_choices:
+        status_choices = [
+            (key, key.replace("_", " ").title())
+            for key in ("pending", "reviewing", "approved", "in_production",
+                        "completed", "cancelled")
+        ]
+
+    allowed_statuses = {key for key, _ in status_choices}
 
     if request.method == "POST":
-        status = request.POST.get("status")
-        staff_notes = request.POST.get(
-            "staff_notes",
-            "",
-        )
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("staff_notes", calendar_order.staff_notes)
 
-        if status:
-            order.status = status
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid job status.")
+        else:
+            changed = []
+            if calendar_order.status != new_status:
+                old_status = calendar_order.status
+                calendar_order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if calendar_order.staff_notes != new_notes:
+                calendar_order.staff_notes = new_notes
+                changed.append("staff notes updated")
 
-        if hasattr(order, "staff_notes"):
-            order.staff_notes = staff_notes
+            if changed:
+                calendar_order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Calendar job #{calendar_order.pk}: " + "; ".join(changed),
+                    f"Calendar job #{calendar_order.pk}",
+                )
+                messages.success(
+                    request, f"Calendar job #{calendar_order.pk} has been updated."
+                )
+            else:
+                messages.info(request, "No changes were needed.")
 
-        order.save()
+            return redirect(
+                "staff_calendar_order_detail", pk=calendar_order.pk
+            )
 
-        profile = get_staff_profile(request.user)
+    return render(request, "staff/calendar_orders/detail.html", {
+        "calendar_order": calendar_order,
+        "status_choices": status_choices,
+    })
 
-        log_staff_activity(
-            request,
-            profile,
-            "update",
-            f"Updated calendar sticker order #{order.pk}",
-            f"Calendar Sticker Order #{order.pk}",
-        )
-
-        messages.success(
-            request,
-            "Calendar sticker order updated successfully.",
-        )
-
-        return redirect(
-            "staff_calendar_order_detail",
-            pk=order.pk,
-        )
-
-    return render(
-        request,
-        "staff/calendar_order_detail.html",
-        {
-            "order": order,
-            "status_choices": getattr(
-                CollectionCalendarStickerOrder,
-                "STATUS_CHOICES",
-                [],
-            ),
-        },
-    )
 
 @boss_required
 def boss_site_settings(request):
@@ -1052,10 +1195,13 @@ def staff_quotes(request):
 
 @staff_required
 def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
     from products.models import Order, QuoteRequest
 
-    search = request.GET.get("search", "").strip()
     people = {}
+    search = request.GET.get("search", "").strip()
 
     def add_person(name, email, phone, company, kind, record):
         name = (name or "").strip()
@@ -1075,57 +1221,71 @@ def staff_customers(request):
                 "company": company,
                 "orders_count": 0,
                 "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
                 "last_seen": getattr(record, "created_at", None),
             }
             people[key] = person
         else:
             for field, value in (
                 ("name", name), ("email", email),
-                ("phone", phone), ("company", company)
+                ("phone", phone), ("company", company),
             ):
                 if value and (not person[field] or person[field] == "Customer"):
                     person[field] = value
             created = getattr(record, "created_at", None)
-            if created and (not person["last_seen"] or created > person["last_seen"]):
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
                 person["last_seen"] = created
 
-        person["orders_count" if kind == "order" else "quotes_count"] += 1
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
 
     for obj in Order.objects.all().order_by("-created_at"):
         add_person(
-            getattr(obj, "customer_name", ""),
-            getattr(obj, "customer_email", ""),
-            getattr(obj, "customer_phone", ""),
-            "", "order", obj
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
         )
 
     for obj in QuoteRequest.objects.all().order_by("-created_at"):
         add_person(
-            getattr(obj, "customer_name", ""),
-            getattr(obj, "customer_email", ""),
-            getattr(obj, "customer_phone", ""),
-            getattr(obj, "company_name", ""),
-            "quote", obj
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
         )
 
     customers = list(people.values())
     if search:
-        term = search.casefold()
+        needle = search.casefold()
         customers = [
             p for p in customers
-            if any(term in str(p.get(f, "") or "").casefold()
-                   for f in ("name", "email", "phone", "company"))
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
         ]
 
     customers.sort(
-        key=lambda p: p["last_seen"] or datetime.min.replace(tzinfo=None),
-        reverse=True
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
     )
-    return render(request, "staff/customers.html", {
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
         "customers": customers,
         "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
         "search": search,
     })
+
 
 
 @staff_required
@@ -1211,10 +1371,451 @@ def boss_staff_management(request):
 
 @staff_required
 def staff_order_detail(request, pk):
-    order = get_object_or_404(Order, pk=pk)
+    from django.contrib import messages
+    from products.models import Order
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items"),
+        pk=pk,
+    )
+    status_choices = list(Order._meta.get_field("status").choices)
+    allowed_statuses = {str(key) for key, _ in status_choices}
+
     if request.method == "POST":
-        if order.status != "completed":
-            order.status = "completed"
-            order.save()
-        return redirect("staff_order_detail", pk=pk)
-    return render(request, "staff/order_detail.html", {"order": order})
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("notes", order.notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid order status.")
+        else:
+            changed = []
+            if order.status != new_status:
+                old_status = order.status
+                order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if order.notes != new_notes:
+                order.notes = new_notes
+                changed.append("internal notes updated")
+
+            if changed:
+                order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Order #{order.pk}: " + "; ".join(changed),
+                    f"Order #{order.pk}",
+                )
+                messages.success(request, f"Order #{order.pk} has been updated.")
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect("staff_order_detail", pk=order.pk)
+
+    return render(request, "staff/orders/detail.html", {
+        "order": order,
+        "status_choices": status_choices,
+        "items": order.items.select_related("product").all(),
+        "item_count": order.items.count(),
+    })
+
+
+@staff_required
+def staff_shipping_dashboard(request):
+    import os
+    import requests
+    from django.conf import settings
+    from django.contrib import messages
+    from django.shortcuts import render, redirect
+    from django.utils import timezone
+    from products.models import Shipment
+
+    if request.method == "POST":
+        shipment_id = request.POST.get("shipment_id", "").strip()
+        action = request.POST.get("action", "update").strip()
+
+        shipment = Shipment.objects.select_related("order").filter(
+            pk=shipment_id
+        ).first()
+
+        if not shipment:
+            messages.error(request, "Shipment not found.")
+            return redirect("staff_shipping_dashboard")
+
+        if action == "purchase_label":
+            # Live purchases require deliberate server-side authorization.
+            import os
+            import requests
+            from django.conf import settings
+            from django.db import transaction as db_transaction
+            from django.utils import timezone
+
+            live_enabled = os.environ.get(
+                "THE_LABEL_GROUP_ALLOW_LIVE_SHIPPO_PURCHASES", ""
+            ).strip().lower() in {"1", "true", "yes"}
+
+            if not live_enabled:
+                messages.error(
+                    request,
+                    "Live Shippo label purchases are disabled. Verify the "
+                    "configuration and test safely before enabling purchases."
+                )
+                return redirect("staff_shipping_dashboard")
+
+            # Lock the shipment row to reduce the chance of simultaneous
+            # staff requests purchasing the same label twice.
+            with db_transaction.atomic():
+                try:
+                    locked = (
+                        shipment.__class__.objects
+                        .select_for_update()
+                        .select_related("order")
+                        .get(pk=shipment.pk)
+                    )
+                except shipment.__class__.DoesNotExist:
+                    messages.error(request, "Shipment not found.")
+                    return redirect("staff_shipping_dashboard")
+
+                order_status = str(
+                    getattr(locked.order, "status", "") or ""
+                ).strip().lower()
+                shipment_status = str(
+                    getattr(locked, "status", "") or ""
+                ).strip().lower()
+
+                if order_status == "cancelled" or shipment_status == "cancelled":
+                    messages.error(
+                        request,
+                        "A label cannot be purchased for a cancelled order."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                # A timeout may happen after Shippo has created a transaction.
+                # Require a dashboard check before any retry in that case.
+                unknown_marker = (
+                    "Shippo purchase outcome unknown after a network timeout."
+                )
+                if unknown_marker in (locked.notes or ""):
+                    messages.error(
+                        request,
+                        "The previous Shippo request had an unknown outcome. "
+                        "Check Shippo transactions before clearing the warning "
+                        "and attempting another purchase."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                if locked.shippo_transaction_id or locked.label_url:
+                    messages.error(
+                        request,
+                        "A Shippo transaction or label is already recorded. "
+                        "Check Shippo before taking any further action."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                rate_id = request.POST.get("shippo_rate_id", "").strip()
+                if not rate_id:
+                    messages.error(
+                        request,
+                        "Enter the saved Shippo rate ID before purchasing."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                if not locked.shippo_rate_id or rate_id != locked.shippo_rate_id:
+                    messages.error(
+                        request,
+                        "The submitted rate does not match the saved shipment "
+                        "rate. Recalculate and save a valid rate first."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                token = (
+                    os.environ.get("SHIPPO_API_TOKEN", "").strip()
+                    or os.environ.get("SHIPPO_API_KEY", "").strip()
+                    or str(getattr(settings, "SHIPPO_API_TOKEN", "") or "").strip()
+                    or str(getattr(settings, "SHIPPO_API_KEY", "") or "").strip()
+                    or str(getattr(settings, "SHIPPO_TOKEN", "") or "").strip()
+                    or os.environ.get("SHIPPO_TOKEN", "").strip()
+                )
+                if not token:
+                    messages.error(
+                        request,
+                        "Shippo API credentials are not configured on the server."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                headers = {
+                    "Authorization": "ShippoToken " + token,
+                    "Content-Type": "application/json",
+                    "SHIPPO-API-VERSION": "2018-02-08",
+                }
+                payload = {
+                    "rate": rate_id,
+                    "label_file_type": "PDF",
+                    "async": False,
+                    "metadata": "The Label Group Order #" + str(locked.order_id),
+                }
+
+                try:
+                    response = requests.post(
+                        "https://api.goshippo.com/transactions/",
+                        headers=headers,
+                        json=payload,
+                        timeout=45,
+                    )
+                except requests.RequestException:
+                    locked.notes = (
+                        ((locked.notes or "").rstrip() + "\\n")
+                        + unknown_marker
+                        + " Check the Shippo dashboard before retrying."
+                    ).strip()
+                    locked.save(update_fields=["notes", "updated_at"])
+                    messages.error(
+                        request,
+                        "Shippo could not confirm the result of the request. "
+                        "The shipment is marked for review to reduce the risk "
+                        "of a duplicate charge. Check Shippo transactions."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                try:
+                    result = response.json()
+                except ValueError:
+                    result = {}
+
+                if not isinstance(result, dict):
+                    result = {}
+
+                if not response.ok:
+                    detail = (
+                        result.get("detail")
+                        or result.get("message")
+                        or result.get("messages")
+                        or "Check the rate ID, Shippo account and carrier settings."
+                    )
+                    if isinstance(detail, (dict, list)):
+                        detail = str(detail)[:1200]
+                    messages.error(
+                        request,
+                        "Shippo rejected the label purchase (HTTP "
+                        + str(response.status_code) + "): " + str(detail)
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                transaction_status = str(result.get("status") or "").upper()
+                transaction_id = str(result.get("object_id") or "").strip()
+                label_url = str(result.get("label_url") or "").strip()
+                tracking_number = str(result.get("tracking_number") or "").strip()
+                tracking_url = str(
+                    result.get("tracking_url_provider") or ""
+                ).strip()
+                rate_data = result.get("rate") or {}
+                if not isinstance(rate_data, dict):
+                    rate_data = {}
+
+                if transaction_status != "SUCCESS" or not label_url.startswith("https://"):
+                    # Record any returned transaction ID so staff can inspect
+                    # it instead of accidentally creating another transaction.
+                    if transaction_id:
+                        locked.shippo_transaction_id = transaction_id
+                        locked.save(update_fields=[
+                            "shippo_transaction_id", "updated_at"
+                        ])
+                    messages.error(
+                        request,
+                        "Shippo did not return a successful transaction with "
+                        "a secure label URL. Inspect the transaction in Shippo "
+                        "before attempting another purchase."
+                    )
+                    return redirect("staff_shipping_dashboard")
+
+                locked.shippo_rate_id = rate_id
+                locked.shippo_transaction_id = transaction_id
+                locked.label_url = label_url
+                locked.tracking_url = (
+                    tracking_url if tracking_url.startswith("https://") else ""
+                )
+                if tracking_number:
+                    locked.tracking_number = tracking_number
+
+                provider = str(rate_data.get("provider") or "").strip()
+                if provider:
+                    locked.carrier = provider[:100]
+
+                servicelevel = rate_data.get("servicelevel") or {}
+                if isinstance(servicelevel, dict):
+                    service_name = str(servicelevel.get("name") or "").strip()
+                    if service_name:
+                        locked.shipping_method = service_name[:100]
+
+                locked.status = "shipped"
+                if getattr(locked, "shipped_at", None) is None:
+                    locked.shipped_at = timezone.now()
+                locked.save()
+
+                # Update the order only if "shipped" is a valid model choice.
+                order = locked.order
+                try:
+                    status_field = order._meta.get_field("status")
+                    valid_statuses = {
+                        str(value) for value, label in status_field.choices
+                    }
+                    if "shipped" in valid_statuses and order.status != "shipped":
+                        order.status = "shipped"
+                        order.save(update_fields=["status"])
+                except Exception:
+                    # Shipment and label data are already saved. Do not report
+                    # a purchased label as failed because of an order-status issue.
+                    pass
+
+            messages.success(
+                request,
+                "Shippo label purchased and saved for Order #"
+                + str(locked.order_id)
+                + ". Open the label URL to print it."
+            )
+            return redirect("staff_shipping_dashboard")
+
+        if action == "update":
+            status = request.POST.get("status", "").strip()
+            allowed = {choice[0] for choice in Shipment.STATUS_CHOICES}
+
+            if status not in allowed:
+                messages.error(request, "Invalid shipment status.")
+                return redirect("staff_shipping_dashboard")
+
+            from django.utils.dateparse import parse_date
+
+            delivery_raw = request.POST.get("estimated_delivery", "").strip()
+            delivery_date = parse_date(delivery_raw) if delivery_raw else None
+            if delivery_raw and delivery_date is None:
+                messages.error(request, "Enter a valid estimated delivery date.")
+                return redirect("staff_shipping_dashboard")
+
+            shipment.status = status
+            shipment.estimated_delivery = delivery_date
+            from urllib.parse import quote
+
+            previous_tracking_number = (shipment.tracking_number or "").strip()
+            shipment.tracking_number = request.POST.get(
+                "tracking_number", shipment.tracking_number
+            ).strip()[:200]
+            shipment.carrier = request.POST.get(
+                "carrier", shipment.carrier
+            ).strip()[:100]
+
+            current_tracking_number = (shipment.tracking_number or "").strip()
+            carrier_key = (shipment.carrier or "").lower()
+
+            # Keep an existing Shippo URL when the tracking number is unchanged.
+            # If staff changes or clears the number, never leave a stale link.
+            if current_tracking_number != previous_tracking_number:
+                shipment.tracking_url = ""
+
+            if current_tracking_number and not shipment.tracking_url:
+                encoded_tracking = quote(current_tracking_number, safe="")
+                if "ups" in carrier_key:
+                    shipment.tracking_url = (
+                        "https://www.ups.com/track?tracknum=" + encoded_tracking
+                    )
+                elif "fedex" in carrier_key:
+                    shipment.tracking_url = (
+                        "https://www.fedex.com/fedextrack/?trknbr=" + encoded_tracking
+                    )
+                elif "dhl" in carrier_key:
+                    shipment.tracking_url = (
+                        "https://www.dhl.com/global-en/home/tracking.html?tracking-id="
+                        + encoded_tracking
+                    )
+            shipment.shipping_method = request.POST.get(
+                "shipping_method", shipment.shipping_method
+            ).strip()[:100]
+            shipment.notes = request.POST.get("notes", shipment.notes)
+
+            if status == "shipped" and shipment.shipped_at is None:
+                shipment.shipped_at = timezone.now()
+            if status == "delivered" and shipment.delivered_at is None:
+                shipment.delivered_at = timezone.now()
+
+            shipment.save()
+
+            # Keep the order status aligned with shipment progress when supported.
+            order = shipment.order
+            shipment_to_order = {
+                "processing": "processing",
+                "packed": "packed",
+                "shipped": "shipped",
+                "in_transit": "shipped",
+                "out_for_delivery": "shipped",
+                "delivered": "completed",
+                "cancelled": "cancelled",
+            }
+            desired_order_status = shipment_to_order.get(status)
+            if desired_order_status and (order.status or "").lower() != "cancelled":
+                try:
+                    field = order._meta.get_field("status")
+                    choices = {value for value, label in field.choices}
+                    if desired_order_status in choices:
+                        order.status = desired_order_status
+                        order.save(update_fields=["status"])
+                except Exception:
+                    # Shipment changes remain saved if the order model differs.
+                    pass
+
+            messages.success(request, "Shipment details updated.")
+            return redirect("staff_shipping_dashboard")
+
+        messages.error(request, "Unknown shipping action.")
+        return redirect("staff_shipping_dashboard")
+
+    shipments = list(Shipment.objects.select_related("order").order_by("-updated_at"))
+
+    # Display each address component once, including overlapping city/state/ZIP data.
+    # Build a display-only address without repeating city, state or ZIP.
+    # Original order address fields are not modified.
+    for shipment in shipments:
+        order = shipment.order
+        address_fields = [
+            getattr(order, "shipping_address", ""),
+            getattr(order, "shipping_city", ""),
+            getattr(order, "shipping_state", ""),
+            getattr(order, "shipping_postal_code", ""),
+            getattr(order, "shipping_country", ""),
+        ]
+
+        parts = []
+        seen = set()
+
+        for field in address_fields:
+            text_value = " ".join(
+                str(field or "").replace("\r", " ").replace("\n", " ").split()
+            ).strip(" ,")
+
+            if not text_value:
+                continue
+
+            for raw_part in text_value.split(","):
+                part = " ".join(raw_part.split()).strip(" ,")
+                key = " ".join(part.casefold().split())
+
+                if not key or key in seen:
+                    continue
+
+                # Avoid appending city/state/ZIP when already included in
+                # a previously displayed address component.
+                already_included = any(
+                    key in " ".join(existing.casefold().split())
+                    or " ".join(existing.casefold().split()) in key
+                    for existing in parts
+                )
+
+                if already_included:
+                    continue
+
+                seen.add(key)
+                parts.append(part)
+
+        shipment.shipping_destination = ", ".join(parts)
+    return render(request, "staff/shipping/dashboard.html", {
+        "shipments": shipments,
+        "status_choices": Shipment.STATUS_CHOICES,
+    })
+

@@ -1,6 +1,160 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<head><title>Checkout | THE LABEL GROUP</title></head>
+<head><title>Checkout | THE LABEL GROUP</title>
+<style id="tlg-checkout-layout">
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-navy-dark: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-border: #e1e7ef;
+    --tlg-muted: #64748b;
+    --tlg-surface: #ffffff;
+    --tlg-background: #f4f7fb;
+}
+html { scroll-behavior: smooth; }
+body {
+    background: var(--tlg-background) !important;
+    color: var(--tlg-navy) !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    line-height: 1.55;
+}
+main, .container, .checkout-container, .checkout-page,
+.page-container, .content, .wrapper {
+    width: min(1120px, calc(100% - 32px)) !important;
+    max-width: 1120px !important;
+    margin: 24px auto !important;
+}
+h1, h2, h3 {
+    color: var(--tlg-navy) !important;
+    line-height: 1.25;
+}
+h1 { font-size: clamp(1.65rem, 3vw, 2.2rem) !important; }
+h2 { font-size: 1.25rem !important; }
+p { margin-top: 0; }
+.card, .panel, .checkout-card, .order-summary,
+.summary, .empty, form.checkout-form {
+    background: var(--tlg-surface) !important;
+    border: 1px solid var(--tlg-border) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 5px 22px rgba(11,31,58,.06) !important;
+    padding: 22px !important;
+    margin-bottom: 18px !important;
+}
+.empty {
+    max-width: 720px;
+    margin: 24px auto !important;
+    text-align: center;
+}
+form {
+    min-width: 0;
+}
+label {
+    display: block;
+    color: var(--tlg-navy) !important;
+    font-size: .92rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+select, textarea {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 10px 12px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 7px !important;
+    background: #fff !important;
+    color: var(--tlg-navy) !important;
+    font: inherit !important;
+    margin: 3px 0 14px;
+}
+textarea { min-height: 100px; }
+input:focus, select:focus, textarea:focus {
+    outline: 2px solid rgba(244,123,32,.25) !important;
+    border-color: var(--tlg-orange) !important;
+}
+button, input[type="submit"], a.checkout,
+button[type="submit"], .btn-primary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    background: var(--tlg-orange) !important;
+    color: #fff !important;
+    border: 0 !important;
+    border-radius: 7px !important;
+    padding: 12px 18px !important;
+    min-height: 44px;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease;
+}
+button:hover, input[type="submit"]:hover,
+a.checkout:hover, button[type="submit"]:hover, .btn-primary:hover {
+    background: var(--tlg-orange-dark) !important;
+}
+a.back, a:not(.checkout) {
+    text-underline-offset: 3px;
+}
+a.back {
+    color: var(--tlg-navy) !important;
+    font-weight: 600;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 11px 10px;
+    border-bottom: 1px solid var(--tlg-border);
+    text-align: left;
+}
+th {
+    color: var(--tlg-navy);
+    background: #f1f5f9;
+}
+img { max-width: 100%; height: auto; }
+.grid, .form-grid, .checkout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+.checkout-grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, .85fr);
+    align-items: start;
+}
+footer {
+    margin-top: 30px;
+    padding: 18px;
+    text-align: center;
+    color: var(--tlg-muted);
+    font-size: .9rem;
+}
+@media (max-width: 720px) {
+    main, .container, .checkout-container, .checkout-page,
+    .page-container, .content, .wrapper {
+        width: calc(100% - 22px) !important;
+        margin: 14px auto !important;
+    }
+    .card, .panel, .checkout-card, .order-summary,
+    .summary, .empty, form.checkout-form {
+        padding: 16px !important;
+        border-radius: 10px !important;
+    }
+    .grid, .form-grid, .checkout-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    button, input[type="submit"], a.checkout {
+        max-width: 100%;
+    }
+    table { display: block; overflow-x: auto; }
+}
+</style>
+
+</head>
 <body style="font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px;">
     <h2>Complete Your Order</h2>
     <form method="post">

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container" style="max-width:1200px;margin:35px auto;padding:20px">
+  <h1>The Label Group Shipping Management</h1>
+  <p>Manage shipment status, carrier, tracking, and delivery notes.</p>
+  {% if messages %}
+    {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+  {% endif %}
+  <div style="overflow-x:auto">
+  <table style="width:100%;border-collapse:collapse">
+    <thead><tr>
+      <th>Order</th><th>Customer</th><th>Destination</th><th>Status</th>
+      <th>Carrier</th><th>Tracking</th><th>Save</th>
+    </tr></thead>
+    <tbody>
+    {% for shipment in shipments %}
+      <tr>
+      <form method="post">
+        {% csrf_token %}
+        <td>#{{ shipment.order_id }}<input type="hidden" name="shipment_id" value="{{ shipment.id }}"></td>
+        <td>{{ shipment.order.customer_name }}</td>
+        <td>{{ shipment.order.shipping_city }}, {{ shipment.order.shipping_country }}</td>
+        <td><select name="status">
+          {% for value,label in status_choices %}
+          <option value="{{ value }}" {% if shipment.status == value %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select></td>
+        <td><input name="carrier" value="{{ shipment.carrier }}" maxlength="100"></td>
+        <td><input name="tracking_number" value="{{ shipment.tracking_number }}" maxlength="200"></td>
+        <td><button type="submit">Update</button></td>
+      </form>
+      </tr>
+      <tr><td colspan="7"><small>Estimated delivery: {{ shipment.estimated_delivery|default:"Not set" }} | Notes: {{ shipment.notes|default:"None" }}</small></td></tr>
+    {% empty %}
+      <tr><td colspan="7">No shipments recorded yet. Shipments are linked to existing orders.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</div>
+{% endblock %}

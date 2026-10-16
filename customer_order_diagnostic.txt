@@ -1,0 +1,13 @@
+THE LABEL GROUP - CUSTOMER AND ORDER DIAGNOSTIC
+============================================================
+OK: Template found: staff/customers/list.html
+OK: Template found: staff/orders/list.html
+OK: Template found: staff/orders/detail.html
+OK: staff_customers -> /staff/customers/ -> wrapper
+OK: staff_orders -> /staff/orders/ -> wrapper
+OK: staff_order_detail -> /staff/orders/1/ -> wrapper
+View staff_customers: defined 2 time(s)
+View staff_orders: defined 1 time(s)
+View staff_order_detail: defined 1 time(s)
+
+No application files or database records were changed.

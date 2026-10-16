@@ -1,0 +1,111 @@
+﻿{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ product.name }} | THE LABEL GROUP{% endblock %}
+
+{% block content %}
+<style>
+.tlg-detail{max-width:1180px;margin:35px auto;padding:0 20px;color:#17253b}
+.tlg-breadcrumb{font-size:13px;color:#68768a;margin-bottom:24px}
+.tlg-breadcrumb a{color:#d9620d;text-decoration:none}
+.tlg-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:38px;align-items:start}
+.tlg-image{background:#f4f6f9;border:1px solid #e0e5eb;border-radius:14px;min-height:330px;display:flex;align-items:center;justify-content:center;padding:24px}
+.tlg-image img{width:100%;max-height:490px;object-fit:contain}
+.tlg-placeholder{font-size:18px;font-weight:700;color:#8793a3;text-align:center}
+.tlg-kicker{font-size:12px;font-weight:800;letter-spacing:2px;color:#d9620d;text-transform:uppercase}
+.tlg-detail h1{font-size:clamp(28px,4vw,42px);line-height:1.15;margin:10px 0;color:#0b1f3a}
+.tlg-code{font-size:13px;color:#64748b;margin:12px 0 18px}
+.tlg-description{font-size:16px;line-height:1.8;color:#536176;white-space:pre-line}
+.tlg-price{font-size:30px;font-weight:800;color:#0b1f3a;margin:20px 0}
+.tlg-price del{font-size:17px;font-weight:500;color:#8993a2;margin-right:9px}
+.tlg-stock{font-size:13px;font-weight:700;margin:12px 0;color:#247447}
+.tlg-button{display:inline-block;background:#f47b20;color:white!important;border:0;border-radius:7px;padding:13px 22px;font-weight:800;text-decoration:none;cursor:pointer}
+.tlg-button:hover{background:#d9620d}
+.tlg-spec-title{font-size:25px;color:#0b1f3a;margin:38px 0 15px}
+.tlg-specs{width:100%;border-collapse:collapse;border:1px solid #e0e5eb;border-radius:9px;overflow:hidden}
+.tlg-specs th,.tlg-specs td{text-align:left;padding:14px 16px;border-bottom:1px solid #e7ebf0;vertical-align:top;line-height:1.6}
+.tlg-specs th{width:32%;background:#f4f6f9;color:#0b1f3a;font-size:14px}
+.tlg-specs td{color:#536176;overflow-wrap:anywhere}
+.tlg-specs tr:last-child th,.tlg-specs tr:last-child td{border-bottom:0}
+.tlg-notes{background:#fff7ef;border-left:4px solid #f47b20;border-radius:5px;padding:16px;margin-top:20px;color:#5a4635;line-height:1.7}
+@media(max-width:760px){.tlg-layout{grid-template-columns:1fr;gap:24px}.tlg-detail{margin:20px auto;padding:0 14px}.tlg-image{min-height:240px}.tlg-specs th,.tlg-specs td{padding:11px 10px}.tlg-specs th{width:38%}}
+</style>
+
+<div class="tlg-detail">
+    <div class="tlg-breadcrumb">
+        <a href="{% url 'product_list' %}">Shop</a> / {{ product.name }}
+    </div>
+
+    <div class="tlg-layout">
+        <div class="tlg-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <div class="tlg-placeholder">THE LABEL GROUP<br>INDUSTRIAL PRINTS &amp; DECALS</div>
+            {% endif %}
+        </div>
+
+        <div>
+            <div class="tlg-kicker">Industrial Prints &amp; Decals</div>
+            <h1>{{ product.name }}</h1>
+            <div class="tlg-code">
+                Product Code: {{ product.product_code|default:"Contact us for details" }}
+                {% if product.industry %} · {{ product.industry }}{% endif %}
+            </div>
+
+            {% if product.description %}
+                <div class="tlg-description">{{ product.description }}</div>
+            {% endif %}
+
+            <div class="tlg-price">
+                {% if product.discount_price %}
+                    <del>${{ product.price|floatformat:2 }}</del>
+                    ${{ product.discount_price|floatformat:2 }}
+                {% else %}
+                    ${{ product.price|floatformat:2 }}
+                {% endif %}
+            </div>
+
+            {% if product.is_available %}
+                <div class="tlg-stock">Available to order</div>
+            {% else %}
+                <div class="tlg-stock" style="color:#b42318">Currently unavailable</div>
+            {% endif %}
+
+            {% if product.is_available %}
+                <form method="post" action="{% url 'add_to_quote' product.id %}">
+                    {% csrf_token %}
+                    <label for="tlg-quantity" style="display:block;font-weight:700;margin-bottom:8px">Quantity</label>
+                    <input id="tlg-quantity" type="number" name="quantity" min="1" value="1" required
+                           style="width:100px;padding:11px;border:1px solid #cbd5e1;border-radius:6px;margin-bottom:15px">
+                    <br>
+                    <button class="tlg-button" type="submit">Add to Quote</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <h2 class="tlg-spec-title">Product Specifications</h2>
+    <table class="tlg-specs">
+        <tbody>
+            <tr><th>Product Code</th><td>{{ product.product_code|default:"Not specified" }}</td></tr>
+            <tr><th>Product Name</th><td>{{ product.name|default:"Not specified" }}</td></tr>
+            {% if product.category %}<tr><th>Category</th><td>{{ product.category }}</td></tr>{% endif %}
+            {% if product.industry %}<tr><th>Industry</th><td>{{ product.industry }}</td></tr>{% endif %}
+            {% if product.material %}<tr><th>Ideal Material</th><td>{{ product.material }}</td></tr>{% endif %}
+            {% if product.finish %}<tr><th>Finish</th><td>{{ product.finish }}</td></tr>{% endif %}
+            {% if product.shape %}<tr><th>Shape</th><td>{{ product.shape }}</td></tr>{% endif %}
+            {% if product.printing_method %}<tr><th>Printing Method</th><td>{{ product.printing_method }}</td></tr>{% endif %}
+            {% if product.adhesive %}<tr><th>Adhesive</th><td>{{ product.adhesive }}</td></tr>{% endif %}
+            {% if product.stock %}<tr><th>Stock</th><td>{{ product.stock }}</td></tr>{% endif %}
+            {% if product.description %}
+                <tr><th>Description / Buyer’s Notes</th><td><div style="white-space:pre-line">{{ product.description }}</div></td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <div class="tlg-notes">
+        Need a custom size, material or quantity? Contact THE LABEL GROUP for a quote tailored to your application.
+    </div>
+</div>
+{% endblock %}

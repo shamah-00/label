@@ -1,0 +1,122 @@
+﻿
+/* THE LABEL GROUP - IMAGE FIT AND SPACING FIX */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+}
+
+img {
+    max-width: 100%;
+}
+
+.product-card img,
+.product-item img,
+.product-box img,
+.catalog-card img,
+.featured-product img,
+.product-image img,
+.product-image-wrapper img,
+.product-card-image img,
+.product-detail-image img,
+.product-gallery img,
+.cart-item img,
+.cart-product img,
+.checkout-item img,
+.order-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.product-image,
+.product-image-wrapper,
+.product-card-image,
+.product-detail-image,
+.product-gallery,
+.product-gallery-item {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    line-height: 0;
+    background: transparent;
+}
+
+.products-grid,
+.product-grid,
+.catalog-grid,
+.featured-products-grid {
+    min-width: 0;
+}
+
+.products-grid img,
+.product-grid img,
+.catalog-grid img,
+.featured-products-grid img {
+    object-fit: contain;
+    object-position: center;
+}
+
+@media (max-width: 768px) {
+    .products-grid,
+    .product-grid,
+    .catalog-grid,
+    .featured-products-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 420px) {
+    .products-grid,
+    .product-grid,
+    .catalog-grid,
+    .featured-products-grid {
+        gap: 8px;
+    }
+}
+
+
+/* TLG-NATURAL-PRODUCT-IMAGES-V3
+   Display complete product images without cropping. */
+.products-grid img,
+.product-grid img,
+.catalog-grid img,
+.featured-products-grid img,
+.product-image img {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    aspect-ratio: auto !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.product-image {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    aspect-ratio: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+}

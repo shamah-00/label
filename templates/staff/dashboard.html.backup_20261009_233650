@@ -1,0 +1,257 @@
+﻿
+<style id="label-group-dashboard-readability">
+.staff-dashboard, .dashboard, .dashboard-content {
+    font-size: 16px;
+}
+.staff-dashboard h1, .dashboard h1, .dashboard-content h1 {
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.2;
+}
+.staff-dashboard h2, .dashboard h2, .dashboard-content h2 {
+    font-size: 23px;
+}
+.staff-dashboard .stat-value, .dashboard .stat-value,
+.staff-dashboard .stat-number, .dashboard .stat-number {
+    font-size: 32px;
+    font-weight: 800;
+}
+.staff-dashboard .stat-label, .dashboard .stat-label,
+.staff-dashboard small, .dashboard small {
+    font-size: 14px;
+}
+</style>
+{% extends "staff/base.html" %}
+{% block content %}
+<style>
+.dashboard { color:#17263c; max-width:1500px; margin:auto; }
+.dashboard * { box-sizing:border-box; }
+.dashboard .hero {
+    position:relative; overflow:hidden; display:flex; justify-content:space-between;
+    align-items:center; gap:24px; padding:35px; border-radius:20px;
+    background:linear-gradient(115deg,#06152a,#0b1f3a 68%,#17416a);
+    color:#fff; margin-bottom:28px;
+}
+.dashboard .hero:after {
+    content:"TLG"; position:absolute; right:35px; top:-22px;
+    font-size:130px; font-weight:900; color:rgba(255,255,255,.045);
+    pointer-events:none;
+}
+.dashboard .eyebrow { color:#ffb779; text-transform:uppercase; letter-spacing:2px; font-size:10px; font-weight:800; }
+.dashboard .hero h1 { font-size:clamp(27px,3vw,39px); letter-spacing:-1px; margin:12px 0; color:#fff; }
+.dashboard .hero p { color:#c7d4e4; max-width:550px; line-height:1.8; margin:0; font-size:13px; }
+.dashboard .actions { display:flex; gap:10px; flex-wrap:wrap; position:relative; z-index:1; }
+.dashboard .btn {
+    display:inline-block; text-decoration:none; padding:13px 16px; border-radius:9px;
+    background:#f47b20; color:white; font-size:12px; font-weight:800;
+}
+.dashboard .btn.alt { background:rgba(255,255,255,.08); border:1px solid #52647b; }
+.dashboard .section-heading { display:flex; justify-content:space-between; align-items:end; gap:12px; margin:27px 0 15px; }
+.dashboard .section-heading h2 { margin:0; font-size:18px; color:#0b1f3a; }
+.dashboard .section-heading p { color:#8290a4; font-size:12px; margin:6px 0 0; }
+.dashboard .stats { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; }
+.dashboard .stat {
+    background:#fff; border:1px solid #e8edf4; border-radius:16px; padding:22px;
+    box-shadow:0 8px 28px rgba(11,31,58,.045); min-width:0;
+    transition:transform .2s,box-shadow .2s;
+}
+.dashboard .stat:hover { transform:translateY(-3px); box-shadow:0 14px 32px rgba(11,31,58,.09); }
+.dashboard .stat-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.dashboard .stat-label { color:#78879b; font-size:12px; font-weight:700; }
+.dashboard .stat-icon { display:grid; place-items:center; width:40px; height:40px; border-radius:12px; background:#fff0e4; color:#d9620d; font-size:18px; }
+.dashboard .stat-icon.blue { background:#edf2ff; color:#3468c8; }
+.dashboard .stat-icon.green { background:#e8f8f0; color:#16845b; }
+.dashboard .stat-icon.purple { background:#f1edff; color:#7957c8; }
+.dashboard .stat-number { color:#0b1f3a; font-size:35px; font-weight:900; letter-spacing:-1px; margin:17px 0 12px; }
+.dashboard .stat-foot { padding-top:12px; border-top:1px solid #edf1f6; color:#8794a6; font-size:11px; }
+.dashboard a.text-link { color:#d9620d; font-weight:800; text-decoration:none; }
+.dashboard .pipeline,.dashboard .panel { background:#fff; border:1px solid #e8edf4; border-radius:16px; box-shadow:0 8px 28px rgba(11,31,58,.04); }
+.dashboard .pipeline { padding:23px; }
+.dashboard .pipeline h3,.dashboard .panel h3 { color:#0b1f3a; margin:0; font-size:15px; }
+.dashboard .muted { color:#8290a4; font-size:11px; margin:7px 0 0; }
+.dashboard .pipeline-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; margin-top:23px; }
+.dashboard .stage { background:#f7f9fc; border:1px solid #edf1f6; border-radius:11px; padding:14px; }
+.dashboard .stage:before { content:""; display:block; height:4px; width:30px; border-radius:4px; background:#f47b20; margin-bottom:12px; }
+.dashboard .stage:nth-child(2):before { background:#3468c8; }
+.dashboard .stage:nth-child(3):before { background:#7957c8; }
+.dashboard .stage:nth-child(4):before { background:#168f91; }
+.dashboard .stage:nth-child(5):before { background:#16845b; }
+.dashboard .stage span { display:block; color:#8290a4; font-size:11px; line-height:1.5; }
+.dashboard .stage strong { display:block; color:#0b1f3a; font-size:24px; margin-top:7px; }
+.dashboard .columns { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:18px; margin-top:20px; }
+.dashboard .panel { overflow:hidden; min-width:0; }
+.dashboard .panel-head { padding:20px 22px; border-bottom:1px solid #e8edf4; display:flex; justify-content:space-between; align-items:center; gap:10px; }
+.dashboard .panel-body { padding:0 22px; }
+.dashboard .quote-row,.dashboard .activity-row { display:flex; align-items:center; gap:12px; padding:16px 0; border-bottom:1px solid #edf1f6; }
+.dashboard .quote-row:last-child,.dashboard .activity-row:last-child { border-bottom:0; }
+.dashboard .round-icon { width:38px; height:38px; flex:0 0 38px; border-radius:11px; display:grid; place-items:center; background:#fff0e4; color:#d9620d; font-weight:900; }
+.dashboard .quote-info { flex:1; min-width:0; }
+.dashboard .quote-name { color:#0b1f3a; font-weight:800; font-size:12px; overflow-wrap:anywhere; }
+.dashboard .quote-meta { color:#8290a4; font-size:10px; margin-top:5px; }
+.dashboard .status { display:inline-block; border-radius:7px; padding:6px 8px; font-size:10px; font-weight:800; background:#edf2f7; color:#536278; text-transform:capitalize; }
+.dashboard .status-new { background:#fff0e4; color:#b85108; }
+.dashboard .status-approved,.dashboard .status-completed { background:#e5f7ee; color:#16734f; }
+.dashboard .status-reviewing,.dashboard .status-quoted { background:#edf2ff; color:#285db3; }
+.dashboard .status-in-production { background:#f1edff; color:#6e4cb9; }
+.dashboard .activity-row { align-items:flex-start; }
+.dashboard .activity-copy { color:#536278; font-size:11px; line-height:1.7; overflow-wrap:anywhere; }
+.dashboard .activity-copy strong { color:#0b1f3a; }
+.dashboard .activity-time { color:#9aa5b4; font-size:10px; margin-top:5px; }
+.dashboard .empty { padding:30px 15px; text-align:center; color:#8290a4; font-size:12px; line-height:1.8; }
+.dashboard .empty strong { display:block; color:#0b1f3a; margin-bottom:5px; }
+.dashboard .quick-links { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+.dashboard .quick-link { display:flex; align-items:center; gap:12px; padding:18px; background:#fff; border:1px solid #e8edf4; border-radius:13px; text-decoration:none; transition:.2s; }
+.dashboard .quick-link:hover { border-color:#f4b17c; transform:translateY(-2px); }
+.dashboard .quick-link strong { display:block; color:#0b1f3a; font-size:12px; }
+.dashboard .quick-link small { display:block; color:#8290a4; font-size:10px; margin-top:5px; line-height:1.5; }
+.dashboard .arrow { margin-left:auto; color:#d9620d; font-size:18px; }
+@media(max-width:1100px) {
+    .dashboard .stats { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .dashboard .columns { grid-template-columns:1fr; }
+}
+@media(max-width:700px) {
+    .dashboard .hero { padding:25px; flex-direction:column; align-items:flex-start; }
+    .dashboard .hero:after { font-size:85px; right:10px; }
+    .dashboard .pipeline-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .dashboard .stage:last-child { grid-column:span 2; }
+    .dashboard .quick-links { grid-template-columns:1fr; }
+}
+@media(max-width:430px) {
+    .dashboard .stats { grid-template-columns:1fr; }
+    .dashboard .quote-row { align-items:flex-start; flex-wrap:wrap; }
+}
+</style>
+
+<div class="dashboard">
+
+    <section class="hero">
+        <div>
+            <div class="eyebrow">THE LABEL GROUP · OPERATIONS</div>
+            <h1>Welcome back, {{ request.user.first_name|default:request.user.username|title }}</h1>
+            <p>Your business operations at a glance. Manage products, review customer requests and keep orders moving from enquiry to delivery.</p>
+        </div>
+        <div class="actions">
+            <a class="btn" href="/staff/orders/">Manage orders ↗</a>
+            <a class="btn alt" href="/staff/quotes/">Review quotes ↗</a>
+        </div>
+    </section>
+
+    <div class="section-heading">
+        <div><h2>Business at a glance</h2><p>Your catalogue and customer workflow, all in one place.</p></div>
+        <a class="text-link" href="/staff/products/">Open catalogue ↗</a>
+    </div>
+
+    <section class="stats">
+        <article class="stat">
+            <div class="stat-top"><span class="stat-label">Total products</span><span class="stat-icon">▦</span></div>
+            <div class="stat-number">{{ total_products|default:0 }}</div>
+            <div class="stat-foot"><a class="text-link" href="/staff/products/">Manage catalogue →</a></div>
+        </article>
+        <article class="stat">
+            <div class="stat-top"><span class="stat-label">Available products</span><span class="stat-icon green">✓</span></div>
+            <div class="stat-number">{{ available_products|default:0 }}</div>
+            <div class="stat-foot">Marked available in your catalogue</div>
+        </article>
+        <article class="stat">
+            <div class="stat-top"><span class="stat-label">Quote requests</span><span class="stat-icon blue">▤</span></div>
+            <div class="stat-number">{{ total_quotes|default:0 }}</div>
+            <div class="stat-foot"><a class="text-link" href="/staff/quotes/">{{ new_quotes|default:0 }} new · Review requests →</a></div>
+        </article>
+        <article class="stat">
+            <div class="stat-top"><span class="stat-label">Total orders</span><span class="stat-icon purple">▣</span></div>
+            <div class="stat-number">{{ total_orders|default:0 }}</div>
+            <div class="stat-foot"><a class="text-link" href="/staff/orders/">Open order management →</a></div>
+        </article>
+    </section>
+
+    <div class="section-heading">
+        <div><h2>Quote pipeline</h2><p>Follow each request through its current stage.</p></div>
+        <a class="text-link" href="/staff/quotes/">View requests ↗</a>
+    </div>
+
+    <section class="pipeline">
+        <h3>Request progress</h3>
+        <p class="muted">Live counts from your existing dashboard data.</p>
+        <div class="pipeline-grid">
+            <div class="stage"><span>New requests</span><strong>{{ new_quotes|default:0 }}</strong></div>
+            <div class="stage"><span>Under review</span><strong>{{ reviewing_quotes|default:0 }}</strong></div>
+            <div class="stage"><span>Quotes prepared</span><strong>{{ quoted_quotes|default:0 }}</strong></div>
+            <div class="stage"><span>In production</span><strong>{{ production_quotes|default:0 }}</strong></div>
+            <div class="stage"><span>Completed</span><strong>{{ completed_quotes|default:0 }}</strong></div>
+        </div>
+    </section>
+
+    <section class="columns">
+        <div class="panel">
+            <div class="panel-head">
+                <div><h3>Recent quote requests</h3><p class="muted">Latest customer enquiries.</p></div>
+                <a class="text-link" href="/staff/quotes/">View all →</a>
+            </div>
+            <div class="panel-body">
+                {% for quote in recent_quotes %}
+                <div class="quote-row">
+                    <div class="round-icon">Q</div>
+                    <div class="quote-info">
+                        <div class="quote-name">{{ quote.company_name|default:quote.customer_name|default:"Quote request" }}</div>
+                        <div class="quote-meta">Request #{{ quote.pk }}{% if quote.created_at %} · {{ quote.created_at|date:"M j, Y" }}{% endif %}</div>
+                    </div>
+                    <span class="status status-{{ quote.status|default:'new'|slugify }}">{{ quote.get_status_display|default:quote.status|default:"New" }}</span>
+                </div>
+                {% empty %}
+                <div class="empty"><strong>No recent quote requests</strong>New customer enquiries will appear here.</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <div><h3>Team activity</h3><p class="muted">Recent actions recorded by the portal.</p></div>
+                {% if request.user.is_superuser %}<a class="text-link" href="/staff/activity-log/">Full log →</a>{% endif %}
+            </div>
+            <div class="panel-body">
+                {% for activity in recent_activity %}
+                <div class="activity-row">
+                    <div class="round-icon">↗</div>
+                    <div class="activity-copy">
+                        {% if activity.staff.user.get_full_name %}<strong>{{ activity.staff.user.get_full_name }}</strong>{% elif activity.staff.user.username %}<strong>{{ activity.staff.user.username }}</strong>{% endif %}
+                        {{ activity.description|default:activity.description|default:activity.action|default:"Activity recorded" }}
+                        <div class="activity-time">{% if activity.created_at %}{{ activity.created_at|date:"M j, Y · H:i" }}{% elif activity.timestamp %}{{ activity.timestamp|date:"M j, Y · H:i" }}{% endif %}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty"><strong>No activity to display yet</strong>Recorded staff actions will appear here.</div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <div class="section-heading">
+        <div><h2>Quick access</h2><p>Jump straight to your daily tools.</p></div>
+    </div>
+
+    <section class="quick-links">
+        <a class="quick-link" href="/staff/products/"><span class="stat-icon">▦</span><span><strong>Product catalogue</strong><small>Manage products and availability</small></span><span class="arrow">→</span></a>
+        <a class="quick-link" href="/staff/customers/"><span class="stat-icon blue">♙</span><span><strong>Customer directory</strong><small>Access customer records</small></span><span class="arrow">→</span></a>
+        <a class="quick-link" href="/staff/orders/"><span class="stat-icon green">▣</span><span><strong>Order management</strong><small>Review and process orders</small></span><span class="arrow">→</span></a>
+    </section>
+
+    {% if request.user.is_superuser %}
+    <div class="section-heading">
+        <div><h2>Administrator overview</h2><p>Staff access and additional workflow totals.</p></div>
+    </div>
+    <section class="stats">
+        <article class="stat"><div class="stat-top"><span class="stat-label">Approved staff</span><span class="stat-icon green">✓</span></div><div class="stat-number">{{ approved_staff|default:0 }}</div><div class="stat-foot">Staff with approved access</div></article>
+        <article class="stat"><div class="stat-top"><span class="stat-label">Pending staff</span><span class="stat-icon">!</span></div><div class="stat-number">{{ pending_staff|default:0 }}</div><div class="stat-foot">Applications awaiting review</div></article>
+        <article class="stat"><div class="stat-top"><span class="stat-label">Approved quotes</span><span class="stat-icon blue">✓</span></div><div class="stat-number">{{ approved_quotes|default:0 }}</div><div class="stat-foot">Requests marked approved</div></article>
+        <article class="stat"><div class="stat-top"><span class="stat-label">Quoted requests</span><span class="stat-icon purple">▤</span></div><div class="stat-number">{{ quoted_quotes|default:0 }}</div><div class="stat-foot">Quotes prepared for customers</div></article>
+    </section>
+    <section class="quick-links" style="margin-top:16px">
+        <a class="quick-link" href="/staff/staff-management/"><span class="stat-icon">♧</span><span><strong>Staff management</strong><small>Review applications and access</small></span><span class="arrow">→</span></a>
+        <a class="quick-link" href="/staff/activity-log/"><span class="stat-icon blue">◷</span><span><strong>Activity log</strong><small>Review recorded staff actions</small></span><span class="arrow">→</span></a>
+        <a class="quick-link" href="/staff/calendar-orders/"><span class="stat-icon green">▦</span><span><strong>Order calendar</strong><small>View scheduled orders</small></span><span class="arrow">→</span></a>
+    </section>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+

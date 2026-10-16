@@ -1,0 +1,34 @@
+﻿THE LABEL GROUP - UPS SETUP
+
+1. UPS credentials are not available yet.
+2. Do not enter invented credentials or account numbers.
+3. Request UPS Developer Portal API access and confirm the APIs
+   enabled for your account.
+4. Confirm the ship-from address and postal code.
+5. Confirm the package dimensions, weights, origin country and
+   destination countries.
+6. Confirm whether you need live rating, tracking, shipping labels,
+   or all three.
+7. Keep the UPS client secret out of Git, source code, screenshots,
+   customer pages and browser JavaScript.
+
+Environment variables to configure when UPS supplies the details:
+
+UPS_ENVIRONMENT=sandbox
+UPS_CLIENT_ID=
+UPS_CLIENT_SECRET=
+UPS_ACCOUNT_NUMBER=
+UPS_ORIGIN_POSTAL_CODE=
+UPS_ORIGIN_COUNTRY_CODE=US
+UPS_CURRENCY_CODE=USD
+
+IMPORTANT:
+The origin country and postal code above are examples/placeholders.
+Replace them with the actual shipping origin for The Label Group.
+
+This helper prepares configuration and OAuth authentication.
+It does not yet connect the checkout to live rates, create labels,
+purchase shipments, or automatically update order tracking.
+
+Do not advertise live UPS pricing until the Rating API is implemented
+and verified against the actual UPS account.

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -60,6 +60,7 @@ tbody tr:hover{background:#fff5ed}
 <a class="nav-link" href="{% url 'staff_customers' %}">Customers</a>
 <a class="nav-link" href="{% url 'staff_quotes' %}">Quote Requests</a>
 <a class="nav-link active" href="{% url 'staff_orders' %}">Orders</a>
+<a class="nav-link" href="{% url 'staff_shipping_dashboard' %}">Shipping</a>
 <div class="nav-title">Account</div>
 <a class="nav-link" href="{% url 'staff_profile' %}">Staff Profile</a>
 {% if user.is_superuser %}

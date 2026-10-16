@@ -1,0 +1,42 @@
+{% extends "staff/ops_base.html" %}
+{% block title %}Customer Directory{% endblock %}
+{% block content %}
+<div class="intro">
+<h1>Customer Directory</h1>
+<div class="muted">A combined view of customers who have placed orders or submitted quote requests.</div>
+</div>
+<div class="cards">
+<div class="card"><div class="metric">{{ total_customers }}</div><div class="metric-label">Customers found</div></div>
+<div class="card"><div class="metric">{{ total_order_count }}</div><div class="metric-label">Orders represented</div></div>
+<div class="card"><div class="metric">{{ total_quote_count }}</div><div class="metric-label">Quote requests represented</div></div>
+<div class="card"><div class="metric">{{ total_customer_spend|floatformat:2 }}</div><div class="metric-label">Recorded order value · USD</div></div>
+</div>
+<section class="panel">
+<form method="get" class="toolbar">
+<input type="search" name="search" value="{{ search }}" placeholder="Search name, company, email or phone">
+<button type="submit">Search customers</button>
+<a class="btn light" href="/staff/customers/">Clear</a>
+</form>
+</section>
+<div class="table-wrap" style="margin-top:18px">
+<table>
+<thead><tr><th>Customer</th><th>Company</th><th>Contact</th><th>Orders</th><th>Quotes</th><th>Recorded spend</th><th>Latest activity</th></tr></thead>
+<tbody>
+{% for customer in customers %}
+<tr>
+<td><strong>{{ customer.name }}</strong></td>
+<td>{{ customer.company|default:"—" }}</td>
+<td>{% if customer.email %}<a href="mailto:{{ customer.email }}">{{ customer.email }}</a>{% else %}—{% endif %}<br>{{ customer.phone|default:"—" }}</td>
+<td><span class="pill">{{ customer.orders_count }}</span></td>
+<td><span class="pill">{{ customer.quotes_count }}</span></td>
+<td><strong>USD {{ customer.total_spend|floatformat:2 }}</strong></td>
+<td>{% if customer.last_seen %}{{ customer.last_seen|date:"d M Y, H:i" }}{% else %}—{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="7" class="empty">No customers match your search.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p class="muted">Recorded spend is calculated from existing order totals. It does not imply that an order has been paid.</p>
+{% endblock %}

@@ -1,0 +1,2622 @@
+﻿THE LABEL GROUP - STAFF CUSTOMER AND ORDER MANAGEMENT SOURCE
+Generated: 10/12/2026 13:48:04
+
+==========================================================================================
+FILE: .\staff\urls.py
+==========================================================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.staff_dashboard, name="staff_dashboard"),
+    path("login/", views.staff_login, name="staff_login"),
+    path("logout/", views.staff_logout, name="staff_logout"),
+    path("register/", views.staff_register, name="staff_register"),
+    path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+    path("profile/", views.staff_profile, name="staff_profile"),
+    
+    # Products
+    path("products/", views.staff_products, name="staff_products"),
+    path("products/", views.staff_products, name="staff_product_list"),
+    path("products/add/", views.staff_product_add, name="staff_product_add"),
+    path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+    path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+    
+    # Customers
+    path("customers/", views.staff_customers, name="staff_customers"),
+    path("customers/", views.staff_customers, name="staff_customer_list"),
+    
+    # Orders
+    path("orders/", views.staff_orders, name="staff_orders"),
+    path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+    
+    # Quotes
+    path("quotes/", views.staff_quotes, name="staff_quotes"),
+    path("quotes/", views.staff_quotes, name="staff_quote_list"),
+    path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+    
+    # Calendar Orders
+    path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+    path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+    
+    # Boss / Staff Management paths
+    path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+    path("staff-management/", views.boss_staff_management),
+    
+    path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+    path("staff-management/create/", views.owner_create_staff),
+    
+    path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+    path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+    path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+    path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+    path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+    path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+    path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+]
+
+==========================================================================================
+FILE: .\staff\views.py
+==========================================================================================
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from products.models import (
+    Product,
+    Order,
+    QuoteRequest,
+    CollectionCalendarStickerOrder,
+)
+
+from .forms import (
+    ProductForm,
+    StaffRegistrationForm,
+    OwnerStaffForm,
+)
+
+from .models import StaffProfile, StaffActivityLog
+
+
+def get_staff_profile(user):
+    try:
+        return StaffProfile.objects.get(user=user)
+    except StaffProfile.DoesNotExist:
+        return None
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def log_staff_activity(request, staff_profile, action, description, object_name=""):
+    if not staff_profile:
+        return
+
+    StaffActivityLog.objects.create(
+        staff=staff_profile,
+        action=action,
+        description=description,
+        ip_address=get_client_ip(request),
+    )
+
+
+def staff_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def boss_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(request, "Your account is inactive.")
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "Staff profile not found.")
+            return redirect("staff_dashboard")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(request, "Your account is not approved.")
+            return redirect("staff_dashboard")
+
+        if profile.role != "manager":
+            messages.error(
+                request,
+                "Boss access is required for this section.",
+            )
+            return redirect("staff_dashboard")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+@staff_required
+def staff_dashboard(request):
+    profile = get_staff_profile(request.user)
+
+    products_count = Product.objects.count()
+    available_products_count = Product.objects.filter(
+        is_available=True
+    ).count()
+
+    orders_count = Order.objects.count()
+    quotes_count = QuoteRequest.objects.count()
+
+    new_quotes_count = QuoteRequest.objects.filter(
+        status="new"
+    ).count()
+
+    reviewing_quotes_count = QuoteRequest.objects.filter(
+        status="reviewing"
+    ).count()
+
+    quoted_count = QuoteRequest.objects.filter(
+        status="quoted"
+    ).count()
+
+    approved_quotes_count = QuoteRequest.objects.filter(
+        status="approved"
+    ).count()
+
+    in_production_count = QuoteRequest.objects.filter(
+        status="in_production"
+    ).count()
+
+    completed_quotes_count = QuoteRequest.objects.filter(
+        status="completed"
+    ).count()
+
+    if profile:
+        profile.last_activity = timezone.now()
+        profile.save(update_fields=["last_activity"])
+
+    recent_quotes = QuoteRequest.objects.order_by("-created_at")[:8]
+    recent_activity = StaffActivityLog.objects.select_related(
+        "staff", "staff__user"
+    ).order_by("-id")[:8]
+
+    approved_staff_count = StaffProfile.objects.filter(
+        approved=True, status="approved"
+    ).count()
+    pending_staff_count = StaffProfile.objects.filter(
+        approved=False, status="pending"
+    ).count()
+
+    context = {
+        "total_products": products_count,
+        "available_products": available_products_count,
+        "total_orders": orders_count,
+        "total_quotes": quotes_count,
+        "new_quotes": new_quotes_count,
+        "reviewing_quotes": reviewing_quotes_count,
+        "quoted_quotes": quoted_count,
+        "approved_quotes": approved_quotes_count,
+        "production_quotes": in_production_count,
+        "completed_quotes": completed_quotes_count,
+        "approved_staff": approved_staff_count,
+        "pending_staff": pending_staff_count,
+        "recent_quotes": recent_quotes,
+        "recent_activity": recent_activity,
+        "profile": profile,
+        "products_count": products_count,
+        "available_products_count": available_products_count,
+        "orders_count": orders_count,
+        "quotes_count": quotes_count,
+        "new_quotes_count": new_quotes_count,
+        "reviewing_quotes_count": reviewing_quotes_count,
+        "quoted_count": quoted_count,
+        "approved_quotes_count": approved_quotes_count,
+        "in_production_count": in_production_count,
+        "completed_quotes_count": completed_quotes_count,
+    }
+
+    return render(
+        request,
+        "staff/dashboard.html",
+        context,
+    )
+
+
+@staff_required
+def staff_products(request):
+    products = Product.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/products.html",
+        {
+            "products": products,
+        },
+    )
+
+
+@staff_required
+def staff_product_add(request):
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "create",
+                f"Created product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product created successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm()
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "title": "Add Product",
+        },
+    )
+
+
+@staff_required
+def staff_product_edit(request, pk):
+    product = get_object_or_404(
+        Product,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+            instance=product,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Updated product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product updated successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm(instance=product)
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "product": product,
+            "title": "Edit Product",
+        },
+    )
+
+
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+
+
+@staff_required
+def staff_orders(request):
+    from django.db.models import Q, Sum
+    from decimal import Decimal
+    from products.models import Order
+
+    all_orders = Order.objects.all().order_by("-created_at")
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(Order._meta.get_field("status").choices)
+
+    if search:
+        condition = (
+            Q(customer_name__icontains=search)
+            | Q(customer_email__icontains=search)
+            | Q(customer_phone__icontains=search)
+            | Q(shipping_city__icontains=search)
+            | Q(shipping_country__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search))
+        all_orders = all_orders.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        all_orders = all_orders.filter(status=status_filter)
+
+    all_orders = all_orders.prefetch_related("items")
+    status_cards = []
+    for key, label in status_choices:
+        status_cards.append({
+            "key": key,
+            "label": label,
+            "count": Order.objects.filter(status=key).count(),
+        })
+
+    totals = Order.objects.aggregate(value=Sum("total"))
+    total_value = totals["value"] or Decimal("0.00")
+    active_statuses = [
+        key for key, _ in status_choices
+        if key not in ("completed", "cancelled")
+    ]
+
+    return render(request, "staff/orders/list.html", {
+        "orders": all_orders,
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "status_cards": status_cards,
+        "total_orders": Order.objects.count(),
+        "active_orders": Order.objects.filter(status__in=active_statuses).count(),
+        "completed_orders": Order.objects.filter(status="completed").count(),
+        "total_value": total_value,
+    })
+
+
+
+
+@boss_required
+def owner_create_staff(request):
+    if request.method == "POST":
+        form = OwnerStaffForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                user = form.save(commit=False)
+
+                password = form.cleaned_data.get("password1")
+
+                if password:
+                    user.set_password(password)
+
+                user.is_active = True
+                user.is_staff = True
+                user.save()
+
+                profile = StaffProfile.objects.create(
+                    user=user,
+                    approved=True,
+                    status="approved",
+                    approved_at=timezone.now(),
+                )
+
+            log_staff_activity(
+                request,
+                get_staff_profile(request.user),
+                "create",
+                f"Boss created staff account: {user.username}",
+                user.username,
+            )
+
+            messages.success(
+                request,
+                f"Staff account for {user.username} created successfully.",
+            )
+
+            return redirect("boss_staff_management")
+    else:
+        form = OwnerStaffForm()
+
+    return render(
+        request,
+        "staff/boss/create_staff.html",
+        {
+            "form": form,
+        },
+    )
+
+
+@boss_required
+@transaction.atomic
+def approve_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.approved = True
+    profile.status = "approved"
+    profile.approved_at = timezone.now()
+    profile.rejection_reason = ""
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "approve",
+        f"Approved staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been approved.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reject_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    reason = request.POST.get(
+        "rejection_reason",
+        "Rejected by Boss",
+    ).strip()
+
+    profile.approved = False
+    profile.status = "rejected"
+    profile.rejection_reason = reason
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reject",
+        f"Rejected staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been rejected.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def deactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "Only approved staff members can be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if not profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = False
+    profile.user.save(
+        update_fields=["is_active"]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "deactivate",
+        f"Deactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been deactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account does not need reactivation.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "This account is not an approved staff account. Approve it again instead.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already active.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reactivate",
+        f"Reactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been reactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def remove_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.status = "rejected"
+    profile.approved = False
+    profile.rejection_reason = "Removed by Boss"
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "remove",
+        f"Removed staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been removed from the staff system.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+def staff_activity_log(request):
+    activities = (
+        StaffActivityLog.objects
+        .select_related(
+            "staff",
+            "staff__user",
+        )
+        .order_by("-created_at")
+    )
+
+    search = request.GET.get(
+        "search",
+        "",
+    ).strip()
+
+    action = request.GET.get(
+        "action",
+        "",
+    ).strip()
+
+    if search:
+        activities = activities.filter(
+            description__icontains=search
+        )
+
+    if action:
+        activities = activities.filter(
+            action=action
+        )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "page_view",
+        "Boss viewed the staff activity log.",
+        "Activity Log",
+    )
+
+    return render(
+        request,
+        "staff/boss/activity.html",
+        {
+            "activities": activities,
+            "search_query": search,
+            "selected_action": action,
+            "action_choices": StaffActivityLog.ACTION_CHOICES,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_orders(request):
+    from django.db.models import Q, Sum
+    from products.models import Order, CollectionCalendarStickerOrder
+
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(
+        CollectionCalendarStickerOrder._meta.get_field("status").choices
+    )
+
+    jobs = CollectionCalendarStickerOrder.objects.all().order_by(
+        "-created_at", "-pk"
+    )
+
+    if search:
+        condition = (
+            Q(name__icontains=search)
+            | Q(company__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(title__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search)) | Q(calendar_year=int(search))
+        jobs = jobs.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        jobs = jobs.filter(status=status_filter)
+
+    summary = jobs.aggregate(quantity=Sum("quantity"))
+    total_quantity = summary["quantity"] or 0
+    years = jobs.values_list("calendar_year", flat=True).distinct().count()
+    completed_keys = {"completed", "cancelled"}
+    active_count = jobs.exclude(status__in=completed_keys).count()
+
+    return render(request, "staff/calendar_orders/list.html", {
+        "calendar_orders": jobs,
+        "recent_orders": Order.objects.all().order_by("-created_at")[:8],
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "total_calendar_orders": jobs.count(),
+        "total_quantity": total_quantity,
+        "active_calendar_orders": active_count,
+        "year_count": years,
+    })
+
+
+
+@staff_required
+def staff_calendar_order_detail(request, pk):
+    from django.contrib import messages
+    from products.models import CollectionCalendarStickerOrder
+
+    calendar_order = get_object_or_404(CollectionCalendarStickerOrder, pk=pk)
+    status_field = CollectionCalendarStickerOrder._meta.get_field("status")
+    status_choices = [
+        (str(key), str(label)) for key, label in status_field.choices if str(key)
+    ]
+    if not status_choices:
+        status_choices = [
+            (key, key.replace("_", " ").title())
+            for key in ("pending", "reviewing", "approved", "in_production",
+                        "completed", "cancelled")
+        ]
+
+    allowed_statuses = {key for key, _ in status_choices}
+
+    if request.method == "POST":
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("staff_notes", calendar_order.staff_notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid job status.")
+        else:
+            changed = []
+            if calendar_order.status != new_status:
+                old_status = calendar_order.status
+                calendar_order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if calendar_order.staff_notes != new_notes:
+                calendar_order.staff_notes = new_notes
+                changed.append("staff notes updated")
+
+            if changed:
+                calendar_order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Calendar job #{calendar_order.pk}: " + "; ".join(changed),
+                    f"Calendar job #{calendar_order.pk}",
+                )
+                messages.success(
+                    request, f"Calendar job #{calendar_order.pk} has been updated."
+                )
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect(
+                "staff_calendar_order_detail", pk=calendar_order.pk
+            )
+
+    return render(request, "staff/calendar_orders/detail.html", {
+        "calendar_order": calendar_order,
+        "status_choices": status_choices,
+    })
+
+
+@boss_required
+def boss_site_settings(request):
+    from products.models import SiteSettings
+
+    settings_obj = SiteSettings.get_settings()
+
+    if request.method == "POST":
+        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+        settings_obj.phone = request.POST.get("phone", "").strip()
+        settings_obj.email = request.POST.get("email", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+        settings_obj.facebook = request.POST.get("facebook", "").strip()
+        settings_obj.instagram = request.POST.get("instagram", "").strip()
+        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+        settings_obj.youtube = request.POST.get("youtube", "").strip()
+        settings_obj.save()
+        messages.success(request, "Website settings updated successfully.")
+        return redirect("boss_site_settings")
+
+    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+
+
+
+@staff_required
+def staff_product_image_delete(request, pk):
+    profile = get_staff_profile(request.user)
+
+    product = get_object_or_404(
+        Product,
+        pk=pk
+    )
+
+    if request.method == "POST":
+        product_name = product.name
+
+        if product.image:
+            product.image.delete(save=False)
+            product.image = None
+            product.save()
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Deleted product image: {product_name}",
+                f"Staff member deleted the current image for product '{product_name}'.",
+            )
+
+            messages.success(
+                request,
+                f"The current image for '{product_name}' was deleted successfully."
+            )
+        else:
+            messages.info(
+                request,
+                f"'{product_name}' does not currently have an image."
+            )
+
+    return redirect(
+        "staff_product_edit",
+        pk=product.pk
+    )
+
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+
+def staff_login(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user.is_staff:
+                login(request, user)
+                return redirect("staff_dashboard")
+            else:
+                form.add_error(None, "You do not have staff permissions.")
+    else:
+        form = AuthenticationForm()
+    return render(request, "staff/login.html", {"form": form})
+
+from django.contrib.auth import logout
+
+def staff_logout(request):
+    logout(request)
+    return redirect("staff_login")
+
+from django.contrib.auth.forms import UserCreationForm
+
+def staff_register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True
+            user.save()
+            return redirect("staff_login")
+    else:
+        form = UserCreationForm()
+    return render(request, "staff/register.html", {"form": form})
+
+def staff_registration_success(request):
+    return render(request, "staff/registration_success.html", {})
+
+@staff_required
+def staff_profile(request):
+    return render(request, "staff/profile.html", {"user": request.user})
+
+
+def _label_group_customer_records():
+    """
+    Build one customer directory from existing orders and quote requests.
+    This does not create or modify database records.
+    """
+    from types import SimpleNamespace
+    from products.models import Order, QuoteRequest
+
+    records = {}
+
+    def value(obj, *names):
+        for name in names:
+            result = getattr(obj, name, None)
+            if result not in (None, ""):
+                return str(result).strip()
+        return ""
+
+    def add_record(obj, source_type):
+        name = value(obj, "customer_name", "full_name", "name")
+        email = value(obj, "customer_email", "email").lower()
+        phone = value(obj, "customer_phone", "phone", "telephone")
+        address = value(obj, "shipping_address", "address")
+
+        if not (name or email or phone):
+            return
+
+        key = email or phone or name.casefold()
+        if not key:
+            return
+
+        if key not in records:
+            records[key] = {
+                "name": name or email or phone,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "total_orders": 0,
+                "total_quotes": 0,
+                "sources": set(),
+            }
+
+        customer = records[key]
+
+        if name and not customer["name"]:
+            customer["name"] = name
+        if email and not customer["email"]:
+            customer["email"] = email
+        if phone and not customer["phone"]:
+            customer["phone"] = phone
+        if address and not customer["address"]:
+            customer["address"] = address
+
+        customer["sources"].add(source_type)
+
+        if source_type == "order":
+            customer["total_orders"] += 1
+        elif source_type == "quote":
+            customer["total_quotes"] += 1
+
+    for order in Order.objects.all().iterator():
+        add_record(order, "order")
+
+    for quote in QuoteRequest.objects.all().iterator():
+        add_record(quote, "quote")
+
+    customers = []
+
+    for item in records.values():
+        item["sources"] = ", ".join(sorted(item["sources"]))
+        customers.append(SimpleNamespace(
+            name=item["name"],
+            full_name=item["name"],
+            customer_name=item["name"],
+            email=item["email"],
+            customer_email=item["email"],
+            phone=item["phone"],
+            customer_phone=item["phone"],
+            address=item["address"],
+            total_orders=item["total_orders"],
+            total_quotes=item["total_quotes"],
+            sources=item["sources"],
+        ))
+
+    return sorted(customers, key=lambda customer: customer.name.lower())
+
+
+@staff_required
+def staff_quotes(request):
+    from django.db.models import Q
+    from products.models import QuoteRequest
+
+    quotes = QuoteRequest.objects.all().order_by("-pk")
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        filters = Q()
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+            and not getattr(field, "many_to_many", False)
+        }
+
+        for field in ("customer_name", "customer_email", "customer_phone",
+                      "company_name", "status"):
+            if field in field_names:
+                filters |= Q(**{field + "__icontains": search})
+
+        if filters:
+            quotes = quotes.filter(filters)
+
+    return render(request, "staff/quotes.html", {
+        "quotes": quotes,
+        "search_query": search,
+    })
+
+
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+
+
+@staff_required
+def staff_quote_detail(request, pk):
+    from django.shortcuts import get_object_or_404
+    from products.models import QuoteRequest
+
+    quote = get_object_or_404(QuoteRequest, pk=pk)
+
+    if request.method == "POST":
+        from django.contrib import messages
+
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+        }
+
+        new_status = request.POST.get("status", "").strip()
+        if new_status and "status" in field_names:
+            valid_statuses = {
+                str(choice[0])
+                for choice in getattr(
+                    QuoteRequest, "STATUS_CHOICES", ()
+                )
+            }
+
+            if not valid_statuses or new_status in valid_statuses:
+                quote.status = new_status
+                quote.save(update_fields=["status"])
+                messages.success(request, "Quote status updated.")
+            else:
+                messages.error(request, "Please select a valid quote status.")
+
+        return redirect("staff_quote_detail", pk=quote.pk)
+
+    return render(request, "staff/quote_detail.html", {
+        "quote": quote,
+        "quote_id": quote.pk,
+    })
+
+
+def boss_staff_management(request):
+    from django.contrib import messages
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from django.shortcuts import render, redirect
+
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "Boss access is required.")
+        return redirect("/staff/")
+
+    User = get_user_model()
+    search = request.GET.get("search", "").strip()
+
+    staff_members = User.objects.filter(
+        is_staff=True
+    ).order_by("-date_joined")
+
+    if search:
+        staff_members = staff_members.filter(
+            Q(username__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search)
+        )
+
+    context = {
+        "staff_members": staff_members,
+        "search_query": search,
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "active_staff_count": User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).count(),
+    }
+
+    return render(
+        request,
+        "staff/boss/staff_management.html",
+        context
+    )
+
+
+@staff_required
+def staff_order_detail(request, pk):
+    from django.contrib import messages
+    from products.models import Order
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items"),
+        pk=pk,
+    )
+    status_choices = list(Order._meta.get_field("status").choices)
+    allowed_statuses = {str(key) for key, _ in status_choices}
+
+    if request.method == "POST":
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("notes", order.notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid order status.")
+        else:
+            changed = []
+            if order.status != new_status:
+                old_status = order.status
+                order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if order.notes != new_notes:
+                order.notes = new_notes
+                changed.append("internal notes updated")
+
+            if changed:
+                order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Order #{order.pk}: " + "; ".join(changed),
+                    f"Order #{order.pk}",
+                )
+                messages.success(request, f"Order #{order.pk} has been updated.")
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect("staff_order_detail", pk=order.pk)
+
+    return render(request, "staff/orders/detail.html", {
+        "order": order,
+        "status_choices": status_choices,
+        "item_count": order.items.count(),
+    })
+
+==========================================================================================
+FILE: .\staff\models.py
+==========================================================================================
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class StaffProfile(models.Model):
+
+    ROLE_CHOICES = [
+        ("manager", "Manager"),
+        ("sales", "Sales Staff"),
+        ("production", "Production Staff"),
+        ("shipping", "Shipping Staff"),
+    ]
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    profile_picture = models.ImageField(
+        upload_to="staff_profiles/",
+        blank=True,
+        null=True
+    )
+
+    full_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    phone = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    role = models.CharField(
+        max_length=30,
+        choices=ROLE_CHOICES
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    approved = models.BooleanField(
+        default=False
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    joined_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    last_activity = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    rejection_reason = models.TextField(
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_status_display()}"
+
+
+class StaffActivityLog(models.Model):
+
+    ACTION_CHOICES = [
+        ("login", "Login"),
+        ("logout", "Logout"),
+        ("page_view", "Page Viewed"),
+        ("create", "Created"),
+        ("update", "Updated"),
+        ("delete", "Deleted"),
+        ("approve", "Approved"),
+        ("reject", "Rejected"),
+        ("failed_login", "Failed Login"),
+    ]
+
+    staff = models.ForeignKey(
+        StaffProfile,
+        on_delete=models.CASCADE,
+        related_name="activity_logs"
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES
+    )
+
+    page = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
+
+    user_agent = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.staff.user.username} - "
+            f"{self.get_action_display()} - "
+            f"{self.created_at}"
+        )
+
+==========================================================================================
+FILE: .\staff\templates\staff\customers\list.html
+==========================================================================================
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        The Label Group | Customers
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 250px;
+            background: #111;
+            color: white;
+            padding: 25px 18px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .brand {
+            padding: 5px 10px 30px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 25px;
+        }
+
+        .brand h1 {
+            font-size: 21px;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 10px 8px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ddd;
+            text-decoration: none;
+            padding: 11px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .sidebar a:hover {
+            background: #292929;
+            color: white;
+        }
+
+        .sidebar a.active {
+            background: #155eef;
+            color: white;
+        }
+
+        .logout {
+            margin-top: 25px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .logout a {
+            background: #8b0000;
+            text-align: center;
+            color: white;
+        }
+
+        .logout a:hover {
+            background: #b00000;
+        }
+
+        /* MAIN */
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 30px;
+        }
+
+        .topbar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .topbar h2 {
+            font-size: 25px;
+        }
+
+        .topbar p {
+            color: #777;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .staff-name {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .staff-role {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        /* SEARCH */
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-box form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            border: none;
+            background: #155eef;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-box button:hover {
+            background: #0d47c7;
+        }
+
+        .clear-search {
+            display: inline-block;
+            margin-top: 10px;
+            color: #777;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        /* CUSTOMER LIST */
+
+        .customer-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-header h2 {
+            font-size: 19px;
+        }
+
+        .panel-header p {
+            color: #777;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .customer-row {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customer-row:last-child {
+            border-bottom: none;
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .customer-name {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .company {
+            color: #777;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        .customer-contact {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .contact-item {
+            background: #f7f7f7;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .contact-label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .contact-value {
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .customer-meta {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            background: #eef5ff;
+            color: #155eef;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .quantity {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .view-quote {
+            display: inline-block;
+            margin-top: 14px;
+            background: #111;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-quote:hover {
+            background: #333;
+        }
+
+        .empty {
+            padding: 50px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .customer-contact {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .topbar {
+                display: block;
+            }
+
+            .staff-name {
+                text-align: left;
+                margin-top: 15px;
+            }
+
+            .search-box form {
+                display: block;
+            }
+
+            .search-box button {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .customer-header {
+                display: block;
+            }
+        }
+
+    </style>
+
+<!-- TLG-STAFF-PROFESSIONAL-THEME-V1 -->
+<style>
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-navy-dark: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-bg: #f3f6fa;
+    --tlg-white: #ffffff;
+    --tlg-text: #263449;
+    --tlg-muted: #68778b;
+    --tlg-border: #e0e6ee;
+    --tlg-radius: 12px;
+    --tlg-shadow: 0 5px 20px rgba(11,31,58,.07);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--tlg-bg) !important;
+    color: var(--tlg-text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+h1, h2, h3, h4 {
+    color: var(--tlg-navy);
+    line-height: 1.25;
+    margin-top: 0;
+}
+h1 { font-size: clamp(25px, 3vw, 34px); font-weight: 800; letter-spacing: -.6px; }
+h2 { font-size: 22px; font-weight: 750; }
+h3 { font-size: 17px; font-weight: 700; }
+p { color: var(--tlg-muted); }
+a { color: var(--tlg-navy); text-decoration: none; }
+a:hover { color: var(--tlg-orange-dark); }
+.wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap {
+    width: min(1240px, calc(100% - 40px));
+    margin: 30px auto;
+}
+.container {
+    width: min(1240px, calc(100% - 40px));
+    max-width: 1240px;
+    margin: 28px auto;
+    padding: 28px;
+    background: var(--tlg-white);
+    border: 1px solid var(--tlg-border);
+    border-radius: 16px;
+    box-shadow: var(--tlg-shadow);
+}
+.head, .page-header, .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.head h1, .page-header h1 { margin-bottom: 7px; }
+.head p, .page-header p { margin: 0; }
+nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    color: var(--tlg-navy);
+    font-weight: 750;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+nav a:hover, .navbar a:hover, .topnav a:hover,
+.staff-nav a:hover, .navigation a:hover, .nav-links a:hover {
+    background: #fff0e5;
+    color: var(--tlg-orange-dark);
+    text-decoration: none;
+}
+.btn, button, input[type="submit"], input[type="button"], .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 10px 17px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--tlg-navy);
+    color: #fff !important;
+    font: inherit;
+    font-weight: 750;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn:hover, button:hover, input[type="submit"]:hover,
+input[type="button"]:hover, .button:hover {
+    background: var(--tlg-navy-dark);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(11,31,58,.16);
+    transform: translateY(-1px);
+}
+.btn.orange, .btn-primary, .btn-orange, .button-primary,
+button.orange, input.orange {
+    background: var(--tlg-orange);
+    color: #fff !important;
+}
+.btn.orange:hover, .btn-primary:hover, .btn-orange:hover,
+.button-primary:hover, button.orange:hover {
+    background: var(--tlg-orange-dark);
+}
+.btn.navy, .btn-secondary, .btn-outline {
+    background: var(--tlg-navy);
+    color: #fff !important;
+}
+.btn-danger, .delete-btn { background: #b42318 !important; }
+.btn-success, .success-btn { background: #18794e !important; }
+.filters, .filter-form, .search-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 22px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+}
+.filters input, .filters select, .filter-form input, .filter-form select,
+.search-form input, .search-form select { flex: 1 1 190px; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select, textarea {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #ccd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--tlg-text);
+    font: inherit;
+    outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--tlg-orange) !important;
+    box-shadow: 0 0 0 3px rgba(244,123,32,.13);
+}
+textarea { min-height: 110px; resize: vertical; }
+label { display: block; margin-bottom: 6px; color: var(--tlg-navy); font-weight: 700; }
+form p { margin-bottom: 15px; }
+.tablebox, .table-container, .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 18px 0 0;
+    border: 1px solid var(--tlg-border);
+    border-radius: 12px;
+    background: #fff;
+}
+table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+}
+thead th {
+    padding: 15px 16px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #e9edf3;
+    vertical-align: middle;
+    color: #38475b;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:nth-child(even) { background: #f8fafc; }
+tbody tr:hover { background: #fff5ed; }
+td strong { color: var(--tlg-navy); }
+td .btn { min-height: 36px; padding: 8px 12px; white-space: nowrap; }
+.status, .badge, .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border: 1px solid #f6d1b4;
+    border-radius: 999px;
+    background: #fff0e5;
+    color: #99420a;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.card, .stat-card, .metric-card, .dashboard-card, .panel, .section-card {
+    min-width: 0;
+    padding: 21px;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(11,31,58,.04);
+}
+.cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+}
+.card h2, .stat-card h2, .metric-card h2,
+.dashboard-card h2 { margin-bottom: 8px; }
+.empty, .empty-state {
+    padding: 42px 22px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    text-align: center;
+}
+hr { border: 0; border-top: 1px solid var(--tlg-border); margin: 24px 0; }
+.alert, .message, .messages li {
+    padding: 12px 15px;
+    margin: 12px 0;
+    border-radius: 8px;
+    background: #fff0e5;
+    color: #8a3b09;
+}
+footer {
+    color: var(--tlg-muted);
+    text-align: center;
+}
+@media (max-width: 700px) {
+    .wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap,
+    .container {
+        width: calc(100% - 24px);
+        margin: 12px auto;
+    }
+    .container { padding: 17px; border-radius: 12px; }
+    .head, .page-header, .section-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .head > a, .page-header > a { align-self: flex-start; }
+    .filters, .filter-form, .search-form {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 12px;
+    }
+    .filters > *, .filter-form > *, .search-form > * { width: 100%; }
+    nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links { gap: 5px; }
+    nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    .cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <h1>
+                The Label Group
+            </h1>
+
+            <p>
+                Staff Management
+            </p>
+
+        </div>
+
+
+        <div class="menu-title">
+            Dashboard
+        </div>
+
+        <a href="{% url 'staff_dashboard' %}">
+            Dashboard
+        </a>
+
+
+        <div class="menu-title">
+            Management
+        </div>
+
+        <a href="{% url 'staff_product_list' %}">
+            Products
+        </a>
+
+        <a
+            href="{% url 'staff_customer_list' %}"
+            class="active"
+        >
+            Customers
+        </a>
+
+        <a href="{% url 'staff_quote_list' %}">
+            Quote Requests
+        </a>
+
+        <a href="#">
+            Orders
+        </a>
+
+
+        <div class="menu-title">
+            Website
+        </div>
+
+        <a href="#">
+            Business Information
+        </a>
+
+        <a href="#">
+            Website Content
+        </a>
+
+        <a href="#">
+            FAQs
+        </a>
+
+
+        {% if user.is_superuser %}
+
+        <div class="menu-title">
+            Owner
+        </div>
+
+        <a href="{% url 'boss_staff_management' %}">
+            Staff Management
+        </a>
+
+        <a href="{% url 'staff_activity_log' %}">
+            Activity Log
+        </a>
+
+        {% endif %}
+
+
+        <div class="menu-title">
+            Account
+        </div>
+
+        <a href="{% url 'staff_profile' %}">
+            Staff Profile
+        </a>
+
+
+        <div class="logout">
+
+            <a href="{% url 'staff_logout' %}">
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <h2>
+                    Customer Management
+                </h2>
+
+                <p>
+                    View customers and their quote history.
+                </p>
+
+            </div>
+
+
+            <div class="staff-name">
+
+                {{ user.username }}
+
+                <div class="staff-role">
+                    Authorized Staff
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+            <form method="get">
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search by name, company, email or phone"
+                >
+
+                <button type="submit">
+                    Search Customers
+                </button>
+
+            </form>
+
+
+            {% if search_query %}
+
+            <a
+                href="{% url 'staff_customer_list' %}"
+                class="clear-search"
+            >
+                Clear Search
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- CUSTOMER LIST -->
+
+        <div class="customer-panel">
+
+
+            <div class="panel-header">
+
+                <h2>
+                    Customers
+                </h2>
+
+                <p>
+                    Customers who have submitted quote requests.
+                </p>
+
+            </div>
+
+
+            {% for customer in customers %}
+
+            <div class="customer-row">
+
+
+                <div class="customer-header">
+
+                    <div>
+
+                        <div class="customer-name">
+                            {{ customer.customer_name }}
+                        </div>
+
+
+                        {% if customer.company_name %}
+
+                        <div class="company">
+                            {{ customer.company_name }}
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-contact">
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Email
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_email }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Phone
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_phone }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Location
+                        </span>
+
+                        <span class="contact-value">
+
+                            {{ customer.city }}
+
+                            {% if customer.state %}
+                                , {{ customer.state }}
+                            {% endif %}
+
+                            {% if customer.country %}
+                                , {{ customer.country }}
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-meta">
+
+                    <span class="status">
+                        {{ customer.get_status_display }}
+                    </span>
+
+
+                    <span class="quantity">
+
+                        {{ customer.total_quantity }}
+                        item{{ customer.total_quantity|pluralize }}
+
+                    </span>
+
+
+                    <span class="date">
+
+                        Quote submitted
+                        {{ customer.created_at|date:"M d, Y H:i" }}
+
+                    </span>
+
+                </div>
+
+
+                {% if customer.id %}
+<a
+                    href="{% url 'staff_quote_detail' customer.id %}"
+                    class="view-quote"
+                >
+                    View Quote
+                </a>
+{% endif %}
+
+
+            </div>
+
+
+            {% empty %}
+
+            <div class="empty">
+
+                {% if search_query %}
+
+                    No customers found matching
+                    "{{ search_query }}".
+
+                {% else %}
+
+                    No customers have submitted quote requests yet.
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+</body>
+
+</html>
+
+
+

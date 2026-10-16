@@ -1,0 +1,496 @@
+﻿THE LABEL GROUP - REMAINING REPAIR DETAILS
+
+========== .\staff\views.py (1635-1715) ==========
+1635:     shipments = list(Shipment.objects.select_related("order").order_by("-updated_at"))
+1636: 
+1637:     # Create a clean display address without repeating address components.
+1638:     for shipment in shipments:
+1639:         order = shipment.order
+1640:         address_fields = [
+1641:             getattr(order, "shipping_address", ""),
+1642:             getattr(order, "shipping_city", ""),
+1643:             getattr(order, "shipping_state", ""),
+1644:             getattr(order, "shipping_postal_code", ""),
+1645:             getattr(order, "shipping_country", ""),
+1646:         ]
+1647: 
+1648:         parts = []
+1649:         seen = set()
+1650: 
+1651:         for field in address_fields:
+1652:             text_value = " ".join(str(field or "").replace("\r", " ").replace("\n", " ").split()).strip(" ,")
+1653:             if not text_value:
+1654:                 continue
+1655: 
+1656:             for part in text_value.split(","):
+1657:                 part = part.strip(" ,")
+1658:                 key = " ".join(part.casefold().split())
+1659: 
+1660:                 if not key or key in seen:
+1661:                     continue
+1662: 
+1663:                 # Avoid repeating a component already included in a previous
+1664:                 # address field, such as "Springfield, MA 01109".
+1665: 
+1666:                 seen.add(key)
+1667:                 parts.append(part)
+1668: 
+1669:         shipment.shipping_destination = ", ".join(parts)
+1670:     return render(request, "staff/shipping/dashboard.html", {
+1671:         "shipments": shipments,
+1672:         "status_choices": Shipment.STATUS_CHOICES,
+1673:     })
+1674: 
+
+========== .\products\views.py (1300-1395) ==========
+1300:                         )
+1301:                     elif not tracking_url and "dhl" in carrier:
+1302:                         tracking_url = (
+1303:                             "https://www.dhl.com/global-en/home/tracking.html?tracking-id="
+1304:                             + tracking_number
+1305:                         )
+1306: 
+1307:     status_steps = [
+1308:         {"value": "pending", "label": "Order received"},
+1309:         {"value": "confirmed", "label": "Order confirmed"},
+1310:         {"value": "processing", "label": "Being prepared"},
+1311:         {"value": "packed", "label": "Packed"},
+1312:         {"value": "shipped", "label": "Shipped"},
+1313:         {"value": "completed", "label": "Completed"},
+1314:     ]
+1315: 
+1316:     current_step = -1
+1317:     is_cancelled = False
+1318:     if order:
+1319:         status_value = (order.status or "").lower()
+1320:         is_cancelled = status_value == "cancelled"
+1321:         for index, step in enumerate(status_steps):
+1322:             if step["value"] == status_value:
+1323:                 current_step = index
+1324: 
+1325:         # If a shipment has progressed further than the order status,
+1326:         # show the recorded shipment progress without claiming live carrier data.
+1327:         if shipment:
+1328:             shipment_status = (shipment.status or "").lower()
+1329:             shipment_rank = {
+1330:                 "pending": 0,
+1331:                 "processing": 2,
+1332:                 "packed": 3,
+1333:                 "shipped": 4,
+1334:                 "in_transit": 4,
+1335:                 "out_for_delivery": 4,
+1336:                 "delivered": 5,
+1337:             }
+1338:             current_step = max(
+1339:                 current_step,
+1340:                 shipment_rank.get(shipment_status, -1)
+1341:             )
+1342: 
+1343:     context = {
+1344:         "order": order,
+1345:         "shipment": shipment,
+1346:         "tracking_url": tracking_url,
+1347:         "error_message": error_message,
+1348:         "email_value": email_value,
+1349:         "order_number": order_number,
+1350:         "status_steps": status_steps,
+1351:         "current_step": current_step,
+1352:         "is_cancelled": is_cancelled,
+1353:     }
+1354:     return render(request, "track_order.html", context)
+1355: 
+1356: 
+1357: 
+1358: 
+
+========== .\staff\templates\staff\orders\detail.html (1-300) ==========
+   1: <!DOCTYPE html>
+   2: <html lang="en">
+   3: <head>
+   4:     <meta charset="UTF-8">
+   5:     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   6: 
+   7:     <title>Order #{{ order.id }} | The Label Group</title>
+   8: 
+   9:     <style>
+  10: 
+  11:         * {
+  12:             box-sizing: border-box;
+  13:         }
+  14: 
+  15:         body {
+  16:             margin: 0;
+  17:             font-family: Arial, Helvetica, sans-serif;
+  18:             background: #f4f7fb;
+  19:             color: #172033;
+  20:         }
+  21: 
+  22:         a {
+  23:             text-decoration: none;
+  24:         }
+  25: 
+  26:         .topbar {
+  27:             background: #102a43;
+  28:             color: white;
+  29:             padding: 14px 30px;
+  30:             display: flex;
+  31:             justify-content: space-between;
+  32:             align-items: center;
+  33:         }
+  34: 
+  35:         .brand {
+  36:             font-size: 22px;
+  37:             font-weight: 800;
+  38:             letter-spacing: 1px;
+  39:         }
+  40: 
+  41:         .topbar-right {
+  42:             font-size: 14px;
+  43:             opacity: 0.9;
+  44:         }
+  45: 
+  46:         .layout {
+  47:             display: flex;
+  48:             min-height: calc(100vh - 56px);
+  49:         }
+  50: 
+  51:         .sidebar {
+  52:             width: 250px;
+  53:             background: white;
+  54:             border-right: 1px solid #e1e7ef;
+  55:             padding: 25px 18px;
+  56:         }
+  57: 
+  58:         .sidebar-title {
+  59:             font-size: 12px;
+  60:             font-weight: 700;
+  61:             color: #7b8794;
+  62:             text-transform: uppercase;
+  63:             margin: 10px 12px;
+  64:             letter-spacing: 1px;
+  65:         }
+  66: 
+  67:         .sidebar a {
+  68:             display: block;
+  69:             padding: 12px 14px;
+  70:             margin-bottom: 5px;
+  71:             color: #334e68;
+  72:             border-radius: 8px;
+  73:             font-size: 14px;
+  74:         }
+  75: 
+  76:         .sidebar a:hover {
+  77:             background: #edf4fb;
+  78:             color: #0b63ce;
+  79:         }
+  80: 
+  81:         .sidebar a.active {
+  82:             background: #e8f1fb;
+  83:             color: #0b63ce;
+  84:             font-weight: 700;
+  85:         }
+  86: 
+  87:         .main {
+  88:             flex: 1;
+  89:             padding: 32px;
+  90:             max-width: 1400px;
+  91:         }
+  92: 
+  93:         .breadcrumb {
+  94:             margin-bottom: 20px;
+  95:             font-size: 14px;
+  96:         }
+  97: 
+  98:         .breadcrumb a {
+  99:             color: #0b63ce;
+ 100:         }
+ 101: 
+ 102:         .breadcrumb span {
+ 103:             color: #7b8794;
+ 104:         }
+ 105: 
+ 106:         .page-header {
+ 107:             display: flex;
+ 108:             justify-content: space-between;
+ 109:             align-items: center;
+ 110:             gap: 20px;
+ 111:             margin-bottom: 25px;
+ 112:         }
+ 113: 
+ 114:         .page-header h1 {
+ 115:             margin: 0 0 6px;
+ 116:             font-size: 30px;
+ 117:         }
+ 118: 
+ 119:         .page-header p {
+ 120:             margin: 0;
+ 121:             color: #627d98;
+ 122:         }
+ 123: 
+ 124:         .back-btn {
+ 125:             display: inline-block;
+ 126:             background: white;
+ 127:             color: #334e68;
+ 128:             border: 1px solid #d9e2ec;
+ 129:             padding: 11px 18px;
+ 130:             border-radius: 8px;
+ 131:             font-weight: 600;
+ 132:         }
+ 133: 
+ 134:         .back-btn:hover {
+ 135:             background: #f0f4f8;
+ 136:         }
+ 137: 
+ 138:         .message {
+ 139:             padding: 14px 18px;
+ 140:             background: #e8f7ee;
+ 141:             color: #176b3a;
+ 142:             border: 1px solid #b7e4c7;
+ 143:             border-radius: 8px;
+ 144:             margin-bottom: 20px;
+ 145:         }
+ 146: 
+ 147:         .grid {
+ 148:             display: grid;
+ 149:             grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+ 150:             gap: 22px;
+ 151:         }
+ 152: 
+ 153:         .card {
+ 154:             background: white;
+ 155:             border: 1px solid #e1e7ef;
+ 156:             border-radius: 12px;
+ 157:             padding: 24px;
+ 158:             margin-bottom: 22px;
+ 159:             box-shadow: 0 3px 12px rgba(16, 42, 67, 0.04);
+ 160:         }
+ 161: 
+ 162:         .card h2 {
+ 163:             margin: 0 0 20px;
+ 164:             font-size: 19px;
+ 165:         }
+ 166: 
+ 167:         .customer-grid {
+ 168:             display: grid;
+ 169:             grid-template-columns: repeat(2, 1fr);
+ 170:             gap: 18px;
+ 171:         }
+ 172: 
+ 173:         .info-label {
+ 174:             display: block;
+ 175:             font-size: 12px;
+ 176:             color: #7b8794;
+ 177:             text-transform: uppercase;
+ 178:             letter-spacing: 0.5px;
+ 179:             margin-bottom: 5px;
+ 180:         }
+ 181: 
+ 182:         .info-value {
+ 183:             font-size: 15px;
+ 184:             font-weight: 600;
+ 185:             color: #243b53;
+ 186:             word-break: break-word;
+ 187:         }
+ 188: 
+ 189:         .items-table {
+ 190:             width: 100%;
+ 191:             border-collapse: collapse;
+ 192:         }
+ 193: 
+ 194:         .items-table th {
+ 195:             text-align: left;
+ 196:             padding: 12px;
+ 197:             background: #f5f8fb;
+ 198:             color: #52606d;
+ 199:             font-size: 12px;
+ 200:             text-transform: uppercase;
+ 201:         }
+ 202: 
+ 203:         .items-table td {
+ 204:             padding: 15px 12px;
+ 205:             border-bottom: 1px solid #e8edf3;
+ 206:             vertical-align: middle;
+ 207:         }
+ 208: 
+ 209:         .product-name {
+ 210:             font-weight: 700;
+ 211:             color: #243b53;
+ 212:         }
+ 213: 
+ 214:         .product-code {
+ 215:             color: #829ab1;
+ 216:             font-size: 12px;
+ 217:             margin-top: 4px;
+ 218:         }
+ 219: 
+ 220:         .product-image {
+ 221:             width: 58px;
+ 222:             height: 58px;
+ 223:             object-fit: cover;
+ 224:             border-radius: 7px;
+ 225:             border: 1px solid #d9e2ec;
+ 226:             background: #f5f7fa;
+ 227:         }
+ 228: 
+ 229:         .no-image {
+ 230:             width: 58px;
+ 231:             height: 58px;
+ 232:             display: flex;
+ 233:             align-items: center;
+ 234:             justify-content: center;
+ 235:             border-radius: 7px;
+ 236:             background: #f0f4f8;
+ 237:             color: #9fb3c8;
+ 238:             font-size: 11px;
+ 239:             text-align: center;
+ 240:         }
+ 241: 
+ 242:         .money {
+ 243:             font-weight: 700;
+ 244:             white-space: nowrap;
+ 245:         }
+ 246: 
+ 247:         .summary-row {
+ 248:             display: flex;
+ 249:             justify-content: space-between;
+ 250:             gap: 20px;
+ 251:             padding: 11px 0;
+ 252:             border-bottom: 1px solid #edf1f5;
+ 253:         }
+ 254: 
+ 255:         .summary-row:last-child {
+ 256:             border-bottom: 0;
+ 257:         }
+ 258: 
+ 259:         .summary-label {
+ 260:             color: #627d98;
+ 261:         }
+ 262: 
+ 263:         .summary-value {
+ 264:             font-weight: 700;
+ 265:         }
+ 266: 
+ 267:         .total-row {
+ 268:             margin-top: 8px;
+ 269:             padding-top: 17px;
+ 270:             border-top: 2px solid #d9e2ec;
+ 271:             font-size: 19px;
+ 272:         }
+ 273: 
+ 274:         .status-form label,
+ 275:         .status-form textarea {
+ 276:             display: block;
+ 277:         }
+ 278: 
+ 279:         .status-form label {
+ 280:             font-weight: 700;
+ 281:             margin-bottom: 8px;
+ 282:             color: #334e68;
+ 283:         }
+ 284: 
+ 285:         .status-form select,
+ 286:         .status-form textarea {
+ 287:             width: 100%;
+ 288:             border: 1px solid #bcccdc;
+ 289:             border-radius: 8px;
+ 290:             padding: 12px;
+ 291:             font: inherit;
+ 292:             background: white;
+ 293:             margin-bottom: 18px;
+ 294:         }
+ 295: 
+ 296:         .status-form select:focus,
+ 297:         .status-form textarea:focus {
+ 298:             outline: none;
+ 299:             border-color: #0b63ce;
+ 300:         }
+
+========== SHIPPING TEMPLATE FILES ==========
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:293
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Tracking number</strong>
+                    <span>{{ shipment.tracking_number|default:"Not available" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Estimated delivery</strong>
+                    <span>{{ shipment.estimated_delivery|default:"Not set" }}</span>
+                </div>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:297
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Estimated delivery</strong>
+                    <span>{{ shipment.estimated_delivery|default:"Not set" }}</span>
+                </div>
+            </div>
+
+            {% if shipment.label_url %}
+            <p><strong>Shipping label:</strong>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:331
+                    <div class="shipping-form-grid">
+                        <div class="shipping-field full">
+                            <label for="rate-{{ shipment.id }}">Shippo rate ID</label>
+                            <input id="rate-{{ shipment.id }}" name="shippo_rate_id"
+                                   value="{{ shipment.shippo_rate_id }}"
+                                   placeholder="Paste the verified rate ID"
+                                   required maxlength="200" autocomplete="off">
+                        </div>
+                    </div>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:332
+                        <div class="shipping-field full">
+                            <label for="rate-{{ shipment.id }}">Shippo rate ID</label>
+                            <input id="rate-{{ shipment.id }}" name="shippo_rate_id"
+                                   value="{{ shipment.shippo_rate_id }}"
+                                   placeholder="Paste the verified rate ID"
+                                   required maxlength="200" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="shipping-actions">
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:340
+                    <div class="shipping-actions">
+                        <button class="shipping-button orange" type="submit"
+                            onclick="return confirm('This may purchase a real shipping label and charge your Shippo account. Have you verified the rate, parcel, and destination?');">
+                            Purchase label
+                        </button>
+                    </div>
+                </form>
+                {% endif %}
+            </section>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:380
+
+                        <div class="shipping-field">
+                            <label for="tracking-{{ shipment.id }}">Tracking number</label>
+                            <input id="tracking-{{ shipment.id }}" name="tracking_number"
+                                   value="{{ shipment.tracking_number }}" maxlength="200">
+                        </div>
+
+                        <div class="shipping-field full">
+                            <label for="notes-{{ shipment.id }}">Notes</label>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:381
+                        <div class="shipping-field">
+                            <label for="tracking-{{ shipment.id }}">Tracking number</label>
+                            <input id="tracking-{{ shipment.id }}" name="tracking_number"
+                                   value="{{ shipment.tracking_number }}" maxlength="200">
+                        </div>
+
+                        <div class="shipping-field full">
+                            <label for="notes-{{ shipment.id }}">Notes</label>
+                            <textarea id="notes-{{ shipment.id }}" name="notes" rows="3">{{ shipment.notes }}</textarea>
+
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:391
+                    </div>
+
+                    <div class="shipping-actions">
+                        <button class="shipping-button primary" type="submit">Save shipment details</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </article>

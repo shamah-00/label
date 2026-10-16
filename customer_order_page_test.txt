@@ -1,0 +1,12 @@
+THE LABEL GROUP - CUSTOMER/ORDER PAGE TEST
+============================================================
+Customer Management: GET /staff/customers/ -> HTTP 400
+Order Management: GET /staff/orders/ -> HTTP 400
+
+Active superuser accounts:
+- SHAMIE
+- shamah
+- amos
+- boss
+
+Test finished. No database records were changed by these GET requests.

@@ -1,0 +1,4105 @@
+﻿THE LABEL GROUP - SOURCE FILES FOR DASHBOARD AND PRODUCT FIX
+
+
+==================================================
+FILE: .\staff\views.py
+==================================================
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from products.models import (
+    Product,
+    Order,
+    QuoteRequest,
+    CollectionCalendarStickerOrder,
+)
+
+from .forms import (
+    ProductForm,
+    StaffRegistrationForm,
+    OwnerStaffForm,
+)
+
+from .models import StaffProfile, StaffActivityLog
+
+
+def get_staff_profile(user):
+    try:
+        return StaffProfile.objects.get(user=user)
+    except StaffProfile.DoesNotExist:
+        return None
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def log_staff_activity(request, staff_profile, action, description, object_name=""):
+    if not staff_profile:
+        return
+
+    StaffActivityLog.objects.create(
+        staff=staff_profile,
+        action=action,
+        description=description,
+        ip_address=get_client_ip(request),
+    )
+
+
+def staff_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def boss_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(request, "Your account is inactive.")
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "Staff profile not found.")
+            return redirect("staff_dashboard")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(request, "Your account is not approved.")
+            return redirect("staff_dashboard")
+
+        if profile.role != "manager":
+            messages.error(
+                request,
+                "Boss access is required for this section.",
+            )
+            return redirect("staff_dashboard")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+@staff_required
+def staff_dashboard(request):
+    profile = get_staff_profile(request.user)
+
+    products_count = Product.objects.count()
+    available_products_count = Product.objects.filter(
+        is_available=True
+    ).count()
+
+    orders_count = Order.objects.count()
+    quotes_count = QuoteRequest.objects.count()
+
+    new_quotes_count = QuoteRequest.objects.filter(
+        status="new"
+    ).count()
+
+    reviewing_quotes_count = QuoteRequest.objects.filter(
+        status="reviewing"
+    ).count()
+
+    quoted_count = QuoteRequest.objects.filter(
+        status="quoted"
+    ).count()
+
+    approved_quotes_count = QuoteRequest.objects.filter(
+        status="approved"
+    ).count()
+
+    in_production_count = QuoteRequest.objects.filter(
+        status="in_production"
+    ).count()
+
+    completed_quotes_count = QuoteRequest.objects.filter(
+        status="completed"
+    ).count()
+
+    if profile:
+        profile.last_activity = timezone.now()
+        profile.save(update_fields=["last_activity"])
+
+    context = {
+        "profile": profile,
+        "products_count": products_count,
+        "available_products_count": available_products_count,
+        "orders_count": orders_count,
+        "quotes_count": quotes_count,
+        "new_quotes_count": new_quotes_count,
+        "reviewing_quotes_count": reviewing_quotes_count,
+        "quoted_count": quoted_count,
+        "approved_quotes_count": approved_quotes_count,
+        "in_production_count": in_production_count,
+        "completed_quotes_count": completed_quotes_count,
+    }
+
+    return render(
+        request,
+        "staff/dashboard.html",
+        context,
+    )
+
+
+@staff_required
+def staff_products(request):
+    products = Product.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/products.html",
+        {
+            "products": products,
+        },
+    )
+
+
+@staff_required
+def staff_product_add(request):
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "create",
+                f"Created product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product created successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm()
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "title": "Add Product",
+        },
+    )
+
+
+@staff_required
+def staff_product_edit(request, pk):
+    product = get_object_or_404(
+        Product,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+            instance=product,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Updated product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product updated successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm(instance=product)
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "product": product,
+            "title": "Edit Product",
+        },
+    )
+
+
+@staff_required
+def staff_customers(request):
+    customers = (
+        Order.objects
+        .values(
+            "customer_name",
+            "customer_email",
+            "customer_phone",
+        )
+        .distinct()
+        .order_by("customer_name")
+    )
+
+    return render(
+        request,
+        "staff/customers.html",
+        {
+            "customers": customers,
+        },
+    )
+
+
+@staff_required
+def staff_orders(request):
+    orders = Order.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/orders.html",
+        {
+            "orders": orders,
+        },
+    )
+
+
+
+def owner_create_staff(request):
+    if request.method == "POST":
+        form = OwnerStaffForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                user = form.save(commit=False)
+
+                password = form.cleaned_data.get("password1")
+
+                if password:
+                    user.set_password(password)
+
+                user.is_active = True
+                user.is_staff = True
+                user.save()
+
+                profile = StaffProfile.objects.create(
+                    user=user,
+                    approved=True,
+                    status="approved",
+                    approved_at=timezone.now(),
+                )
+
+            log_staff_activity(
+                request,
+                get_staff_profile(request.user),
+                "create",
+                f"Boss created staff account: {user.username}",
+                user.username,
+            )
+
+            messages.success(
+                request,
+                f"Staff account for {user.username} created successfully.",
+            )
+
+            return redirect("boss_staff_management")
+    else:
+        form = OwnerStaffForm()
+
+    return render(
+        request,
+        "staff/boss/create_staff.html",
+        {
+            "form": form,
+        },
+    )
+
+
+@boss_required
+@transaction.atomic
+def approve_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.approved = True
+    profile.status = "approved"
+    profile.approved_at = timezone.now()
+    profile.rejection_reason = ""
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "approve",
+        f"Approved staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been approved.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reject_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    reason = request.POST.get(
+        "rejection_reason",
+        "Rejected by Boss",
+    ).strip()
+
+    profile.approved = False
+    profile.status = "rejected"
+    profile.rejection_reason = reason
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reject",
+        f"Rejected staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been rejected.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def deactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "Only approved staff members can be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if not profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = False
+    profile.user.save(
+        update_fields=["is_active"]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "deactivate",
+        f"Deactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been deactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account does not need reactivation.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "This account is not an approved staff account. Approve it again instead.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already active.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reactivate",
+        f"Reactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been reactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def remove_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.status = "rejected"
+    profile.approved = False
+    profile.rejection_reason = "Removed by Boss"
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "remove",
+        f"Removed staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been removed from the staff system.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+def staff_activity_log(request):
+    activities = (
+        StaffActivityLog.objects
+        .select_related(
+            "staff",
+            "staff__user",
+        )
+        .order_by("-created_at")
+    )
+
+    search = request.GET.get(
+        "search",
+        "",
+    ).strip()
+
+    action = request.GET.get(
+        "action",
+        "",
+    ).strip()
+
+    if search:
+        activities = activities.filter(
+            description__icontains=search
+        )
+
+    if action:
+        activities = activities.filter(
+            action=action
+        )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "page_view",
+        "Boss viewed the staff activity log.",
+        "Activity Log",
+    )
+
+    return render(
+        request,
+        "staff/boss/activity.html",
+        {
+            "activities": activities,
+            "search_query": search,
+            "selected_action": action,
+            "action_choices": StaffActivityLog.ACTION_CHOICES,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_orders(request):
+    orders = (
+        CollectionCalendarStickerOrder.objects
+        .all()
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "staff/calendar_orders.html",
+        {
+            "orders": orders,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_order_detail(request, pk):
+    order = get_object_or_404(
+        CollectionCalendarStickerOrder,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        status = request.POST.get("status")
+        staff_notes = request.POST.get(
+            "staff_notes",
+            "",
+        )
+
+        if status:
+            order.status = status
+
+        if hasattr(order, "staff_notes"):
+            order.staff_notes = staff_notes
+
+        order.save()
+
+        profile = get_staff_profile(request.user)
+
+        log_staff_activity(
+            request,
+            profile,
+            "update",
+            f"Updated calendar sticker order #{order.pk}",
+            f"Calendar Sticker Order #{order.pk}",
+        )
+
+        messages.success(
+            request,
+            "Calendar sticker order updated successfully.",
+        )
+
+        return redirect(
+            "staff_calendar_order_detail",
+            pk=order.pk,
+        )
+
+    return render(
+        request,
+        "staff/calendar_order_detail.html",
+        {
+            "order": order,
+            "status_choices": getattr(
+                CollectionCalendarStickerOrder,
+                "STATUS_CHOICES",
+                [],
+            ),
+        },
+    )
+
+def boss_site_settings(request):
+    from products.models import SiteSettings
+
+    boss_required(request)
+    settings_obj = SiteSettings.get_settings()
+
+    if request.method == "POST":
+        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+        settings_obj.phone = request.POST.get("phone", "").strip()
+        settings_obj.email = request.POST.get("email", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+        settings_obj.facebook = request.POST.get("facebook", "").strip()
+        settings_obj.instagram = request.POST.get("instagram", "").strip()
+        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+        settings_obj.youtube = request.POST.get("youtube", "").strip()
+        settings_obj.save()
+        messages.success(request, "Website settings updated successfully.")
+        return redirect("boss_site_settings")
+
+    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+
+
+
+@staff_required
+def staff_product_image_delete(request, pk):
+    profile = get_staff_profile(request.user)
+
+    product = get_object_or_404(
+        Product,
+        pk=pk
+    )
+
+    if request.method == "POST":
+        product_name = product.name
+
+        if product.image:
+            product.image.delete(save=False)
+            product.image = None
+            product.save()
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Deleted product image: {product_name}",
+                f"Staff member deleted the current image for product '{product_name}'.",
+            )
+
+            messages.success(
+                request,
+                f"The current image for '{product_name}' was deleted successfully."
+            )
+        else:
+            messages.info(
+                request,
+                f"'{product_name}' does not currently have an image."
+            )
+
+    return redirect(
+        "staff_product_edit",
+        pk=product.pk
+    )
+
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+
+def staff_login(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user.is_staff:
+                login(request, user)
+                return redirect("staff_dashboard")
+            else:
+                form.add_error(None, "You do not have staff permissions.")
+    else:
+        form = AuthenticationForm()
+    return render(request, "staff/login.html", {"form": form})
+
+from django.contrib.auth import logout
+
+def staff_logout(request):
+    logout(request)
+    return redirect("staff_login")
+
+from django.contrib.auth.forms import UserCreationForm
+
+def staff_register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True
+            user.save()
+            return redirect("staff_login")
+    else:
+        form = UserCreationForm()
+    return render(request, "staff/register.html", {"form": form})
+
+def staff_registration_success(request):
+    return render(request, "staff/registration_success.html", {})
+
+@staff_required
+def staff_profile(request):
+    return render(request, "staff/profile.html", {"user": request.user})
+
+
+def _label_group_customer_records():
+    """
+    Build one customer directory from existing orders and quote requests.
+    This does not create or modify database records.
+    """
+    from types import SimpleNamespace
+    from products.models import Order, QuoteRequest
+
+    records = {}
+
+    def value(obj, *names):
+        for name in names:
+            result = getattr(obj, name, None)
+            if result not in (None, ""):
+                return str(result).strip()
+        return ""
+
+    def add_record(obj, source_type):
+        name = value(obj, "customer_name", "full_name", "name")
+        email = value(obj, "customer_email", "email").lower()
+        phone = value(obj, "customer_phone", "phone", "telephone")
+        address = value(obj, "shipping_address", "address")
+
+        if not (name or email or phone):
+            return
+
+        key = email or phone or name.casefold()
+        if not key:
+            return
+
+        if key not in records:
+            records[key] = {
+                "name": name or email or phone,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "total_orders": 0,
+                "total_quotes": 0,
+                "sources": set(),
+            }
+
+        customer = records[key]
+
+        if name and not customer["name"]:
+            customer["name"] = name
+        if email and not customer["email"]:
+            customer["email"] = email
+        if phone and not customer["phone"]:
+            customer["phone"] = phone
+        if address and not customer["address"]:
+            customer["address"] = address
+
+        customer["sources"].add(source_type)
+
+        if source_type == "order":
+            customer["total_orders"] += 1
+        elif source_type == "quote":
+            customer["total_quotes"] += 1
+
+    for order in Order.objects.all().iterator():
+        add_record(order, "order")
+
+    for quote in QuoteRequest.objects.all().iterator():
+        add_record(quote, "quote")
+
+    customers = []
+
+    for item in records.values():
+        item["sources"] = ", ".join(sorted(item["sources"]))
+        customers.append(SimpleNamespace(
+            name=item["name"],
+            full_name=item["name"],
+            customer_name=item["name"],
+            email=item["email"],
+            customer_email=item["email"],
+            phone=item["phone"],
+            customer_phone=item["phone"],
+            address=item["address"],
+            total_orders=item["total_orders"],
+            total_quotes=item["total_quotes"],
+            sources=item["sources"],
+        ))
+
+    return sorted(customers, key=lambda customer: customer.name.lower())
+
+
+@staff_required
+def staff_quotes(request):
+    from django.db.models import Q
+    from products.models import QuoteRequest
+
+    quotes = QuoteRequest.objects.all().order_by("-pk")
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        filters = Q()
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+            and not getattr(field, "many_to_many", False)
+        }
+
+        for field in ("customer_name", "customer_email", "customer_phone",
+                      "company_name", "status"):
+            if field in field_names:
+                filters |= Q(**{field + "__icontains": search})
+
+        if filters:
+            quotes = quotes.filter(filters)
+
+    return render(request, "staff/quotes.html", {
+        "quotes": quotes,
+        "search_query": search,
+    })
+
+
+@staff_required
+def staff_customers(request):
+    from django.core.paginator import Paginator
+
+    customers = _label_group_customer_records()
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        search_lower = search.lower()
+        customers = [
+            customer for customer in customers
+            if search_lower in customer.name.lower()
+            or search_lower in customer.email.lower()
+            or search_lower in customer.phone.lower()
+        ]
+
+    paginator = Paginator(customers, 25)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(request, "staff/customers.html", {
+        "customers": page_obj.object_list,
+        "page_obj": page_obj,
+        "search_query": search,
+        "total_customers": len(customers),
+    })
+
+
+@staff_required
+def staff_quote_detail(request, pk):
+    from django.shortcuts import get_object_or_404
+    from products.models import QuoteRequest
+
+    quote = get_object_or_404(QuoteRequest, pk=pk)
+
+    if request.method == "POST":
+        from django.contrib import messages
+
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+        }
+
+        new_status = request.POST.get("status", "").strip()
+        if new_status and "status" in field_names:
+            valid_statuses = {
+                str(choice[0])
+                for choice in getattr(
+                    QuoteRequest, "STATUS_CHOICES", ()
+                )
+            }
+
+            if not valid_statuses or new_status in valid_statuses:
+                quote.status = new_status
+                quote.save(update_fields=["status"])
+                messages.success(request, "Quote status updated.")
+            else:
+                messages.error(request, "Please select a valid quote status.")
+
+        return redirect("staff_quote_detail", pk=quote.pk)
+
+    return render(request, "staff/quote_detail.html", {
+        "quote": quote,
+        "quote_id": quote.pk,
+    })
+
+
+def boss_staff_management(request):
+    from django.contrib import messages
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from django.shortcuts import render, redirect
+
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "Boss access is required.")
+        return redirect("/staff/")
+
+    User = get_user_model()
+    search = request.GET.get("search", "").strip()
+
+    staff_members = User.objects.filter(
+        is_staff=True
+    ).order_by("-date_joined")
+
+    if search:
+        staff_members = staff_members.filter(
+            Q(username__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search)
+        )
+
+    context = {
+        "staff_members": staff_members,
+        "search_query": search,
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "active_staff_count": User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).count(),
+    }
+
+    return render(
+        request,
+        "staff/boss/staff_management.html",
+        context
+    )
+
+
+@staff_required
+def staff_order_detail(request, pk):
+    order = get_object_or_404(Order, pk=pk)
+    if request.method == "POST":
+        if order.status != "completed":
+            order.status = "completed"
+            order.save()
+        return redirect("staff_order_detail", pk=pk)
+    return render(request, "staff/order_detail.html", {"order": order})
+
+
+
+==================================================
+FILE: .\staff\models.py
+==================================================
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class StaffProfile(models.Model):
+
+    ROLE_CHOICES = [
+        ("manager", "Manager"),
+        ("sales", "Sales Staff"),
+        ("production", "Production Staff"),
+        ("shipping", "Shipping Staff"),
+    ]
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    profile_picture = models.ImageField(
+        upload_to="staff_profiles/",
+        blank=True,
+        null=True
+    )
+
+    full_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    phone = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    role = models.CharField(
+        max_length=30,
+        choices=ROLE_CHOICES
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    approved = models.BooleanField(
+        default=False
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    joined_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    last_activity = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    rejection_reason = models.TextField(
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_status_display()}"
+
+
+class StaffActivityLog(models.Model):
+
+    ACTION_CHOICES = [
+        ("login", "Login"),
+        ("logout", "Logout"),
+        ("page_view", "Page Viewed"),
+        ("create", "Created"),
+        ("update", "Updated"),
+        ("delete", "Deleted"),
+        ("approve", "Approved"),
+        ("reject", "Rejected"),
+        ("failed_login", "Failed Login"),
+    ]
+
+    staff = models.ForeignKey(
+        StaffProfile,
+        on_delete=models.CASCADE,
+        related_name="activity_logs"
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES
+    )
+
+    page = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
+
+    user_agent = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.staff.user.username} - "
+            f"{self.get_action_display()} - "
+            f"{self.created_at}"
+        )
+
+
+==================================================
+FILE: .\staff\urls.py
+==================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.staff_dashboard, name="staff_dashboard"),
+    path("login/", views.staff_login, name="staff_login"),
+    path("logout/", views.staff_logout, name="staff_logout"),
+    path("register/", views.staff_register, name="staff_register"),
+    path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+    path("profile/", views.staff_profile, name="staff_profile"),
+    
+    # Products
+    path("products/", views.staff_products, name="staff_products"),
+    path("products/", views.staff_products, name="staff_product_list"),
+    path("products/add/", views.staff_product_add, name="staff_product_add"),
+    path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+    path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+    
+    # Customers
+    path("customers/", views.staff_customers, name="staff_customers"),
+    path("customers/", views.staff_customers, name="staff_customer_list"),
+    
+    # Orders
+    path("orders/", views.staff_orders, name="staff_orders"),
+    path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+    
+    # Quotes
+    path("quotes/", views.staff_quotes, name="staff_quotes"),
+    path("quotes/", views.staff_quotes, name="staff_quote_list"),
+    path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+    
+    # Calendar Orders
+    path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+    path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+    
+    # Boss / Staff Management paths
+    path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+    path("staff-management/", views.boss_staff_management),
+    
+    path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+    path("staff-management/create/", views.owner_create_staff),
+    
+    path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+    path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+    path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+    path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+    path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+    path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+    path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+]
+
+
+
+==================================================
+FILE: .\staff\templates\staff\base.html
+==================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SwiftCart Staff Portal</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        h1, h2 { color: #333; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
+
+
+
+==================================================
+FILE: .\staff\templates\staff\dashboard.html
+==================================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operations Dashboard | THE LABEL GROUP</title>
+
+<style>
+:root {
+    --navy: #0b1f3a;
+    --deep: #06152a;
+    --orange: #f47b20;
+    --orange-dark: #d9620d;
+    --paper: #f5f7fb;
+    --white: #ffffff;
+    --ink: #17263c;
+    --muted: #8290a4;
+    --line: #e8edf4;
+    --green: #16845b;
+    --blue: #3468c8;
+    --purple: #7957c8;
+    --radius: 17px;
+    --shadow: 0 8px 30px rgba(11,31,58,.045);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* SIDEBAR */
+
+.sidebar {
+    width: 250px;
+    flex: 0 0 250px;
+    min-height: 100vh;
+    background: var(--deep);
+    color: #d6dfeb;
+    display: flex;
+    flex-direction: column;
+    padding: 27px 16px 18px;
+}
+
+.brand {
+    padding: 0 12px 27px;
+    border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.brand-name {
+    font-size: 19px;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.brand-name .accent { color: var(--orange); }
+
+.brand-caption {
+    color: #8495ac;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 8px;
+}
+
+.nav-label {
+    margin: 27px 12px 11px;
+    color: #72849d;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.7px;
+    text-transform: uppercase;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav a {
+    min-height: 44px;
+    padding: 11px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-radius: 10px;
+    color: #b6c4d6;
+    font-weight: 600;
+    font-size: 12px;
+    transition: .2s ease;
+}
+
+.nav a:hover {
+    color: #fff;
+    background: rgba(255,255,255,.065);
+}
+
+.nav a.active {
+    color: #fff;
+    background: linear-gradient(100deg, rgba(244,123,32,.23), rgba(244,123,32,.07));
+    box-shadow: inset 3px 0 var(--orange);
+}
+
+.nav-icon {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 7px;
+    background: rgba(255,255,255,.065);
+    font-size: 14px;
+}
+
+.nav a.active .nav-icon {
+    background: var(--orange);
+    color: #fff;
+}
+
+.sidebar-spacer { flex: 1; }
+
+.sidebar-note {
+    margin-top: 25px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.035);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.note-indicator {
+    width: 8px;
+    height: 8px;
+    display: inline-block;
+    background: #38c78a;
+    border-radius: 50%;
+    margin-right: 6px;
+    box-shadow: 0 0 0 4px rgba(56,199,138,.1);
+}
+
+.sidebar-note strong {
+    display: block;
+    color: #fff;
+    font-size: 11px;
+    margin-bottom: 7px;
+}
+
+.sidebar-note p {
+    margin: 0;
+    font-size: 10px;
+    line-height: 1.7;
+    color: #8fa0b6;
+}
+
+.sidebar-footer {
+    padding: 20px 9px 0;
+    color: #61738c;
+    font-size: 10px;
+}
+
+/* MAIN HEADER */
+
+.main {
+    flex: 1;
+    min-width: 0;
+}
+
+.topbar {
+    height: 78px;
+    padding: 0 34px;
+    background: rgba(255,255,255,.94);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.breadcrumb {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.breadcrumb strong {
+    color: var(--navy);
+    font-weight: 800;
+}
+
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 17px;
+}
+
+.live-label {
+    color: var(--green);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .4px;
+}
+
+.live-label:before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: #23b879;
+    border-radius: 50%;
+    margin-right: 7px;
+}
+
+.account {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-left: 17px;
+    border-left: 1px solid var(--line);
+}
+
+.avatar {
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: var(--navy);
+    color: white;
+    font-weight: 900;
+    font-size: 13px;
+}
+
+.account-name {
+    font-weight: 800;
+    color: var(--navy);
+    font-size: 12px;
+}
+
+.account-role {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.account-links {
+    display: flex;
+    gap: 7px;
+}
+
+.small-link {
+    border: 1px solid var(--line);
+    background: white;
+    padding: 9px 11px;
+    border-radius: 8px;
+    color: #536278;
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.small-link:hover {
+    border-color: var(--orange);
+    color: var(--orange-dark);
+}
+
+/* PAGE CONTENT */
+
+.content {
+    max-width: 1650px;
+    margin: 0 auto;
+    padding: 30px 34px 35px;
+}
+
+.welcome {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: 35px 36px;
+    min-height: 205px;
+    border-radius: 20px;
+    background:
+        radial-gradient(ellipse at 92% 12%, rgba(244,123,32,.25), transparent 35%),
+        linear-gradient(115deg, #06152a 0%, #0b1f3a 65%, #16385b 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    box-shadow: 0 15px 35px rgba(6,21,42,.13);
+}
+
+.welcome:before,
+.welcome:after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border: 1px solid rgba(255,255,255,.075);
+    transform: rotate(35deg);
+    pointer-events: none;
+}
+
+.welcome:before {
+    width: 260px;
+    height: 360px;
+    right: 13%;
+    top: -180px;
+}
+
+.welcome:after {
+    width: 200px;
+    height: 300px;
+    right: 3%;
+    top: -110px;
+}
+
+.welcome-copy { max-width: 650px; }
+
+.eyebrow {
+    color: #ffb779;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 9px;
+    font-weight: 900;
+}
+
+.welcome h1 {
+    margin: 13px 0 11px;
+    font-size: clamp(28px, 3vw, 39px);
+    line-height: 1.1;
+    letter-spacing: -1.4px;
+}
+
+.welcome p {
+    color: #c3d0e0;
+    font-size: 12px;
+    line-height: 1.8;
+    max-width: 510px;
+    margin: 0;
+}
+
+.welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 13px 16px;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 800;
+    transition: .2s ease;
+    white-space: nowrap;
+}
+
+.btn:hover { transform: translateY(-2px); }
+
+.btn-primary {
+    color: white;
+    background: var(--orange);
+    box-shadow: 0 5px 15px rgba(244,123,32,.2);
+}
+
+.btn-primary:hover { background: var(--orange-dark); }
+
+.btn-secondary {
+    color: white;
+    border: 1px solid rgba(255,255,255,.23);
+    background: rgba(255,255,255,.055);
+}
+
+.btn-secondary:hover { background: rgba(255,255,255,.12); }
+
+/* SECTION HEADINGS */
+
+.section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 18px;
+    margin: 31px 0 15px;
+}
+
+.section-head h2 {
+    color: var(--navy);
+    font-size: 16px;
+    margin: 0;
+    letter-spacing: -.3px;
+}
+
+.section-head p {
+    color: var(--muted);
+    font-size: 11px;
+    margin: 6px 0 0;
+}
+
+.section-link {
+    color: var(--orange-dark);
+    font-weight: 800;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+/* KPI CARDS */
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.stat-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 21px;
+    box-shadow: var(--shadow);
+    transition: transform .2s, box-shadow .2s;
+    min-width: 0;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 13px 32px rgba(11,31,58,.08);
+}
+
+.stat-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.stat-label {
+    color: #78879b;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.stat-icon {
+    width: 39px;
+    height: 39px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    font-size: 17px;
+    font-weight: 800;
+    background: #fff0e4;
+    color: var(--orange-dark);
+}
+
+.stat-icon.blue { background: #edf2ff; color: var(--blue); }
+.stat-icon.green { background: #e8f8f0; color: var(--green); }
+.stat-icon.purple { background: #f1edff; color: var(--purple); }
+.stat-icon.navy { background: #eaf0f7; color: var(--navy); }
+
+.stat-number {
+    color: var(--navy);
+    font-size: 34px;
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    margin: 16px 0 12px;
+    line-height: 1;
+}
+
+.stat-bottom {
+    border-top: 1px solid #edf1f6;
+    padding-top: 12px;
+    color: #8a97a9;
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.stat-bottom a { color: var(--orange-dark); font-weight: 800; }
+
+.pill {
+    display: inline-block;
+    padding: 5px 8px;
+    border-radius: 30px;
+    color: #a74b0b;
+    background: #fff0e4;
+    font-size: 9px;
+    font-weight: 800;
+}
+
+/* PIPELINE */
+
+.pipeline-panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 23px;
+    box-shadow: var(--shadow);
+}
+
+.pipeline-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.pipeline-head h3 {
+    margin: 0;
+    color: var(--navy);
+    font-size: 14px;
+}
+
+.pipeline-head p {
+    color: var(--muted);
+    font-size: 10px;
+    margin: 6px 0 0;
+}
+
+.pipeline-total {
+    text-align: right;
+}
+
+.pipeline-total strong {
+    color: var(--navy);
+    display: block;
+    font-size: 24px;
+}
+
+.pipeline-total span {
+    color: var(--muted);
+    font-size: 10px;
+}
+
+.pipeline {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 9px;
+}
+
+.pipeline-step {
+    min-width: 0;
+    border-radius: 10px;
+    background: #f7f9fc;
+    padding: 13px 11px;
+    border: 1px solid #edf1f6;
+}
+
+.pipeline-step:before {
+    content: "";
+    display: block;
+    height: 4px;
+    width: 27px;
+    border-radius: 8px;
+    background: var(--orange);
+    margin-bottom: 13px;
+}
+
+.pipeline-step:nth-child(2):before { background: var(--blue); }
+.pipeline-step:nth-child(3):before { background: var(--purple); }
+.pipeline-step:nth-child(4):before { background: #169c85; }
+.pipeline-step:nth-child(5):before { background: var(--green); }
+
+.pipeline-step span {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.5;
+    min-height: 28px;
+}
+
+.pipeline-step strong {
+    display: block;
+    margin-top: 7px;
+    color: var(--navy);
+    font-size: 22px;
+    letter-spacing: -.7px;
+}
+
+/* PANELS */
+
+.grid-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(290px, .8fr);
+    gap: 18px;
+    margin-top: 18px;
+}
+
+.panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    min-width: 0;
+    overflow: hidden;
+}
+
+.panel-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 20px 22px;
+    border-bottom: 1px solid var(--line);
+}
+
+.panel-head h3 {
+    color: var(--navy);
+    margin: 0;
+    font-size: 13px;
+}
+
+.panel-head p {
+    color: var(--muted);
+    font-size: 10px;
+    margin: 6px 0 0;
+}
+
+.panel-content { padding: 3px 22px; }
+
+.quote-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 17px 0;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.quote-row:last-child { border-bottom: 0; }
+
+.quote-left {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.quote-mark {
+    width: 39px;
+    height: 39px;
+    flex: 0 0 39px;
+    display: grid;
+    place-items: center;
+    border-radius: 11px;
+    background: #fff0e4;
+    color: var(--orange-dark);
+    font-weight: 900;
+}
+
+.quote-title {
+    color: var(--navy);
+    font-weight: 800;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+}
+
+.quote-subtitle {
+    color: var(--muted);
+    font-size: 10px;
+    margin-top: 5px;
+}
+
+.status {
+    display: inline-block;
+    padding: 6px 9px;
+    border-radius: 7px;
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: capitalize;
+    white-space: nowrap;
+    background: #eef2f7;
+    color: #57677c;
+}
+
+.status-new { background: #fff0e4; color: #b85108; }
+.status-approved, .status-completed { background: #e5f7ee; color: #16734f; }
+.status-reviewing, .status-quoted { background: #edf2ff; color: #285db3; }
+.status-in-production { background: #f1edff; color: #6e4cb9; }
+
+.empty {
+    padding: 34px 18px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.8;
+}
+
+.empty-icon {
+    width: 46px;
+    height: 46px;
+    margin: 0 auto 13px;
+    display: grid;
+    place-items: center;
+    background: #fff0e4;
+    color: var(--orange-dark);
+    border-radius: 14px;
+    font-size: 20px;
+}
+
+.empty strong {
+    display: block;
+    color: var(--navy);
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+/* ACTIVITY TIMELINE */
+
+.activity {
+    padding: 5px 22px 7px;
+}
+
+.activity-row {
+    display: flex;
+    gap: 13px;
+    position: relative;
+    padding: 15px 0;
+    border-bottom: 1px solid #edf1f6;
+}
+
+.activity-row:last-child { border-bottom: 0; }
+
+.activity-marker {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: #fff0e4;
+    color: var(--orange-dark);
+    font-size: 12px;
+}
+
+.activity-text {
+    color: #46556b;
+    font-size: 10px;
+    line-height: 1.65;
+    overflow-wrap: anywhere;
+}
+
+.activity-text strong { color: var(--navy); }
+
+.activity-time {
+    color: #9aa5b4;
+    font-size: 9px;
+    margin-top: 5px;
+}
+
+/* QUICK LINKS */
+
+.quick-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}
+
+.quick-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 18px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    transition: .2s ease;
+}
+
+.quick-card:hover {
+    border-color: #f3b17c;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.quick-card h4 {
+    color: var(--navy);
+    font-size: 11px;
+    margin: 0 0 6px;
+}
+
+.quick-card p {
+    color: var(--muted);
+    font-size: 10px;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.quick-arrow {
+    margin-left: auto;
+    color: var(--orange-dark);
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.footer {
+    text-align: center;
+    padding: 30px 10px 5px;
+    color: #9aa5b4;
+    font-size: 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 1200px) {
+    .sidebar { width: 220px; flex-basis: 220px; }
+    .content { padding: 25px 23px; }
+    .topbar { padding: 0 23px; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-main { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+    .app { display: block; }
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+        padding: 17px;
+    }
+    .brand { padding-bottom: 16px; }
+    .nav-label { margin-top: 17px; }
+    .nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .sidebar-note, .sidebar-footer { display: none; }
+    .topbar {
+        height: auto;
+        min-height: 72px;
+        padding: 14px 18px;
+        flex-wrap: wrap;
+    }
+    .topbar-right { gap: 10px; }
+    .live-label { display: none; }
+    .account { padding-left: 0; border-left: 0; }
+    .account-links { display: none; }
+    .content { padding: 18px; }
+    .welcome {
+        padding: 25px;
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .welcome-actions { width: 100%; }
+    .welcome-actions .btn { flex: 1; }
+    .pipeline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pipeline-step:last-child { grid-column: span 2; }
+    .quick-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 450px) {
+    .stats { grid-template-columns: 1fr; }
+    .welcome h1 { font-size: 28px; }
+    .welcome-actions { flex-direction: column; }
+    .section-head { align-items: flex-start; }
+    .quote-row { align-items: flex-start; flex-direction: column; }
+    .pipeline { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+    <aside class="sidebar">
+        <a href="/staff/" class="brand">
+            <div class="brand-name">THE LABEL <span class="accent">GROUP</span></div>
+            <div class="brand-caption">Operations workspace</div>
+        </a>
+
+        <div class="nav-label">Main workspace</div>
+        <nav class="nav">
+            <a href="/staff/" class="active"><span class="nav-icon">⌂</span> Overview</a>
+            <a href="/staff/products/"><span class="nav-icon">▦</span> Products</a>
+            <a href="/staff/customers/"><span class="nav-icon">♙</span> Customers</a>
+            <a href="/staff/quotes/"><span class="nav-icon">▤</span> Quote Requests</a>
+            <a href="/staff/orders/"><span class="nav-icon">▣</span> Orders</a>
+            <a href="/staff/calendar-orders/"><span class="nav-icon">▦</span> Order Calendar</a>
+        </nav>
+
+        {% if request.user.is_superuser %}
+        <div class="nav-label">Administration</div>
+        <nav class="nav">
+            <a href="/staff/staff-management/"><span class="nav-icon">♧</span> Staff Management</a>
+            <a href="/staff/activity-log/"><span class="nav-icon">◷</span> Activity Log</a>
+        </nav>
+        {% endif %}
+
+        <div class="sidebar-spacer"></div>
+
+        <div class="sidebar-note">
+            <strong><span class="note-indicator"></span> Staff workspace</strong>
+            <p>Use the operations portal to manage your daily work and keep customer requests moving.</p>
+        </div>
+
+        <div class="sidebar-footer">THE LABEL GROUP · Staff portal</div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div class="breadcrumb">Workspace&nbsp; / &nbsp;<strong>Overview</strong></div>
+
+            <div class="topbar-right">
+                <span class="live-label">Operations workspace</span>
+
+                <div class="account">
+                    <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</div>
+                    <div>
+                        <div class="account-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                        <div class="account-role">{% if request.user.is_superuser %}Administrator{% else %}Active Staff{% endif %}</div>
+                    </div>
+                </div>
+
+                <div class="account-links">
+                    <a class="small-link" href="/staff/profile/">Profile</a>
+                    <a class="small-link" href="/staff/logout/">Logout</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+
+            <section class="welcome">
+                <div class="welcome-copy">
+                    <div class="eyebrow">The Label Group · Operations</div>
+                    <h1>Good to have you back,<br>{{ request.user.first_name|default:request.user.username }}.</h1>
+                    <p>
+                        Your central workspace for products, customer requests and order operations.
+                        Keep the workflow moving and stay on top of what matters.
+                    </p>
+                </div>
+
+                <div class="welcome-actions">
+                    <a class="btn btn-primary" href="/staff/orders/">Manage orders <span>↗</span></a>
+                    <a class="btn btn-secondary" href="/staff/quotes/">Review quotes <span>↗</span></a>
+                </div>
+            </section>
+
+            <div class="section-head">
+                <div>
+                    <h2>Business at a glance</h2>
+                    <p>A current snapshot of your catalogue and customer work.</p>
+                </div>
+                <a class="section-link" href="/staff/products/">Open catalogue ↗</a>
+            </div>
+
+            <section class="stats">
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Total products</span>
+                        <span class="stat-icon">▦</span>
+                    </div>
+                    <div class="stat-number">{{ total_products|default:0 }}</div>
+                    <div class="stat-bottom"><a href="/staff/products/">Manage products →</a></div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Available products</span>
+                        <span class="stat-icon green">✓</span>
+                    </div>
+                    <div class="stat-number">{{ available_products|default:0 }}</div>
+                    <div class="stat-bottom">Products marked available in the catalogue</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Quote requests</span>
+                        <span class="stat-icon blue">▤</span>
+                    </div>
+                    <div class="stat-number">{{ total_quotes|default:0 }}</div>
+                    <div class="stat-bottom">
+                        <span class="pill">{{ new_quotes|default:0 }} new</span>
+                        &nbsp;<a href="/staff/quotes/">Review requests →</a>
+                    </div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Total orders</span>
+                        <span class="stat-icon purple">▣</span>
+                    </div>
+                    <div class="stat-number">{{ total_orders|default:0 }}</div>
+                    <div class="stat-bottom"><a href="/staff/orders/">Open order management →</a></div>
+                </article>
+
+            </section>
+
+            <div class="section-head">
+                <div>
+                    <h2>Quote pipeline</h2>
+                    <p>See where requests sit in the current workflow.</p>
+                </div>
+                <a class="section-link" href="/staff/quotes/">View all requests ↗</a>
+            </div>
+
+            <section class="pipeline-panel">
+                <div class="pipeline-head">
+                    <div>
+                        <h3>Request progress</h3>
+                        <p>Counts reflect the quote status totals supplied by Django.</p>
+                    </div>
+                    <div class="pipeline-total">
+                        <strong>{{ total_quotes|default:0 }}</strong>
+                        <span>Total requests</span>
+                    </div>
+                </div>
+
+                <div class="pipeline">
+                    <div class="pipeline-step">
+                        <span>New requests</span>
+                        <strong>{{ new_quotes|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-step">
+                        <span>Under review</span>
+                        <strong>{{ reviewing_quotes|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-step">
+                        <span>Quote prepared</span>
+                        <strong>{{ quoted_quotes|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-step">
+                        <span>In production</span>
+                        <strong>{{ production_quotes|default:0 }}</strong>
+                    </div>
+                    <div class="pipeline-step">
+                        <span>Completed</span>
+                        <strong>{{ completed_quotes|default:0 }}</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid-main">
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Recent quote requests</h3>
+                            <p>The latest requests recorded in the system.</p>
+                        </div>
+                        <a class="section-link" href="/staff/quotes/">View all →</a>
+                    </div>
+
+                    <div class="panel-content">
+                        {% for quote in recent_quotes %}
+                        <div class="quote-row">
+                            <div class="quote-left">
+                                <div class="quote-mark">Q</div>
+                                <div>
+                                    <div class="quote-title">
+                                        {{ quote.company_name|default:quote.customer_name|default:"Quote request" }}
+                                    </div>
+                                    <div class="quote-subtitle">
+                                        Request #{{ quote.pk }}
+                                        {% if quote.created_at %} · {{ quote.created_at|date:"M j, Y" }}{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <span class="status status-{{ quote.status|default:'new'|slugify }}">
+                                {{ quote.get_status_display|default:quote.status|default:"New" }}
+                            </span>
+                        </div>
+                        {% empty %}
+                        <div class="empty">
+                            <div class="empty-icon">▤</div>
+                            <strong>No recent quote requests</strong>
+                            Requests will appear here when they are received.
+                            <br><a class="section-link" href="/staff/quotes/">Open quote requests →</a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h3>Team activity</h3>
+                            <p>Recent activity recorded by the portal.</p>
+                        </div>
+                        {% if request.user.is_superuser %}
+                        <a class="section-link" href="/staff/activity-log/">Full log →</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="activity">
+                        {% for activity in recent_activity %}
+                        <div class="activity-row">
+                            <div class="activity-marker">↗</div>
+                            <div>
+                                <div class="activity-text">
+                                    {% if activity.staff.user.get_full_name %}
+                                    <strong>{{ activity.staff.user.get_full_name }}</strong>
+                                    {% elif activity.staff.user.username %}
+                                    <strong>{{ activity.staff.user.username }}</strong>
+                                    {% endif %}
+                                    {{ activity.description|default:activity.details|default:activity.action|default:"Activity recorded" }}
+                                </div>
+                                <div class="activity-time">
+                                    {% if activity.created_at %}
+                                    {{ activity.created_at|date:"M j, Y · H:i" }}
+                                    {% elif activity.timestamp %}
+                                    {{ activity.timestamp|date:"M j, Y · H:i" }}
+                                    {% else %}
+                                    Recorded activity
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty">
+                            <div class="empty-icon">◷</div>
+                            <strong>No activity to show yet</strong>
+                            Recorded staff actions will appear here.
+                            {% if request.user.is_superuser %}
+                            <br><a class="section-link" href="/staff/activity-log/">Open activity log →</a>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </section>
+
+            <div class="section-head">
+                <div>
+                    <h2>Quick access</h2>
+                    <p>Go straight to the section you need.</p>
+                </div>
+            </div>
+
+            <section class="quick-grid">
+                <a class="quick-card" href="/staff/products/">
+                    <span class="stat-icon">▦</span>
+                    <div>
+                        <h4>Product catalogue</h4>
+                        <p>Manage print products and availability.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+
+                <a class="quick-card" href="/staff/customers/">
+                    <span class="stat-icon blue">♙</span>
+                    <div>
+                        <h4>Customer directory</h4>
+                        <p>Find customer records in one place.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+
+                <a class="quick-card" href="/staff/orders/">
+                    <span class="stat-icon green">▣</span>
+                    <div>
+                        <h4>Order management</h4>
+                        <p>Access orders and follow fulfilment.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+            </section>
+
+            {% if request.user.is_superuser %}
+            <div class="section-head">
+                <div>
+                    <h2>Administrator overview</h2>
+                    <p>Staff access and additional workflow totals.</p>
+                </div>
+            </div>
+
+            <section class="stats">
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Approved staff</span>
+                        <span class="stat-icon green">✓</span>
+                    </div>
+                    <div class="stat-number">{{ approved_staff|default:0 }}</div>
+                    <div class="stat-bottom">Staff with approved access</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Pending staff</span>
+                        <span class="stat-icon">!</span>
+                    </div>
+                    <div class="stat-number">{{ pending_staff|default:0 }}</div>
+                    <div class="stat-bottom">Applications awaiting review</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Approved quotes</span>
+                        <span class="stat-icon blue">✓</span>
+                    </div>
+                    <div class="stat-number">{{ approved_quotes|default:0 }}</div>
+                    <div class="stat-bottom">Requests marked approved</div>
+                </article>
+
+                <article class="stat-card">
+                    <div class="stat-top">
+                        <span class="stat-label">Quoted requests</span>
+                        <span class="stat-icon purple">▤</span>
+                    </div>
+                    <div class="stat-number">{{ quoted_quotes|default:0 }}</div>
+                    <div class="stat-bottom">Requests with a prepared quote</div>
+                </article>
+            </section>
+
+            <section class="quick-grid">
+                <a class="quick-card" href="/staff/staff-management/">
+                    <span class="stat-icon">♧</span>
+                    <div>
+                        <h4>Staff management</h4>
+                        <p>Review applications and manage staff access.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+
+                <a class="quick-card" href="/staff/activity-log/">
+                    <span class="stat-icon blue">◷</span>
+                    <div>
+                        <h4>Audit activity</h4>
+                        <p>Review recorded actions in the portal.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+
+                <a class="quick-card" href="/staff/calendar-orders/">
+                    <span class="stat-icon green">▦</span>
+                    <div>
+                        <h4>Order calendar</h4>
+                        <p>Open the calendar view for orders.</p>
+                    </div>
+                    <span class="quick-arrow">→</span>
+                </a>
+            </section>
+            {% endif %}
+
+            <footer class="footer">
+                THE LABEL GROUP &nbsp;·&nbsp; Professional printing and identification
+            </footer>
+
+        </div>
+    </main>
+</div>
+</body>
+</html>
+
+
+
+==================================================
+FILE: .\products\models.py
+==================================================
+from django.utils.text import slugify
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Product(models.Model):
+
+    CATEGORY_CHOICES = [
+        ("decals", "Decals"),
+        ("stickers", "Stickers"),
+        ("reflective", "Reflective Products"),
+        ("custom", "Custom Products"),
+        ("other", "Other"),
+    ]
+
+    INDUSTRY_CHOICES = [
+        ("truck_motor_car", "Truck / Motor / Car Decals"),
+        ("government", "Government Contractor Decals"),
+        ("pool", "Pool Decals"),
+        ("construction", "Construction Decals"),
+        ("waste", "Waste Company Decals"),
+    ]
+
+    MATERIAL_CHOICES = [
+        ("vinyl", "Vinyl"),
+        ("paper", "Paper"),
+        ("mylar", "Mylar"),
+        ("polystyrene", "Polystyrene"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    SHAPE_CHOICES = [
+        ("rectangle", "Rectangle"),
+        ("square", "Square"),
+        ("circle", "Circle"),
+        ("oval", "Oval"),
+        ("custom", "Custom / Die-cut"),
+    ]
+
+    FINISH_CHOICES = [
+        ("gloss", "Gloss"),
+        ("matte", "Matte"),
+        ("satin", "Satin"),
+        ("clear", "Clear"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    PRINTING_METHOD_CHOICES = [
+        ("full_color", "Full Color"),
+        ("black_white", "Black & White"),
+        ("single_sided", "Single-Sided"),
+        ("double_sided", "Double-Sided"),
+        ("digital", "Digital Printing"),
+        ("screen", "Screen Printing"),
+    ]
+
+    ADHESIVE_CHOICES = [
+        ("permanent", "Permanent"),
+        ("removable", "Removable"),
+        ("indoor", "Indoor"),
+        ("outdoor", "Outdoor"),
+        ("not_applicable", "Not Applicable"),
+    ]
+
+    PRODUCT_NAME_CHOICES = [
+        ("bag_tag", "Bag & Tag Sticker"),
+        ("container_decal", "Container Identification Decal"),
+        ("dumpster_decal", "Dumpster Identification Decal"),
+        ("baler_decal", "Baler Decal"),
+        ("compactor_decal", "Compactor Decal"),
+        ("rolloff_decal", "Rolloff Decal"),
+        ("recycling_label", "Recycling Label"),
+        ("truck_decal", "Truck Decal"),
+        ("fleet_decal", "Fleet Decal"),
+        ("yard_waste_label", "Yard Waste Label"),
+        ("safety_decal", "Safety & Compliance Decal"),
+        ("reflective_label", "Reflective Label"),
+        ("facility_sign", "Facility Sign"),
+        ("food_waste_label", "Food Waste Label"),
+        ("medical_waste_label", "Medical Waste Label"),
+        ("portable_toilet_decal", "Portable Toilet Decal"),
+        ("custom_label", "Custom Label"),
+        ("other", "Other / New Product"),
+    ]
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    product_type = models.CharField(
+        max_length=100,
+        choices=PRODUCT_NAME_CHOICES,
+        default="other"
+    )
+
+    slug = models.SlugField(
+        unique=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    category = models.CharField(
+        max_length=100,
+        choices=CATEGORY_CHOICES,
+        default="other"
+    )
+
+    industry = models.CharField(
+        max_length=100,
+        choices=INDUSTRY_CHOICES,
+        default="waste"
+    )
+
+    brand = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    discount_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    image = models.ImageField(
+        upload_to="products/",
+        blank=True,
+        null=True
+    )
+
+    stock = models.PositiveIntegerField(
+        default=0
+    )
+
+    material = models.CharField(
+        max_length=100,
+        choices=MATERIAL_CHOICES,
+        blank=True
+    )
+
+    finish = models.CharField(
+        max_length=100,
+        choices=FINISH_CHOICES,
+        blank=True
+    )
+
+    shape = models.CharField(
+        max_length=100,
+        choices=SHAPE_CHOICES,
+        blank=True
+    )
+
+    printing_method = models.CharField(
+        max_length=100,
+        choices=PRINTING_METHOD_CHOICES,
+        blank=True
+    )
+
+    adhesive = models.CharField(
+        max_length=100,
+        choices=ADHESIVE_CHOICES,
+        blank=True
+    )
+
+    is_custom = models.BooleanField(
+        default=False
+    )
+
+    is_available = models.BooleanField(
+        default=True
+    )
+
+    is_featured = models.BooleanField(
+        default=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        from django.db import IntegrityError, transaction
+
+        base_slug = (self.slug or "").strip()
+        if not base_slug:
+            base_slug = slugify(getattr(self, "name", "") or getattr(self, "title", "") or "product")
+        base_slug = base_slug or "product"
+
+        candidate = base_slug
+        counter = 2
+
+        ProductModel = self.__class__
+        while ProductModel.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+            candidate = f"{base_slug}-{counter}"
+            counter += 1
+
+        self.slug = candidate
+        return super().save(*args, **kwargs)
+
+class Order(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("confirmed", "Confirmed"),
+        ("processing", "Processing"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    shipping_address = models.TextField()
+
+    shipping_city = models.CharField(
+        max_length=100
+    )
+
+    shipping_state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    shipping_country = models.CharField(
+        max_length=100
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    shipping_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.customer_name}"
+
+
+class OrderItem(models.Model):
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="order_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    unit_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class Shipment(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Preparing Shipment"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("in_transit", "In Transit"),
+        ("out_for_delivery", "Out for Delivery"),
+        ("delivered", "Delivered"),
+        ("delayed", "Delayed"),
+        ("returned", "Returned"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="shipment"
+    )
+
+    carrier = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_method = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    tracking_number = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    estimated_delivery = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    shipped_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    delivered_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Shipment for Order #{self.order.id}"
+
+
+class StaffProfile(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="staff_profile"
+    )
+
+    full_name = models.CharField(
+        max_length=200
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.full_name} - {self.get_status_display()}"
+
+
+class QuoteRequest(models.Model):
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("reviewing", "Being Reviewed"),
+        ("quoted", "Quote Sent"),
+        ("approved", "Approved"),
+        ("in_production", "In Production"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    company_name = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    street_address = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    address_continued = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    country = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    requirements = models.TextField(
+        blank=True
+    )
+
+    uploaded_file = models.FileField(
+        upload_to="quote_requests/",
+        blank=True,
+        null=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Quote #{self.id} - {self.customer_name}"
+
+
+class QuoteRequestItem(models.Model):
+
+    quote_request = models.ForeignKey(
+        QuoteRequest,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="quote_request_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class CollectionCalendarStickerOrder(models.Model):
+
+    YEAR_CHOICES = [
+        (year, str(year))
+        for year in range(2027, 2101)
+    ]
+
+    DAY_CHOICES = [
+        ("Monday", "Monday"),
+        ("Tuesday", "Tuesday"),
+        ("Wednesday", "Wednesday"),
+        ("Thursday", "Thursday"),
+        ("Friday", "Friday"),
+    ]
+
+    FREQUENCY_CHOICES = [
+        ("Once per week", "Once per week"),
+        ("Every other week", "Every other week"),
+        ("Once per month", "Once per month"),
+        ("Other", "Other"),
+    ]
+
+    COLOR_CHOICES = [
+        ("Green", "Green"),
+        ("Red", "Red"),
+        ("Blue", "Blue"),
+        ("Yellow", "Yellow"),
+        ("Orange", "Orange"),
+    ]
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    calendar_year = models.PositiveIntegerField(
+        choices=YEAR_CHOICES
+    )
+
+    trash_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    trash_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_trash_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    recycling_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    recycling_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_recycling_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    new_years_day = models.BooleanField(
+        default=False
+    )
+
+    memorial_day = models.BooleanField(
+        default=False
+    )
+
+    independence_day = models.BooleanField(
+        default=False
+    )
+
+    labor_day = models.BooleanField(
+        default=False
+    )
+
+    thanksgiving_day = models.BooleanField(
+        default=False
+    )
+
+    christmas_day = models.BooleanField(
+        default=False
+    )
+
+    other_holiday_1 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_2 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_3 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    top_bar_color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES
+    )
+
+    include_company_logo = models.BooleanField(
+        default=False
+    )
+
+    other_collection_information = models.TextField(
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField()
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    title = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    company = models.CharField(
+        max_length=200
+    )
+
+    street_address = models.CharField(
+        max_length=255
+    )
+
+    address_contd = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100
+    )
+
+    state = models.CharField(
+        max_length=100
+    )
+
+    zip_code = models.CharField(
+        max_length=30
+    )
+
+    phone = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    email = models.EmailField()
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.company} - {self.calendar_year} - {self.quantity} stickers"
+class SiteSettings(models.Model):
+    company_name = models.CharField(max_length=200, default="THE LABEL GROUP")
+    tagline = models.CharField(max_length=255, default="INDUSTRIAL PRINTS & DECALS")
+    phone = models.CharField(max_length=100, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    whatsapp = models.CharField(max_length=100, blank=True, default="")
+    facebook = models.URLField(blank=True, default="")
+    instagram = models.URLField(blank=True, default="")
+    tiktok = models.URLField(blank=True, default="")
+    linkedin = models.URLField(blank=True, default="")
+    youtube = models.URLField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.first()
+        if not obj:
+            obj = cls.objects.create(
+                company_name="THE LABEL GROUP",
+                tagline="INDUSTRIAL PRINTS & DECALS"
+            )
+        return obj
+
+
+
+
+
+==================================================
+FILE: .\products\views.py
+==================================================
+from .models import QuoteRequest
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Product
+
+def home(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(is_available=True).order_by("-id")
+
+    industry_filter = request.GET.get("industry", "").strip().lower()
+
+    if industry_filter == "waste":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "motor":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "construction":
+        products = products.filter(
+            Q(id__gte=41, id__lte=60)
+        )
+    elif industry_filter == "pool":
+        products = products.filter(
+            Q(id__gte=61, id__lte=80)
+        )
+    elif industry_filter == "government":
+        products = products.filter(
+            Q(id__gte=81, id__lte=100)
+        )
+    elif industry_filter == "other":
+        products = products.filter(id__gte=101)
+
+    return render(
+        request,
+        "products/home.html",
+        {
+            "products": products,
+            "industry_filter": industry_filter,
+        },
+    )
+
+
+def product_list(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(
+        is_available=True
+    ).order_by("id")
+
+    industry = request.GET.get("industry", "").strip().lower()
+    search = request.GET.get("search", "").strip()
+
+    category_ranges = {
+        "motor": (1, 20),
+        "waste": (21, 40),
+        "construction": (41, 60),
+        "pool": (61, 80),
+        "government": (81, 100),
+    }
+
+    if industry in category_ranges:
+        first_id, last_id = category_ranges[industry]
+        products = products.filter(
+            id__gte=first_id,
+            id__lte=last_id
+        )
+    elif industry == "other":
+        products = products.exclude(
+            id__gte=1,
+            id__lte=100
+        )
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(category__icontains=search) |
+            Q(product_type__icontains=search) |
+            Q(product_code__icontains=search)
+        )
+
+    return render(
+        request,
+        "products/product_list.html",
+        {
+            "products": products,
+            "selected_industry": industry,
+            "search_query": search,
+            "product_count": products.count(),
+        },
+    )
+
+
+def industry_products(request, industry_name):
+    industry_name = (industry_name or "").strip().lower()
+
+    allowed = {
+        "motor": "motor",
+        "waste": "waste",
+        "construction": "construction",
+        "pool": "pool",
+        "government": "government",
+        "other": "other",
+    }
+
+    industry = allowed.get(industry_name)
+
+    if not industry:
+        return redirect("product_list")
+
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+
+    url = reverse("product_list") + "?industry=" + industry
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        from urllib.parse import quote
+        url += "&search=" + quote(search)
+
+    return HttpResponseRedirect(url)
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, "products/product_detail.html", {'product': product})
+
+def cart(request):
+    return render(request, "products/cart.html", {})
+
+
+def add_to_quote(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+
+    product = get_object_or_404(Product, id=product_id)
+
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product.id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(quantity, 1)
+
+    quote_cart[product_key] = quote_cart.get(product_key, 0) + quantity
+
+    request.session["quote_cart"] = quote_cart
+    request.session.modified = True
+
+    return redirect("quote_cart")
+
+def remove_from_quote(request, product_id):
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product_id)
+
+    if product_key in quote_cart:
+        del quote_cart[product_key]
+        request.session["quote_cart"] = quote_cart
+        request.session.modified = True
+
+    return redirect("quote_cart")
+def quote_cart(request):
+    from .models import Product
+    from django.shortcuts import render
+
+    cart = request.session.get("quote_cart", {})
+    products_by_id = {}
+    valid_cart = {}
+
+    for product_id, raw_quantity in cart.items():
+        try:
+            product_id = int(product_id)
+            quantity = max(1, int(raw_quantity))
+        except (TypeError, ValueError):
+            continue
+        valid_cart[str(product_id)] = quantity
+
+    products = Product.objects.filter(pk__in=valid_cart.keys())
+    for product in products:
+        products_by_id[str(product.pk)] = product
+
+    quote_items = []
+    for product_id, quantity in valid_cart.items():
+        product = products_by_id.get(product_id)
+        if product is None:
+            continue
+        product.quote_quantity = quantity
+        quote_items.append({
+            "product": product,
+            "quantity": quantity,
+        })
+
+    request.session["quote_cart"] = {
+        str(item["product"].pk): item["quantity"]
+        for item in quote_items
+    }
+
+    return render(request, "products/quote_cart.html", {
+        "quote_items": quote_items,
+        "quote_products": [item["product"] for item in quote_items],
+        "products": [item["product"] for item in quote_items],
+        "quote_count": sum(item["quantity"] for item in quote_items),
+        "quote_cart_empty": not bool(quote_items),
+    })
+
+
+def shipping(request):
+    return render(request, "products/shipping.html", {})
+
+def add_to_cart(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import Product
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = request.session.get("cart", {})
+    key = str(product_id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(1, quantity)
+    cart[key] = int(cart.get(key, 0)) + quantity
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def cart(request):
+    from django.shortcuts import render
+    from .models import Product
+
+    session_cart = request.session.get("cart", {})
+    products = []
+
+    for product_id, quantity in session_cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            quantity = max(1, int(quantity))
+            products.append({
+                "product": product,
+                "quantity": quantity,
+                "subtotal": product.price * quantity,
+            })
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    total = sum(item["subtotal"] for item in products)
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "cart_items": products,
+            "cart": products,
+            "total": total,
+            "cart_total": total,
+        },
+    )
+
+
+def update_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        if quantity > 0:
+            cart[str(product_id)] = quantity
+        else:
+            cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def remove_from_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+    cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def clear_cart(request):
+    from django.shortcuts import redirect
+
+    request.session["cart"] = {}
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+
+def custom_order(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/custom_order.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/custom_order.html", {})
+
+
+
+
+
+
+
+
+
+# =========================================================
+# SHIPPING QUOTE DESK
+# =========================================================
+
+def shipping_quote(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/shipping_quote.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/shipping_quote.html", {})
+
+def custom_orders(request):
+    if request.method == 'POST':
+        from .models import CustomOrder
+        full_name = request.POST.get('full_name')
+        company_name = request.POST.get('company_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('street_address', '') + ', ' + request.POST.get('city', '')
+        requirements = request.POST.get('requirements')
+        artwork = request.FILES.get('artwork')
+
+        CustomOrder.objects.create(
+            full_name=full_name,
+            company_name=company_name,
+            email=email,
+            phone=phone,
+            address=address,
+            requirements=requirements,
+            artwork=artwork
+        )
+        return render(request, 'products/custom_order_success.html', {'full_name': full_name})
+
+    return render(request, 'products/custom_orders.html')
+
+
+
+
+
+
+
+
+
+
+
+# THE LABEL GROUP: invoice payment page foundation.
+# Connect a real payment provider before accepting payments.
+def invoice_payment(request):
+    from django.shortcuts import render
+
+    invoice_number = ""
+    amount = ""
+    message = ""
+
+    if request.method == "POST":
+        invoice_number = request.POST.get("invoice_number", "").strip()
+        amount = request.POST.get("amount", "").strip()
+
+        if not invoice_number:
+            message = "Please enter your invoice number."
+        else:
+            try:
+                value = float(amount)
+                if value <= 0:
+                    raise ValueError
+                amount = f"{value:.2f}"
+                message = (
+                    "Your invoice details are ready. Online payment processing "
+                    "must be connected by the site administrator before payment "
+                    "can be completed. Please contact THE LABEL GROUP to arrange payment."
+                )
+            except (TypeError, ValueError):
+                message = "Please enter a valid invoice amount in USD."
+
+    return render(
+        request,
+        "products/invoice_payment.html",
+        {
+            "invoice_number": invoice_number,
+            "amount": amount,
+            "message": message,
+        },
+    )
+
+
+# ============================================================
+# CUSTOMER CHECKOUT AND ORDER CONFIRMATION
+# ============================================================
+
+def checkout(request):
+    from decimal import Decimal
+    from django.contrib import messages
+    from django.db import transaction
+    from django.shortcuts import render, redirect
+    from .models import Product, Order, OrderItem
+
+    def get_checkout_items():
+        result = []
+        session_cart = request.session.get("cart", {})
+        for product_id, quantity in session_cart.items():
+            try:
+                product = Product.objects.get(pk=int(product_id), is_available=True)
+                quantity = max(1, int(quantity))
+                line_total = product.price * quantity
+                result.append({
+                    "product": product,
+                    "quantity": quantity,
+                    "subtotal": line_total,
+                    "total_price": line_total,
+                })
+            except (Product.DoesNotExist, ValueError, TypeError):
+                continue
+        return result
+
+    checkout_items = get_checkout_items()
+    subtotal = sum((item["subtotal"] for item in checkout_items), Decimal("0.00"))
+    shipping_cost = Decimal("0.00")
+    total = subtotal + shipping_cost
+
+    context = {
+        "checkout_items": checkout_items,
+        "cart_items": checkout_items,
+        "items": checkout_items,
+        "subtotal": subtotal,
+        "cart_total": subtotal,
+        "shipping_cost": shipping_cost,
+        "total": total,
+        "grand_total": total,
+    }
+
+    if not checkout_items:
+        messages.error(request, "Your cart is empty or its products are unavailable.")
+        return redirect("cart")
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+        shipping_address = request.POST.get("shipping_address", "").strip()
+        shipping_city = request.POST.get("shipping_city", "").strip()
+        shipping_state = request.POST.get("shipping_state", "").strip()
+        shipping_postal_code = request.POST.get("shipping_postal_code", "").strip()
+        shipping_country = request.POST.get("shipping_country", "").strip()
+        notes = request.POST.get("notes", "").strip()
+
+        required = {
+            "name": customer_name,
+            "email": customer_email,
+            "phone": customer_phone,
+            "shipping address": shipping_address,
+            "city": shipping_city,
+            "country": shipping_country,
+        }
+        missing = [label for label, value in required.items() if not value]
+        if missing:
+            messages.error(request, "Please complete these required fields: " + ", ".join(missing) + ".")
+            return render(request, "checkout.html", context)
+
+        try:
+            with transaction.atomic():
+                order = Order.objects.create(
+                    customer_name=customer_name,
+                    customer_email=customer_email,
+                    customer_phone=customer_phone,
+                    shipping_address=shipping_address,
+                    shipping_city=shipping_city,
+                    shipping_state=shipping_state,
+                    shipping_postal_code=shipping_postal_code,
+                    shipping_country=shipping_country,
+                    subtotal=subtotal,
+                    shipping_cost=shipping_cost,
+                    total=total,
+                    currency="USD",
+                    status="pending",
+                    notes=notes,
+                )
+
+                for item in checkout_items:
+                    product = item["product"]
+                    quantity = item["quantity"]
+                    unit_price = product.price
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        product_name=product.name,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        total_price=unit_price * quantity,
+                        currency="USD",
+                    )
+
+        except Exception:
+            messages.error(request, "We could not save your order. Your cart has been kept. Please try again.")
+            return render(request, "checkout.html", context)
+
+        request.session["cart"] = {}
+        request.session["last_order_id"] = order.pk
+        request.session.modified = True
+        messages.success(request, f"Your order #{order.pk} has been placed successfully.")
+        return redirect("order_success", order_id=order.pk)
+
+    return render(request, "checkout.html", context)
+
+
+def order_success(request, order_id):
+    from django.shortcuts import render, get_object_or_404
+    from .models import Order
+
+    order = get_object_or_404(Order, pk=order_id)
+    return render(request, "order_success.html", {"order": order})
+
+
+
+
+==================================================
+FILE: .\products\urls.py
+==================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/clear/', views.clear_cart, name='clear_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path("checkout/", views.checkout, name="checkout"),
+    path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+    path('cart/', views.cart, name='cart'),
+    path('quote/', views.quote_cart, name='quote_cart'),
+    path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+    path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+    path('custom-orders/', views.custom_order, name='custom_order'),
+    path('shipping/', views.shipping, name='shipping'),
+    path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+]
+
+
+
+

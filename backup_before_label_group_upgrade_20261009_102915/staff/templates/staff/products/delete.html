@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Delete Product | THE LABEL GROUP
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+            background: #f4f5f7;
+            color: #111827;
+        }
+
+        .topbar {
+            background: #000;
+            color: #fff;
+            padding: 18px 30px;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand span {
+            color: #f97316;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 70px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 42px;
+            box-shadow:
+                0 12px 35px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }
+
+        .warning-icon {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 25px;
+            border-radius: 50%;
+            background: #fee2e2;
+            color: #dc2626;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 34px;
+            font-weight: 900;
+        }
+
+        h1 {
+            margin: 0 0 15px;
+            font-size: 32px;
+        }
+
+        .message {
+            color: #6b7280;
+            line-height: 1.7;
+            margin-bottom: 28px;
+        }
+
+        .product {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: left;
+            background: #fafafa;
+        }
+
+        .product-name {
+            font-size: 21px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .product-code {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .warning {
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            color: #9a3412;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .actions {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .button {
+            display: inline-block;
+            border: 0;
+            border-radius: 9px;
+            padding: 14px 25px;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .cancel {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .delete {
+            background: #dc2626;
+            color: #fff;
+        }
+
+        .delete:hover {
+            background: #b91c1c;
+        }
+
+        @media (max-width: 600px) {
+            .card {
+                padding: 28px 20px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="topbar">
+        <div class="brand">
+            THE LABEL <span>GROUP</span>
+        </div>
+    </div>
+
+    <main class="container">
+
+        <div class="card">
+
+            <div class="warning-icon">
+                !
+            </div>
+
+            <h1>
+                Delete Product?
+            </h1>
+
+            <p class="message">
+                You are about to permanently remove this product
+                from THE LABEL GROUP product catalogue.
+            </p>
+
+            <div class="product">
+
+                <div class="product-name">
+                    {{ product.name }}
+                </div>
+
+                <div class="product-code">
+                    Product Code:
+                    {{ product.product_code|default:"Not provided" }}
+                </div>
+
+            </div>
+
+            <div class="warning">
+                <strong>This action cannot be undone.</strong><br>
+                The product will be removed from the website
+                and product catalogue.
+            </div>
+
+            <form method="post">
+
+                {% csrf_token %}
+
+                <div class="actions">
+
+                    <a
+                        href="{% url 'staff_product_list' %}"
+                        class="button cancel"
+                    >
+                        Cancel
+                    </a>
+
+                    <button
+                        type="submit"
+                        class="button delete"
+                    >
+                        Yes, Delete Product
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

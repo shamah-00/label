@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer Management | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--orange:#f47b20;--bg:#f3f6fa;--border:#e0e6ee;--muted:#68778b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#263449;font:14px/1.6 Arial, sans-serif}
+.sidebar{position:fixed;inset:0 auto 0 0;width:235px;background:var(--navy);color:white;padding:25px 0;overflow:auto}
+.brand{padding:0 22px 22px;border-bottom:1px solid #ffffff22}
+.brand h1{font-size:20px;margin:0;color:white}
+.brand p{color:#bdc9d8;margin:6px 0 0}
+.nav-title{padding:20px 22px 6px;color:#a8b5c7;font-size:11px;text-transform:uppercase;font-weight:bold;letter-spacing:1px}
+.nav-link{display:block;padding:11px 22px;color:#e6edf5;text-decoration:none}
+.nav-link:hover,.nav-link.active{background:var(--orange);color:white}
+.main{margin-left:235px;min-height:100vh}
+.topbar{background:white;padding:16px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px}
+.content{padding:28px;max-width:1500px;margin:auto}
+h2,h3{color:var(--navy);margin-top:0}
+h2{font-size:29px;margin-bottom:4px}
+.muted{color:var(--muted)}
+.header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 3px 12px #0b1f3a08;min-width:0}
+.stat-label{color:var(--muted);font-size:13px}
+.stat-value{font-size:26px;font-weight:bold;color:var(--navy);margin-top:5px;overflow-wrap:anywhere}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+input{flex:1;min-width:220px;padding:12px;border:1px solid #ccd5e1;border-radius:8px;font-size:14px}
+button,.button{display:inline-block;padding:11px 16px;border:0;border-radius:8px;background:var(--orange);color:white;text-decoration:none;font-weight:bold;cursor:pointer}
+.button.secondary{background:var(--navy)}
+.table-card{padding:0;overflow:hidden}
+.table-title{padding:20px;border-bottom:1px solid var(--border)}
+.table-wrap{overflow-x:auto}
+table{width:100%;min-width:850px;border-collapse:collapse;background:white}
+th{background:var(--navy);color:white;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.4px;padding:14px}
+td{padding:14px;border-bottom:1px solid #e9edf3;vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:#fff5ed}
+.badge{display:inline-block;border-radius:20px;padding:4px 9px;background:#fff0e5;color:#99420a;font-weight:bold;font-size:12px}
+.empty{text-align:center;padding:40px 18px;color:var(--muted)}
+@media(max-width:950px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.sidebar{position:static;width:100%;height:auto}.main{margin:0}.content{padding:16px}.topbar{padding:14px 16px}.header{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.stat-value{font-size:22px}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="brand"><h1>THE LABEL GROUP</h1><p>Staff Management</p></div>
+<div class="nav-title">Main</div>
+<a class="nav-link" href="{% url 'staff_dashboard' %}">Dashboard</a>
+<div class="nav-title">Management</div>
+<a class="nav-link" href="{% url 'staff_products' %}">Products</a>
+<a class="nav-link active" href="{% url 'staff_customers' %}">Customers</a>
+<a class="nav-link" href="{% url 'staff_orders' %}">Orders</a>
+<a href="{% url 'staff_shipping_dashboard' %}">Shipping</a>
+<a class="nav-link" href="{% url 'staff_quotes' %}">Quote Requests</a>
+<div class="nav-title">Account</div>
+<a class="nav-link" href="{% url 'staff_profile' %}">Staff Profile</a>
+{% if user.is_superuser %}
+<a class="nav-link" href="{% url 'boss_staff_management' %}">Staff Management</a>
+<a class="nav-link" href="{% url 'staff_activity_log' %}">Activity Log</a>
+{% endif %}
+<a class="nav-link" href="{% url 'staff_logout' %}">Logout</a>
+</aside>
+<main class="main">
+<div class="topbar"><strong>THE LABEL GROUP Staff Portal</strong><span>{{ user.username }}</span></div>
+<div class="content">
+<div class="header"><div><h2>Customer Management</h2><div class="muted">Customers collected from orders and quote requests.</div></div></div>
+<div class="stats">
+<div class="card"><div class="stat-label">Customers{% if search %} Found{% endif %}</div><div class="stat-value">{{ total_customers }}</div></div>
+<div class="card"><div class="stat-label">Orders</div><div class="stat-value">{{ total_order_count }}</div></div>
+<div class="card"><div class="stat-label">Quote Requests</div><div class="stat-value">{{ total_quote_count }}</div></div>
+<div class="card"><div class="stat-label">Order Value (USD)</div><div class="stat-value">${{ total_customer_spend|floatformat:2 }}</div></div>
+</div>
+<form class="filters" method="get">
+<input type="search" name="search" value="{{ search }}" placeholder="Search name, email, phone or company">
+<button type="submit">Search Customers</button>
+{% if search %}<a class="button secondary" href="{% url 'staff_customers' %}">Clear</a>{% endif %}
+</form>
+<div class="card table-card">
+<div class="table-title"><h3 style="margin:0">Customer Directory</h3></div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Customer</th><th>Contact</th><th>Company</th><th>Orders</th><th>Quotes</th><th>Order Spend</th><th>Last Activity</th></tr></thead>
+<tbody>
+{% for customer in customers %}
+<tr>
+<td><strong>{{ customer.name|default:"Customer" }}</strong></td>
+<td>{% if customer.email %}<div>{{ customer.email }}</div>{% endif %}{% if customer.phone %}<div class="muted">{{ customer.phone }}</div>{% endif %}{% if not customer.email and not customer.phone %}<span class="muted">No contact details</span>{% endif %}</td>
+<td>{{ customer.company|default:"—" }}</td>
+<td><span class="badge">{{ customer.orders_count }}</span></td>
+<td><span class="badge">{{ customer.quotes_count }}</span></td>
+<td>${{ customer.total_spend|floatformat:2 }}</td>
+<td>{% if customer.last_seen %}{{ customer.last_seen|date:"M d, Y H:i" }}{% else %}—{% endif %}</td>
+</tr>
+{% empty %}
+<tr><td colspan="7"><div class="empty">{% if search %}No customers matched "{{ search }}". Try another search.{% else %}No customers have been recorded from orders or quote requests yet.{% endif %}</div></td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

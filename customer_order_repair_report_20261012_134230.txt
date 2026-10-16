@@ -1,0 +1,5146 @@
+﻿THE LABEL GROUP CUSTOMER AND ORDER REPAIR REPORT
+Date: 10/12/2026 13:42:31
+Project: C:\Users\Tumaini\Desktop\ecommerce\ecommerce
+Backup: C:\Users\Tumaini\Desktop\ecommerce\ecommerce\backup_customer_orders_20261012_134230
+
+
+================================================================================
+FILE: staff\views.py
+================================================================================
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from products.models import (
+    Product,
+    Order,
+    QuoteRequest,
+    CollectionCalendarStickerOrder,
+)
+
+from .forms import (
+    ProductForm,
+    StaffRegistrationForm,
+    OwnerStaffForm,
+)
+
+from .models import StaffProfile, StaffActivityLog
+
+
+def get_staff_profile(user):
+    try:
+        return StaffProfile.objects.get(user=user)
+    except StaffProfile.DoesNotExist:
+        return None
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def log_staff_activity(request, staff_profile, action, description, object_name=""):
+    if not staff_profile:
+        return
+
+    StaffActivityLog.objects.create(
+        staff=staff_profile,
+        action=action,
+        description=description,
+        ip_address=get_client_ip(request),
+    )
+
+
+def staff_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def boss_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(request, "Your account is inactive.")
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "Staff profile not found.")
+            return redirect("staff_dashboard")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(request, "Your account is not approved.")
+            return redirect("staff_dashboard")
+
+        if profile.role != "manager":
+            messages.error(
+                request,
+                "Boss access is required for this section.",
+            )
+            return redirect("staff_dashboard")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+@staff_required
+def staff_dashboard(request):
+    profile = get_staff_profile(request.user)
+
+    products_count = Product.objects.count()
+    available_products_count = Product.objects.filter(
+        is_available=True
+    ).count()
+
+    orders_count = Order.objects.count()
+    quotes_count = QuoteRequest.objects.count()
+
+    new_quotes_count = QuoteRequest.objects.filter(
+        status="new"
+    ).count()
+
+    reviewing_quotes_count = QuoteRequest.objects.filter(
+        status="reviewing"
+    ).count()
+
+    quoted_count = QuoteRequest.objects.filter(
+        status="quoted"
+    ).count()
+
+    approved_quotes_count = QuoteRequest.objects.filter(
+        status="approved"
+    ).count()
+
+    in_production_count = QuoteRequest.objects.filter(
+        status="in_production"
+    ).count()
+
+    completed_quotes_count = QuoteRequest.objects.filter(
+        status="completed"
+    ).count()
+
+    if profile:
+        profile.last_activity = timezone.now()
+        profile.save(update_fields=["last_activity"])
+
+    recent_quotes = QuoteRequest.objects.order_by("-created_at")[:8]
+    recent_activity = StaffActivityLog.objects.select_related(
+        "staff", "staff__user"
+    ).order_by("-id")[:8]
+
+    approved_staff_count = StaffProfile.objects.filter(
+        approved=True, status="approved"
+    ).count()
+    pending_staff_count = StaffProfile.objects.filter(
+        approved=False, status="pending"
+    ).count()
+
+    context = {
+        "total_products": products_count,
+        "available_products": available_products_count,
+        "total_orders": orders_count,
+        "total_quotes": quotes_count,
+        "new_quotes": new_quotes_count,
+        "reviewing_quotes": reviewing_quotes_count,
+        "quoted_quotes": quoted_count,
+        "approved_quotes": approved_quotes_count,
+        "production_quotes": in_production_count,
+        "completed_quotes": completed_quotes_count,
+        "approved_staff": approved_staff_count,
+        "pending_staff": pending_staff_count,
+        "recent_quotes": recent_quotes,
+        "recent_activity": recent_activity,
+        "profile": profile,
+        "products_count": products_count,
+        "available_products_count": available_products_count,
+        "orders_count": orders_count,
+        "quotes_count": quotes_count,
+        "new_quotes_count": new_quotes_count,
+        "reviewing_quotes_count": reviewing_quotes_count,
+        "quoted_count": quoted_count,
+        "approved_quotes_count": approved_quotes_count,
+        "in_production_count": in_production_count,
+        "completed_quotes_count": completed_quotes_count,
+    }
+
+    return render(
+        request,
+        "staff/dashboard.html",
+        context,
+    )
+
+
+@staff_required
+def staff_products(request):
+    products = Product.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/products.html",
+        {
+            "products": products,
+        },
+    )
+
+
+@staff_required
+def staff_product_add(request):
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "create",
+                f"Created product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product created successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm()
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "title": "Add Product",
+        },
+    )
+
+
+@staff_required
+def staff_product_edit(request, pk):
+    product = get_object_or_404(
+        Product,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+            instance=product,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Updated product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product updated successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm(instance=product)
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "product": product,
+            "title": "Edit Product",
+        },
+    )
+
+
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+
+
+@staff_required
+def staff_orders(request):
+    from django.db.models import Q, Sum
+    from decimal import Decimal
+    from products.models import Order
+
+    all_orders = Order.objects.all().order_by("-created_at")
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(Order._meta.get_field("status").choices)
+
+    if search:
+        condition = (
+            Q(customer_name__icontains=search)
+            | Q(customer_email__icontains=search)
+            | Q(customer_phone__icontains=search)
+            | Q(shipping_city__icontains=search)
+            | Q(shipping_country__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search))
+        all_orders = all_orders.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        all_orders = all_orders.filter(status=status_filter)
+
+    all_orders = all_orders.prefetch_related("items")
+    status_cards = []
+    for key, label in status_choices:
+        status_cards.append({
+            "key": key,
+            "label": label,
+            "count": Order.objects.filter(status=key).count(),
+        })
+
+    totals = Order.objects.aggregate(value=Sum("total"))
+    total_value = totals["value"] or Decimal("0.00")
+    active_statuses = [
+        key for key, _ in status_choices
+        if key not in ("completed", "cancelled")
+    ]
+
+    return render(request, "staff/orders/list.html", {
+        "orders": all_orders,
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "status_cards": status_cards,
+        "total_orders": Order.objects.count(),
+        "active_orders": Order.objects.filter(status__in=active_statuses).count(),
+        "completed_orders": Order.objects.filter(status="completed").count(),
+        "total_value": total_value,
+    })
+
+
+
+
+@boss_required
+def owner_create_staff(request):
+    if request.method == "POST":
+        form = OwnerStaffForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                user = form.save(commit=False)
+
+                password = form.cleaned_data.get("password1")
+
+                if password:
+                    user.set_password(password)
+
+                user.is_active = True
+                user.is_staff = True
+                user.save()
+
+                profile = StaffProfile.objects.create(
+                    user=user,
+                    approved=True,
+                    status="approved",
+                    approved_at=timezone.now(),
+                )
+
+            log_staff_activity(
+                request,
+                get_staff_profile(request.user),
+                "create",
+                f"Boss created staff account: {user.username}",
+                user.username,
+            )
+
+            messages.success(
+                request,
+                f"Staff account for {user.username} created successfully.",
+            )
+
+            return redirect("boss_staff_management")
+    else:
+        form = OwnerStaffForm()
+
+    return render(
+        request,
+        "staff/boss/create_staff.html",
+        {
+            "form": form,
+        },
+    )
+
+
+@boss_required
+@transaction.atomic
+def approve_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.approved = True
+    profile.status = "approved"
+    profile.approved_at = timezone.now()
+    profile.rejection_reason = ""
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "approve",
+        f"Approved staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been approved.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reject_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    reason = request.POST.get(
+        "rejection_reason",
+        "Rejected by Boss",
+    ).strip()
+
+    profile.approved = False
+    profile.status = "rejected"
+    profile.rejection_reason = reason
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reject",
+        f"Rejected staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been rejected.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def deactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "Only approved staff members can be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if not profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = False
+    profile.user.save(
+        update_fields=["is_active"]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "deactivate",
+        f"Deactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been deactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account does not need reactivation.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "This account is not an approved staff account. Approve it again instead.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already active.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reactivate",
+        f"Reactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been reactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def remove_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.status = "rejected"
+    profile.approved = False
+    profile.rejection_reason = "Removed by Boss"
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "remove",
+        f"Removed staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been removed from the staff system.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+def staff_activity_log(request):
+    activities = (
+        StaffActivityLog.objects
+        .select_related(
+            "staff",
+            "staff__user",
+        )
+        .order_by("-created_at")
+    )
+
+    search = request.GET.get(
+        "search",
+        "",
+    ).strip()
+
+    action = request.GET.get(
+        "action",
+        "",
+    ).strip()
+
+    if search:
+        activities = activities.filter(
+            description__icontains=search
+        )
+
+    if action:
+        activities = activities.filter(
+            action=action
+        )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "page_view",
+        "Boss viewed the staff activity log.",
+        "Activity Log",
+    )
+
+    return render(
+        request,
+        "staff/boss/activity.html",
+        {
+            "activities": activities,
+            "search_query": search,
+            "selected_action": action,
+            "action_choices": StaffActivityLog.ACTION_CHOICES,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_orders(request):
+    from django.db.models import Q, Sum
+    from products.models import Order, CollectionCalendarStickerOrder
+
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(
+        CollectionCalendarStickerOrder._meta.get_field("status").choices
+    )
+
+    jobs = CollectionCalendarStickerOrder.objects.all().order_by(
+        "-created_at", "-pk"
+    )
+
+    if search:
+        condition = (
+            Q(name__icontains=search)
+            | Q(company__icontains=search)
+            | Q(email__icontains=search)
+            | Q(phone__icontains=search)
+            | Q(title__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search)) | Q(calendar_year=int(search))
+        jobs = jobs.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        jobs = jobs.filter(status=status_filter)
+
+    summary = jobs.aggregate(quantity=Sum("quantity"))
+    total_quantity = summary["quantity"] or 0
+    years = jobs.values_list("calendar_year", flat=True).distinct().count()
+    completed_keys = {"completed", "cancelled"}
+    active_count = jobs.exclude(status__in=completed_keys).count()
+
+    return render(request, "staff/calendar_orders/list.html", {
+        "calendar_orders": jobs,
+        "recent_orders": Order.objects.all().order_by("-created_at")[:8],
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "total_calendar_orders": jobs.count(),
+        "total_quantity": total_quantity,
+        "active_calendar_orders": active_count,
+        "year_count": years,
+    })
+
+
+
+@staff_required
+def staff_calendar_order_detail(request, pk):
+    from django.contrib import messages
+    from products.models import CollectionCalendarStickerOrder
+
+    calendar_order = get_object_or_404(CollectionCalendarStickerOrder, pk=pk)
+    status_field = CollectionCalendarStickerOrder._meta.get_field("status")
+    status_choices = [
+        (str(key), str(label)) for key, label in status_field.choices if str(key)
+    ]
+    if not status_choices:
+        status_choices = [
+            (key, key.replace("_", " ").title())
+            for key in ("pending", "reviewing", "approved", "in_production",
+                        "completed", "cancelled")
+        ]
+
+    allowed_statuses = {key for key, _ in status_choices}
+
+    if request.method == "POST":
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("staff_notes", calendar_order.staff_notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid job status.")
+        else:
+            changed = []
+            if calendar_order.status != new_status:
+                old_status = calendar_order.status
+                calendar_order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if calendar_order.staff_notes != new_notes:
+                calendar_order.staff_notes = new_notes
+                changed.append("staff notes updated")
+
+            if changed:
+                calendar_order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Calendar job #{calendar_order.pk}: " + "; ".join(changed),
+                    f"Calendar job #{calendar_order.pk}",
+                )
+                messages.success(
+                    request, f"Calendar job #{calendar_order.pk} has been updated."
+                )
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect(
+                "staff_calendar_order_detail", pk=calendar_order.pk
+            )
+
+    return render(request, "staff/calendar_orders/detail.html", {
+        "calendar_order": calendar_order,
+        "status_choices": status_choices,
+    })
+
+
+@boss_required
+def boss_site_settings(request):
+    from products.models import SiteSettings
+
+    settings_obj = SiteSettings.get_settings()
+
+    if request.method == "POST":
+        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+        settings_obj.phone = request.POST.get("phone", "").strip()
+        settings_obj.email = request.POST.get("email", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+        settings_obj.facebook = request.POST.get("facebook", "").strip()
+        settings_obj.instagram = request.POST.get("instagram", "").strip()
+        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+        settings_obj.youtube = request.POST.get("youtube", "").strip()
+        settings_obj.save()
+        messages.success(request, "Website settings updated successfully.")
+        return redirect("boss_site_settings")
+
+    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+
+
+
+@staff_required
+def staff_product_image_delete(request, pk):
+    profile = get_staff_profile(request.user)
+
+    product = get_object_or_404(
+        Product,
+        pk=pk
+    )
+
+    if request.method == "POST":
+        product_name = product.name
+
+        if product.image:
+            product.image.delete(save=False)
+            product.image = None
+            product.save()
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Deleted product image: {product_name}",
+                f"Staff member deleted the current image for product '{product_name}'.",
+            )
+
+            messages.success(
+                request,
+                f"The current image for '{product_name}' was deleted successfully."
+            )
+        else:
+            messages.info(
+                request,
+                f"'{product_name}' does not currently have an image."
+            )
+
+    return redirect(
+        "staff_product_edit",
+        pk=product.pk
+    )
+
+
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import AuthenticationForm
+
+def staff_login(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            if user.is_staff:
+                login(request, user)
+                return redirect("staff_dashboard")
+            else:
+                form.add_error(None, "You do not have staff permissions.")
+    else:
+        form = AuthenticationForm()
+    return render(request, "staff/login.html", {"form": form})
+
+from django.contrib.auth import logout
+
+def staff_logout(request):
+    logout(request)
+    return redirect("staff_login")
+
+from django.contrib.auth.forms import UserCreationForm
+
+def staff_register(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.is_staff = True
+            user.save()
+            return redirect("staff_login")
+    else:
+        form = UserCreationForm()
+    return render(request, "staff/register.html", {"form": form})
+
+def staff_registration_success(request):
+    return render(request, "staff/registration_success.html", {})
+
+@staff_required
+def staff_profile(request):
+    return render(request, "staff/profile.html", {"user": request.user})
+
+
+def _label_group_customer_records():
+    """
+    Build one customer directory from existing orders and quote requests.
+    This does not create or modify database records.
+    """
+    from types import SimpleNamespace
+    from products.models import Order, QuoteRequest
+
+    records = {}
+
+    def value(obj, *names):
+        for name in names:
+            result = getattr(obj, name, None)
+            if result not in (None, ""):
+                return str(result).strip()
+        return ""
+
+    def add_record(obj, source_type):
+        name = value(obj, "customer_name", "full_name", "name")
+        email = value(obj, "customer_email", "email").lower()
+        phone = value(obj, "customer_phone", "phone", "telephone")
+        address = value(obj, "shipping_address", "address")
+
+        if not (name or email or phone):
+            return
+
+        key = email or phone or name.casefold()
+        if not key:
+            return
+
+        if key not in records:
+            records[key] = {
+                "name": name or email or phone,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "total_orders": 0,
+                "total_quotes": 0,
+                "sources": set(),
+            }
+
+        customer = records[key]
+
+        if name and not customer["name"]:
+            customer["name"] = name
+        if email and not customer["email"]:
+            customer["email"] = email
+        if phone and not customer["phone"]:
+            customer["phone"] = phone
+        if address and not customer["address"]:
+            customer["address"] = address
+
+        customer["sources"].add(source_type)
+
+        if source_type == "order":
+            customer["total_orders"] += 1
+        elif source_type == "quote":
+            customer["total_quotes"] += 1
+
+    for order in Order.objects.all().iterator():
+        add_record(order, "order")
+
+    for quote in QuoteRequest.objects.all().iterator():
+        add_record(quote, "quote")
+
+    customers = []
+
+    for item in records.values():
+        item["sources"] = ", ".join(sorted(item["sources"]))
+        customers.append(SimpleNamespace(
+            name=item["name"],
+            full_name=item["name"],
+            customer_name=item["name"],
+            email=item["email"],
+            customer_email=item["email"],
+            phone=item["phone"],
+            customer_phone=item["phone"],
+            address=item["address"],
+            total_orders=item["total_orders"],
+            total_quotes=item["total_quotes"],
+            sources=item["sources"],
+        ))
+
+    return sorted(customers, key=lambda customer: customer.name.lower())
+
+
+@staff_required
+def staff_quotes(request):
+    from django.db.models import Q
+    from products.models import QuoteRequest
+
+    quotes = QuoteRequest.objects.all().order_by("-pk")
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        filters = Q()
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+            and not getattr(field, "many_to_many", False)
+        }
+
+        for field in ("customer_name", "customer_email", "customer_phone",
+                      "company_name", "status"):
+            if field in field_names:
+                filters |= Q(**{field + "__icontains": search})
+
+        if filters:
+            quotes = quotes.filter(filters)
+
+    return render(request, "staff/quotes.html", {
+        "quotes": quotes,
+        "search_query": search,
+    })
+
+
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+
+
+@staff_required
+def staff_quote_detail(request, pk):
+    from django.shortcuts import get_object_or_404
+    from products.models import QuoteRequest
+
+    quote = get_object_or_404(QuoteRequest, pk=pk)
+
+    if request.method == "POST":
+        from django.contrib import messages
+
+        field_names = {
+            field.name for field in QuoteRequest._meta.get_fields()
+            if getattr(field, "concrete", False)
+        }
+
+        new_status = request.POST.get("status", "").strip()
+        if new_status and "status" in field_names:
+            valid_statuses = {
+                str(choice[0])
+                for choice in getattr(
+                    QuoteRequest, "STATUS_CHOICES", ()
+                )
+            }
+
+            if not valid_statuses or new_status in valid_statuses:
+                quote.status = new_status
+                quote.save(update_fields=["status"])
+                messages.success(request, "Quote status updated.")
+            else:
+                messages.error(request, "Please select a valid quote status.")
+
+        return redirect("staff_quote_detail", pk=quote.pk)
+
+    return render(request, "staff/quote_detail.html", {
+        "quote": quote,
+        "quote_id": quote.pk,
+    })
+
+
+def boss_staff_management(request):
+    from django.contrib import messages
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from django.shortcuts import render, redirect
+
+    if not request.user.is_authenticated or not request.user.is_superuser:
+        messages.error(request, "Boss access is required.")
+        return redirect("/staff/")
+
+    User = get_user_model()
+    search = request.GET.get("search", "").strip()
+
+    staff_members = User.objects.filter(
+        is_staff=True
+    ).order_by("-date_joined")
+
+    if search:
+        staff_members = staff_members.filter(
+            Q(username__icontains=search) |
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search)
+        )
+
+    context = {
+        "staff_members": staff_members,
+        "search_query": search,
+        "staff_count": User.objects.filter(is_staff=True).count(),
+        "active_staff_count": User.objects.filter(
+            is_staff=True,
+            is_active=True
+        ).count(),
+    }
+
+    return render(
+        request,
+        "staff/boss/staff_management.html",
+        context
+    )
+
+
+@staff_required
+def staff_order_detail(request, pk):
+    from django.contrib import messages
+    from products.models import Order
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items"),
+        pk=pk,
+    )
+    status_choices = list(Order._meta.get_field("status").choices)
+    allowed_statuses = {str(key) for key, _ in status_choices}
+
+    if request.method == "POST":
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("notes", order.notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid order status.")
+        else:
+            changed = []
+            if order.status != new_status:
+                old_status = order.status
+                order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if order.notes != new_notes:
+                order.notes = new_notes
+                changed.append("internal notes updated")
+
+            if changed:
+                order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Order #{order.pk}: " + "; ".join(changed),
+                    f"Order #{order.pk}",
+                )
+                messages.success(request, f"Order #{order.pk} has been updated.")
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect("staff_order_detail", pk=order.pk)
+
+    return render(request, "staff/orders/detail.html", {
+        "order": order,
+        "status_choices": status_choices,
+        "item_count": order.items.count(),
+    })
+
+
+================================================================================
+FILE: staff\urls.py
+================================================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.staff_dashboard, name="staff_dashboard"),
+    path("login/", views.staff_login, name="staff_login"),
+    path("logout/", views.staff_logout, name="staff_logout"),
+    path("register/", views.staff_register, name="staff_register"),
+    path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+    path("profile/", views.staff_profile, name="staff_profile"),
+    
+    # Products
+    path("products/", views.staff_products, name="staff_products"),
+    path("products/", views.staff_products, name="staff_product_list"),
+    path("products/add/", views.staff_product_add, name="staff_product_add"),
+    path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+    path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+    
+    # Customers
+    path("customers/", views.staff_customers, name="staff_customers"),
+    path("customers/", views.staff_customers, name="staff_customer_list"),
+    
+    # Orders
+    path("orders/", views.staff_orders, name="staff_orders"),
+    path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+    
+    # Quotes
+    path("quotes/", views.staff_quotes, name="staff_quotes"),
+    path("quotes/", views.staff_quotes, name="staff_quote_list"),
+    path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+    
+    # Calendar Orders
+    path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+    path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+    
+    # Boss / Staff Management paths
+    path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+    path("staff-management/", views.boss_staff_management),
+    
+    path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+    path("staff-management/create/", views.owner_create_staff),
+    
+    path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+    path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+    path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+    path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+    path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+    path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+    path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+]
+
+
+================================================================================
+FILE: staff\models.py
+================================================================================
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class StaffProfile(models.Model):
+
+    ROLE_CHOICES = [
+        ("manager", "Manager"),
+        ("sales", "Sales Staff"),
+        ("production", "Production Staff"),
+        ("shipping", "Shipping Staff"),
+    ]
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE
+    )
+
+    profile_picture = models.ImageField(
+        upload_to="staff_profiles/",
+        blank=True,
+        null=True
+    )
+
+    full_name = models.CharField(
+        max_length=150,
+        blank=True
+    )
+
+    phone = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    role = models.CharField(
+        max_length=30,
+        choices=ROLE_CHOICES
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    approved = models.BooleanField(
+        default=False
+    )
+
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    joined_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    last_activity = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    rejection_reason = models.TextField(
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_status_display()}"
+
+
+class StaffActivityLog(models.Model):
+
+    ACTION_CHOICES = [
+        ("login", "Login"),
+        ("logout", "Logout"),
+        ("page_view", "Page Viewed"),
+        ("create", "Created"),
+        ("update", "Updated"),
+        ("delete", "Deleted"),
+        ("approve", "Approved"),
+        ("reject", "Rejected"),
+        ("failed_login", "Failed Login"),
+    ]
+
+    staff = models.ForeignKey(
+        StaffProfile,
+        on_delete=models.CASCADE,
+        related_name="activity_logs"
+    )
+
+    action = models.CharField(
+        max_length=30,
+        choices=ACTION_CHOICES
+    )
+
+    page = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    ip_address = models.GenericIPAddressField(
+        null=True,
+        blank=True
+    )
+
+    user_agent = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return (
+            f"{self.staff.user.username} - "
+            f"{self.get_action_display()} - "
+            f"{self.created_at}"
+        )
+
+================================================================================
+FILE: staff\templates\staff\customers\list.html
+================================================================================
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        The Label Group | Customers
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 250px;
+            background: #111;
+            color: white;
+            padding: 25px 18px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .brand {
+            padding: 5px 10px 30px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 25px;
+        }
+
+        .brand h1 {
+            font-size: 21px;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 10px 8px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ddd;
+            text-decoration: none;
+            padding: 11px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .sidebar a:hover {
+            background: #292929;
+            color: white;
+        }
+
+        .sidebar a.active {
+            background: #155eef;
+            color: white;
+        }
+
+        .logout {
+            margin-top: 25px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .logout a {
+            background: #8b0000;
+            text-align: center;
+            color: white;
+        }
+
+        .logout a:hover {
+            background: #b00000;
+        }
+
+        /* MAIN */
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 30px;
+        }
+
+        .topbar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .topbar h2 {
+            font-size: 25px;
+        }
+
+        .topbar p {
+            color: #777;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .staff-name {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .staff-role {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        /* SEARCH */
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-box form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            border: none;
+            background: #155eef;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-box button:hover {
+            background: #0d47c7;
+        }
+
+        .clear-search {
+            display: inline-block;
+            margin-top: 10px;
+            color: #777;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        /* CUSTOMER LIST */
+
+        .customer-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-header h2 {
+            font-size: 19px;
+        }
+
+        .panel-header p {
+            color: #777;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .customer-row {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customer-row:last-child {
+            border-bottom: none;
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .customer-name {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .company {
+            color: #777;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        .customer-contact {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .contact-item {
+            background: #f7f7f7;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .contact-label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .contact-value {
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .customer-meta {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            background: #eef5ff;
+            color: #155eef;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .quantity {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .view-quote {
+            display: inline-block;
+            margin-top: 14px;
+            background: #111;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-quote:hover {
+            background: #333;
+        }
+
+        .empty {
+            padding: 50px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .customer-contact {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .topbar {
+                display: block;
+            }
+
+            .staff-name {
+                text-align: left;
+                margin-top: 15px;
+            }
+
+            .search-box form {
+                display: block;
+            }
+
+            .search-box button {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .customer-header {
+                display: block;
+            }
+        }
+
+    </style>
+
+<!-- TLG-STAFF-PROFESSIONAL-THEME-V1 -->
+<style>
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-navy-dark: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-bg: #f3f6fa;
+    --tlg-white: #ffffff;
+    --tlg-text: #263449;
+    --tlg-muted: #68778b;
+    --tlg-border: #e0e6ee;
+    --tlg-radius: 12px;
+    --tlg-shadow: 0 5px 20px rgba(11,31,58,.07);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--tlg-bg) !important;
+    color: var(--tlg-text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+h1, h2, h3, h4 {
+    color: var(--tlg-navy);
+    line-height: 1.25;
+    margin-top: 0;
+}
+h1 { font-size: clamp(25px, 3vw, 34px); font-weight: 800; letter-spacing: -.6px; }
+h2 { font-size: 22px; font-weight: 750; }
+h3 { font-size: 17px; font-weight: 700; }
+p { color: var(--tlg-muted); }
+a { color: var(--tlg-navy); text-decoration: none; }
+a:hover { color: var(--tlg-orange-dark); }
+.wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap {
+    width: min(1240px, calc(100% - 40px));
+    margin: 30px auto;
+}
+.container {
+    width: min(1240px, calc(100% - 40px));
+    max-width: 1240px;
+    margin: 28px auto;
+    padding: 28px;
+    background: var(--tlg-white);
+    border: 1px solid var(--tlg-border);
+    border-radius: 16px;
+    box-shadow: var(--tlg-shadow);
+}
+.head, .page-header, .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.head h1, .page-header h1 { margin-bottom: 7px; }
+.head p, .page-header p { margin: 0; }
+nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    color: var(--tlg-navy);
+    font-weight: 750;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+nav a:hover, .navbar a:hover, .topnav a:hover,
+.staff-nav a:hover, .navigation a:hover, .nav-links a:hover {
+    background: #fff0e5;
+    color: var(--tlg-orange-dark);
+    text-decoration: none;
+}
+.btn, button, input[type="submit"], input[type="button"], .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 10px 17px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--tlg-navy);
+    color: #fff !important;
+    font: inherit;
+    font-weight: 750;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn:hover, button:hover, input[type="submit"]:hover,
+input[type="button"]:hover, .button:hover {
+    background: var(--tlg-navy-dark);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(11,31,58,.16);
+    transform: translateY(-1px);
+}
+.btn.orange, .btn-primary, .btn-orange, .button-primary,
+button.orange, input.orange {
+    background: var(--tlg-orange);
+    color: #fff !important;
+}
+.btn.orange:hover, .btn-primary:hover, .btn-orange:hover,
+.button-primary:hover, button.orange:hover {
+    background: var(--tlg-orange-dark);
+}
+.btn.navy, .btn-secondary, .btn-outline {
+    background: var(--tlg-navy);
+    color: #fff !important;
+}
+.btn-danger, .delete-btn { background: #b42318 !important; }
+.btn-success, .success-btn { background: #18794e !important; }
+.filters, .filter-form, .search-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 22px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+}
+.filters input, .filters select, .filter-form input, .filter-form select,
+.search-form input, .search-form select { flex: 1 1 190px; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select, textarea {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #ccd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--tlg-text);
+    font: inherit;
+    outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--tlg-orange) !important;
+    box-shadow: 0 0 0 3px rgba(244,123,32,.13);
+}
+textarea { min-height: 110px; resize: vertical; }
+label { display: block; margin-bottom: 6px; color: var(--tlg-navy); font-weight: 700; }
+form p { margin-bottom: 15px; }
+.tablebox, .table-container, .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 18px 0 0;
+    border: 1px solid var(--tlg-border);
+    border-radius: 12px;
+    background: #fff;
+}
+table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+}
+thead th {
+    padding: 15px 16px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #e9edf3;
+    vertical-align: middle;
+    color: #38475b;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:nth-child(even) { background: #f8fafc; }
+tbody tr:hover { background: #fff5ed; }
+td strong { color: var(--tlg-navy); }
+td .btn { min-height: 36px; padding: 8px 12px; white-space: nowrap; }
+.status, .badge, .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border: 1px solid #f6d1b4;
+    border-radius: 999px;
+    background: #fff0e5;
+    color: #99420a;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.card, .stat-card, .metric-card, .dashboard-card, .panel, .section-card {
+    min-width: 0;
+    padding: 21px;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(11,31,58,.04);
+}
+.cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+}
+.card h2, .stat-card h2, .metric-card h2,
+.dashboard-card h2 { margin-bottom: 8px; }
+.empty, .empty-state {
+    padding: 42px 22px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    text-align: center;
+}
+hr { border: 0; border-top: 1px solid var(--tlg-border); margin: 24px 0; }
+.alert, .message, .messages li {
+    padding: 12px 15px;
+    margin: 12px 0;
+    border-radius: 8px;
+    background: #fff0e5;
+    color: #8a3b09;
+}
+footer {
+    color: var(--tlg-muted);
+    text-align: center;
+}
+@media (max-width: 700px) {
+    .wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap,
+    .container {
+        width: calc(100% - 24px);
+        margin: 12px auto;
+    }
+    .container { padding: 17px; border-radius: 12px; }
+    .head, .page-header, .section-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .head > a, .page-header > a { align-self: flex-start; }
+    .filters, .filter-form, .search-form {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 12px;
+    }
+    .filters > *, .filter-form > *, .search-form > * { width: 100%; }
+    nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links { gap: 5px; }
+    nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    .cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+
+<body>
+
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <h1>
+                The Label Group
+            </h1>
+
+            <p>
+                Staff Management
+            </p>
+
+        </div>
+
+
+        <div class="menu-title">
+            Dashboard
+        </div>
+
+        <a href="{% url 'staff_dashboard' %}">
+            Dashboard
+        </a>
+
+
+        <div class="menu-title">
+            Management
+        </div>
+
+        <a href="{% url 'staff_product_list' %}">
+            Products
+        </a>
+
+        <a
+            href="{% url 'staff_customer_list' %}"
+            class="active"
+        >
+            Customers
+        </a>
+
+        <a href="{% url 'staff_quote_list' %}">
+            Quote Requests
+        </a>
+
+        <a href="#">
+            Orders
+        </a>
+
+
+        <div class="menu-title">
+            Website
+        </div>
+
+        <a href="#">
+            Business Information
+        </a>
+
+        <a href="#">
+            Website Content
+        </a>
+
+        <a href="#">
+            FAQs
+        </a>
+
+
+        {% if user.is_superuser %}
+
+        <div class="menu-title">
+            Owner
+        </div>
+
+        <a href="{% url 'boss_staff_management' %}">
+            Staff Management
+        </a>
+
+        <a href="{% url 'staff_activity_log' %}">
+            Activity Log
+        </a>
+
+        {% endif %}
+
+
+        <div class="menu-title">
+            Account
+        </div>
+
+        <a href="{% url 'staff_profile' %}">
+            Staff Profile
+        </a>
+
+
+        <div class="logout">
+
+            <a href="{% url 'staff_logout' %}">
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <h2>
+                    Customer Management
+                </h2>
+
+                <p>
+                    View customers and their quote history.
+                </p>
+
+            </div>
+
+
+            <div class="staff-name">
+
+                {{ user.username }}
+
+                <div class="staff-role">
+                    Authorized Staff
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+            <form method="get">
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search by name, company, email or phone"
+                >
+
+                <button type="submit">
+                    Search Customers
+                </button>
+
+            </form>
+
+
+            {% if search_query %}
+
+            <a
+                href="{% url 'staff_customer_list' %}"
+                class="clear-search"
+            >
+                Clear Search
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- CUSTOMER LIST -->
+
+        <div class="customer-panel">
+
+
+            <div class="panel-header">
+
+                <h2>
+                    Customers
+                </h2>
+
+                <p>
+                    Customers who have submitted quote requests.
+                </p>
+
+            </div>
+
+
+            {% for customer in customers %}
+
+            <div class="customer-row">
+
+
+                <div class="customer-header">
+
+                    <div>
+
+                        <div class="customer-name">
+                            {{ customer.customer_name }}
+                        </div>
+
+
+                        {% if customer.company_name %}
+
+                        <div class="company">
+                            {{ customer.company_name }}
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-contact">
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Email
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_email }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Phone
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_phone }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Location
+                        </span>
+
+                        <span class="contact-value">
+
+                            {{ customer.city }}
+
+                            {% if customer.state %}
+                                , {{ customer.state }}
+                            {% endif %}
+
+                            {% if customer.country %}
+                                , {{ customer.country }}
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-meta">
+
+                    <span class="status">
+                        {{ customer.get_status_display }}
+                    </span>
+
+
+                    <span class="quantity">
+
+                        {{ customer.total_quantity }}
+                        item{{ customer.total_quantity|pluralize }}
+
+                    </span>
+
+
+                    <span class="date">
+
+                        Quote submitted
+                        {{ customer.created_at|date:"M d, Y H:i" }}
+
+                    </span>
+
+                </div>
+
+
+                {% if customer.id %}
+<a
+                    href="{% url 'staff_quote_detail' customer.id %}"
+                    class="view-quote"
+                >
+                    View Quote
+                </a>
+{% endif %}
+
+
+            </div>
+
+
+            {% empty %}
+
+            <div class="empty">
+
+                {% if search_query %}
+
+                    No customers found matching
+                    "{{ search_query }}".
+
+                {% else %}
+
+                    No customers have submitted quote requests yet.
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+</body>
+
+</html>
+
+
+
+
+
+================================================================================
+FILE: products\views.py
+================================================================================
+from .models import QuoteRequest
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Product
+
+def home(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(is_available=True).order_by("-id")
+
+    industry_filter = request.GET.get("industry", "").strip().lower()
+
+    if industry_filter == "waste":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "motor":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "construction":
+        products = products.filter(
+            Q(id__gte=41, id__lte=60)
+        )
+    elif industry_filter == "pool":
+        products = products.filter(
+            Q(id__gte=61, id__lte=80)
+        )
+    elif industry_filter == "government":
+        products = products.filter(
+            Q(id__gte=81, id__lte=100)
+        )
+    elif industry_filter == "other":
+        products = products.filter(id__gte=101)
+
+    return render(
+        request,
+        "products/home.html",
+        {
+            "products": products,
+            "industry_filter": industry_filter,
+        },
+    )
+
+
+def product_list(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(
+        is_available=True
+    ).order_by("id")
+
+    industry = request.GET.get("industry", "").strip().lower()
+    search = request.GET.get("search", "").strip()
+
+    category_ranges = {
+        "motor": (1, 20),
+        "waste": (21, 40),
+        "construction": (41, 60),
+        "pool": (61, 80),
+        "government": (81, 100),
+    }
+
+    if industry in category_ranges:
+        first_id, last_id = category_ranges[industry]
+        products = products.filter(
+            id__gte=first_id,
+            id__lte=last_id
+        )
+    elif industry == "other":
+        products = products.exclude(
+            id__gte=1,
+            id__lte=100
+        )
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(category__icontains=search) |
+            Q(product_type__icontains=search) |
+            Q(product_code__icontains=search)
+        )
+
+    return render(
+        request,
+        "products/product_list.html",
+        {
+            "products": products,
+            "selected_industry": industry,
+            "search_query": search,
+            "product_count": products.count(),
+        },
+    )
+
+
+def industry_products(request, industry_name):
+    industry_name = (industry_name or "").strip().lower()
+
+    allowed = {
+        "motor": "motor",
+        "waste": "waste",
+        "construction": "construction",
+        "pool": "pool",
+        "government": "government",
+        "other": "other",
+    }
+
+    industry = allowed.get(industry_name)
+
+    if not industry:
+        return redirect("product_list")
+
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+
+    url = reverse("product_list") + "?industry=" + industry
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        from urllib.parse import quote
+        url += "&search=" + quote(search)
+
+    return HttpResponseRedirect(url)
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, "products/product_detail.html", {'product': product})
+
+def cart(request):
+    return render(request, "products/cart.html", {})
+
+
+def add_to_quote(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+
+    product = get_object_or_404(Product, id=product_id)
+
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product.id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(quantity, 1)
+
+    quote_cart[product_key] = quote_cart.get(product_key, 0) + quantity
+
+    request.session["quote_cart"] = quote_cart
+    request.session.modified = True
+
+    return redirect("quote_cart")
+
+def remove_from_quote(request, product_id):
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product_id)
+
+    if product_key in quote_cart:
+        del quote_cart[product_key]
+        request.session["quote_cart"] = quote_cart
+        request.session.modified = True
+
+    return redirect("quote_cart")
+def quote_cart(request):
+    from .models import Product
+    from django.shortcuts import render
+
+    cart = request.session.get("quote_cart", {})
+    products_by_id = {}
+    valid_cart = {}
+
+    for product_id, raw_quantity in cart.items():
+        try:
+            product_id = int(product_id)
+            quantity = max(1, int(raw_quantity))
+        except (TypeError, ValueError):
+            continue
+        valid_cart[str(product_id)] = quantity
+
+    products = Product.objects.filter(pk__in=valid_cart.keys())
+    for product in products:
+        products_by_id[str(product.pk)] = product
+
+    quote_items = []
+    for product_id, quantity in valid_cart.items():
+        product = products_by_id.get(product_id)
+        if product is None:
+            continue
+        product.quote_quantity = quantity
+        quote_items.append({
+            "product": product,
+            "quantity": quantity,
+        })
+
+    request.session["quote_cart"] = {
+        str(item["product"].pk): item["quantity"]
+        for item in quote_items
+    }
+
+    return render(request, "products/quote_cart.html", {
+        "quote_items": quote_items,
+        "quote_products": [item["product"] for item in quote_items],
+        "products": [item["product"] for item in quote_items],
+        "quote_count": sum(item["quantity"] for item in quote_items),
+        "quote_cart_empty": not bool(quote_items),
+    })
+
+
+def shipping(request):
+    return render(request, "products/shipping.html", {})
+
+def add_to_cart(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import Product
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = request.session.get("cart", {})
+    key = str(product_id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(1, quantity)
+    cart[key] = int(cart.get(key, 0)) + quantity
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def cart(request):
+    from django.shortcuts import render
+    from .models import Product
+
+    session_cart = request.session.get("cart", {})
+    products = []
+
+    for product_id, quantity in session_cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            quantity = max(1, int(quantity))
+            products.append({
+                "product": product,
+                "quantity": quantity,
+                "subtotal": product.price * quantity,
+            })
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    total = sum(item["subtotal"] for item in products)
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "cart_items": products,
+            "cart": products,
+            "total": total,
+            "cart_total": total,
+        },
+    )
+
+
+def update_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        if quantity > 0:
+            cart[str(product_id)] = quantity
+        else:
+            cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def remove_from_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+    cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def clear_cart(request):
+    from django.shortcuts import redirect
+
+    request.session["cart"] = {}
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+
+def custom_order(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/custom_order.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/custom_order.html", {})
+
+
+
+
+
+
+
+
+
+# =========================================================
+# SHIPPING QUOTE DESK
+# =========================================================
+
+def shipping_quote(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/shipping_quote.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/shipping_quote.html", {})
+
+def custom_orders(request):
+    if request.method == 'POST':
+        from .models import CustomOrder
+        full_name = request.POST.get('full_name')
+        company_name = request.POST.get('company_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('street_address', '') + ', ' + request.POST.get('city', '')
+        requirements = request.POST.get('requirements')
+        artwork = request.FILES.get('artwork')
+
+        CustomOrder.objects.create(
+            full_name=full_name,
+            company_name=company_name,
+            email=email,
+            phone=phone,
+            address=address,
+            requirements=requirements,
+            artwork=artwork
+        )
+        return render(request, 'products/custom_order_success.html', {'full_name': full_name})
+
+    return render(request, 'products/custom_orders.html')
+
+
+
+
+
+
+
+
+
+
+
+# THE LABEL GROUP: invoice payment page foundation.
+# Connect a real payment provider before accepting payments.
+def invoice_payment(request):
+    from django.shortcuts import render
+
+    invoice_number = ""
+    amount = ""
+    message = ""
+
+    if request.method == "POST":
+        invoice_number = request.POST.get("invoice_number", "").strip()
+        amount = request.POST.get("amount", "").strip()
+
+        if not invoice_number:
+            message = "Please enter your invoice number."
+        else:
+            try:
+                value = float(amount)
+                if value <= 0:
+                    raise ValueError
+                amount = f"{value:.2f}"
+                message = (
+                    "Your invoice details are ready. Online payment processing "
+                    "must be connected by the site administrator before payment "
+                    "can be completed. Please contact THE LABEL GROUP to arrange payment."
+                )
+            except (TypeError, ValueError):
+                message = "Please enter a valid invoice amount in USD."
+
+    return render(
+        request,
+        "products/invoice_payment.html",
+        {
+            "invoice_number": invoice_number,
+            "amount": amount,
+            "message": message,
+        },
+    )
+
+
+# ============================================================
+# CUSTOMER CHECKOUT AND ORDER CONFIRMATION
+# ============================================================
+
+def checkout(request):
+    from decimal import Decimal
+    from django.contrib import messages
+    from django.db import transaction
+    from django.shortcuts import render, redirect
+    from .models import Product, Order, OrderItem
+
+    def get_checkout_items():
+        result = []
+        session_cart = request.session.get("cart", {})
+        for product_id, quantity in session_cart.items():
+            try:
+                product = Product.objects.get(pk=int(product_id), is_available=True)
+                quantity = max(1, int(quantity))
+                line_total = product.price * quantity
+                result.append({
+                    "product": product,
+                    "quantity": quantity,
+                    "subtotal": line_total,
+                    "total_price": line_total,
+                })
+            except (Product.DoesNotExist, ValueError, TypeError):
+                continue
+        return result
+
+    checkout_items = get_checkout_items()
+    subtotal = sum((item["subtotal"] for item in checkout_items), Decimal("0.00"))
+    shipping_cost = Decimal("0.00")
+    total = subtotal + shipping_cost
+
+    context = {
+        "checkout_items": checkout_items,
+        "cart_items": checkout_items,
+        "items": checkout_items,
+        "subtotal": subtotal,
+        "cart_total": subtotal,
+        "shipping_cost": shipping_cost,
+        "total": total,
+        "grand_total": total,
+    }
+
+    if not checkout_items:
+        messages.error(request, "Your cart is empty or its products are unavailable.")
+        return redirect("cart")
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+        shipping_address = request.POST.get("shipping_address", "").strip()
+        shipping_city = request.POST.get("shipping_city", "").strip()
+        shipping_state = request.POST.get("shipping_state", "").strip()
+        shipping_postal_code = request.POST.get("shipping_postal_code", "").strip()
+        shipping_country = request.POST.get("shipping_country", "").strip()
+        notes = request.POST.get("notes", "").strip()
+
+        required = {
+            "name": customer_name,
+            "email": customer_email,
+            "phone": customer_phone,
+            "shipping address": shipping_address,
+            "city": shipping_city,
+            "country": shipping_country,
+        }
+        missing = [label for label, value in required.items() if not value]
+        if missing:
+            messages.error(request, "Please complete these required fields: " + ", ".join(missing) + ".")
+            return render(request, "checkout.html", context)
+
+        try:
+            with transaction.atomic():
+                order = Order.objects.create(
+                    customer_name=customer_name,
+                    customer_email=customer_email,
+                    customer_phone=customer_phone,
+                    shipping_address=shipping_address,
+                    shipping_city=shipping_city,
+                    shipping_state=shipping_state,
+                    shipping_postal_code=shipping_postal_code,
+                    shipping_country=shipping_country,
+                    subtotal=subtotal,
+                    shipping_cost=shipping_cost,
+                    total=total,
+                    currency="USD",
+                    status="pending",
+                    notes=notes,
+                )
+
+                for item in checkout_items:
+                    product = item["product"]
+                    quantity = item["quantity"]
+                    unit_price = product.price
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        product_name=product.name,
+                        quantity=quantity,
+                        unit_price=unit_price,
+                        total_price=unit_price * quantity,
+                        currency="USD",
+                    )
+
+        except Exception:
+            messages.error(request, "We could not save your order. Your cart has been kept. Please try again.")
+            return render(request, "checkout.html", context)
+
+        request.session["cart"] = {}
+        request.session["last_order_id"] = order.pk
+        request.session.modified = True
+        messages.success(request, f"Your order #{order.pk} has been placed successfully.")
+        return redirect("order_success", order_id=order.pk)
+
+    return render(request, "checkout.html", context)
+
+
+def order_success(request, order_id):
+    from django.shortcuts import render, get_object_or_404
+    from .models import Order
+
+    order = get_object_or_404(Order, pk=order_id)
+    return render(request, "order_success.html", {"order": order})
+
+
+
+================================================================================
+FILE: products\urls.py
+================================================================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/clear/', views.clear_cart, name='clear_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path("checkout/", views.checkout, name="checkout"),
+    path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+    path('cart/', views.cart, name='cart'),
+    path('quote/', views.quote_cart, name='quote_cart'),
+    path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+    path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+    path('custom-orders/', views.custom_order, name='custom_order'),
+    path('shipping/', views.shipping, name='shipping'),
+    path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+]
+
+
+
+
+
+================================================================================
+FILE: products\models.py
+================================================================================
+from django.utils.text import slugify
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Product(models.Model):
+
+    CATEGORY_CHOICES = [
+        ("decals", "Decals"),
+        ("stickers", "Stickers"),
+        ("reflective", "Reflective Products"),
+        ("custom", "Custom Products"),
+        ("other", "Other"),
+    ]
+
+    INDUSTRY_CHOICES = [
+        ("truck_motor_car", "Truck / Motor / Car Decals"),
+        ("government", "Government Contractor Decals"),
+        ("pool", "Pool Decals"),
+        ("construction", "Construction Decals"),
+        ("waste", "Waste Company Decals"),
+    ]
+
+    MATERIAL_CHOICES = [
+        ("vinyl", "Vinyl"),
+        ("paper", "Paper"),
+        ("mylar", "Mylar"),
+        ("polystyrene", "Polystyrene"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    SHAPE_CHOICES = [
+        ("rectangle", "Rectangle"),
+        ("square", "Square"),
+        ("circle", "Circle"),
+        ("oval", "Oval"),
+        ("custom", "Custom / Die-cut"),
+    ]
+
+    FINISH_CHOICES = [
+        ("gloss", "Gloss"),
+        ("matte", "Matte"),
+        ("satin", "Satin"),
+        ("clear", "Clear"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    PRINTING_METHOD_CHOICES = [
+        ("full_color", "Full Color"),
+        ("black_white", "Black & White"),
+        ("single_sided", "Single-Sided"),
+        ("double_sided", "Double-Sided"),
+        ("digital", "Digital Printing"),
+        ("screen", "Screen Printing"),
+    ]
+
+    ADHESIVE_CHOICES = [
+        ("permanent", "Permanent"),
+        ("removable", "Removable"),
+        ("indoor", "Indoor"),
+        ("outdoor", "Outdoor"),
+        ("not_applicable", "Not Applicable"),
+    ]
+
+    PRODUCT_NAME_CHOICES = [
+        ("bag_tag", "Bag & Tag Sticker"),
+        ("container_decal", "Container Identification Decal"),
+        ("dumpster_decal", "Dumpster Identification Decal"),
+        ("baler_decal", "Baler Decal"),
+        ("compactor_decal", "Compactor Decal"),
+        ("rolloff_decal", "Rolloff Decal"),
+        ("recycling_label", "Recycling Label"),
+        ("truck_decal", "Truck Decal"),
+        ("fleet_decal", "Fleet Decal"),
+        ("yard_waste_label", "Yard Waste Label"),
+        ("safety_decal", "Safety & Compliance Decal"),
+        ("reflective_label", "Reflective Label"),
+        ("facility_sign", "Facility Sign"),
+        ("food_waste_label", "Food Waste Label"),
+        ("medical_waste_label", "Medical Waste Label"),
+        ("portable_toilet_decal", "Portable Toilet Decal"),
+        ("custom_label", "Custom Label"),
+        ("other", "Other / New Product"),
+    ]
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    product_type = models.CharField(
+        max_length=100,
+        choices=PRODUCT_NAME_CHOICES,
+        default="other"
+    )
+
+    slug = models.SlugField(
+        unique=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    category = models.CharField(
+        max_length=100,
+        choices=CATEGORY_CHOICES,
+        default="other"
+    )
+
+    industry = models.CharField(
+        max_length=100,
+        choices=INDUSTRY_CHOICES,
+        default="waste"
+    )
+
+    brand = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    discount_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    image = models.ImageField(
+        upload_to="products/",
+        blank=True,
+        null=True
+    )
+
+    stock = models.PositiveIntegerField(
+        default=0
+    )
+
+    material = models.CharField(
+        max_length=100,
+        choices=MATERIAL_CHOICES,
+        blank=True
+    )
+
+    finish = models.CharField(
+        max_length=100,
+        choices=FINISH_CHOICES,
+        blank=True
+    )
+
+    shape = models.CharField(
+        max_length=100,
+        choices=SHAPE_CHOICES,
+        blank=True
+    )
+
+    printing_method = models.CharField(
+        max_length=100,
+        choices=PRINTING_METHOD_CHOICES,
+        blank=True
+    )
+
+    adhesive = models.CharField(
+        max_length=100,
+        choices=ADHESIVE_CHOICES,
+        blank=True
+    )
+
+    is_custom = models.BooleanField(
+        default=False
+    )
+
+    is_available = models.BooleanField(
+        default=True
+    )
+
+    is_featured = models.BooleanField(
+        default=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        from django.db import IntegrityError, transaction
+
+        base_slug = (self.slug or "").strip()
+        if not base_slug:
+            base_slug = slugify(getattr(self, "name", "") or getattr(self, "title", "") or "product")
+        base_slug = base_slug or "product"
+
+        candidate = base_slug
+        counter = 2
+
+        ProductModel = self.__class__
+        while ProductModel.objects.filter(slug=candidate).exclude(pk=self.pk).exists():
+            candidate = f"{base_slug}-{counter}"
+            counter += 1
+
+        self.slug = candidate
+        return super().save(*args, **kwargs)
+
+class Order(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("confirmed", "Confirmed"),
+        ("processing", "Processing"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    shipping_address = models.TextField()
+
+    shipping_city = models.CharField(
+        max_length=100
+    )
+
+    shipping_state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    shipping_country = models.CharField(
+        max_length=100
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    shipping_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.customer_name}"
+
+
+class OrderItem(models.Model):
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="order_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    unit_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class Shipment(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Preparing Shipment"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("in_transit", "In Transit"),
+        ("out_for_delivery", "Out for Delivery"),
+        ("delivered", "Delivered"),
+        ("delayed", "Delayed"),
+        ("returned", "Returned"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="shipment"
+    )
+
+    carrier = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_method = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    tracking_number = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    estimated_delivery = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    shipped_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    delivered_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Shipment for Order #{self.order.id}"
+
+
+class StaffProfile(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="staff_profile"
+    )
+
+    full_name = models.CharField(
+        max_length=200
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.full_name} - {self.get_status_display()}"
+
+
+class QuoteRequest(models.Model):
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("reviewing", "Being Reviewed"),
+        ("quoted", "Quote Sent"),
+        ("approved", "Approved"),
+        ("in_production", "In Production"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    company_name = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    street_address = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    address_continued = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    country = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    requirements = models.TextField(
+        blank=True
+    )
+
+    uploaded_file = models.FileField(
+        upload_to="quote_requests/",
+        blank=True,
+        null=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Quote #{self.id} - {self.customer_name}"
+
+
+class QuoteRequestItem(models.Model):
+
+    quote_request = models.ForeignKey(
+        QuoteRequest,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="quote_request_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class CollectionCalendarStickerOrder(models.Model):
+
+    YEAR_CHOICES = [
+        (year, str(year))
+        for year in range(2027, 2101)
+    ]
+
+    DAY_CHOICES = [
+        ("Monday", "Monday"),
+        ("Tuesday", "Tuesday"),
+        ("Wednesday", "Wednesday"),
+        ("Thursday", "Thursday"),
+        ("Friday", "Friday"),
+    ]
+
+    FREQUENCY_CHOICES = [
+        ("Once per week", "Once per week"),
+        ("Every other week", "Every other week"),
+        ("Once per month", "Once per month"),
+        ("Other", "Other"),
+    ]
+
+    COLOR_CHOICES = [
+        ("Green", "Green"),
+        ("Red", "Red"),
+        ("Blue", "Blue"),
+        ("Yellow", "Yellow"),
+        ("Orange", "Orange"),
+    ]
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    calendar_year = models.PositiveIntegerField(
+        choices=YEAR_CHOICES
+    )
+
+    trash_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    trash_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_trash_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    recycling_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    recycling_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_recycling_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    new_years_day = models.BooleanField(
+        default=False
+    )
+
+    memorial_day = models.BooleanField(
+        default=False
+    )
+
+    independence_day = models.BooleanField(
+        default=False
+    )
+
+    labor_day = models.BooleanField(
+        default=False
+    )
+
+    thanksgiving_day = models.BooleanField(
+        default=False
+    )
+
+    christmas_day = models.BooleanField(
+        default=False
+    )
+
+    other_holiday_1 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_2 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_3 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    top_bar_color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES
+    )
+
+    include_company_logo = models.BooleanField(
+        default=False
+    )
+
+    other_collection_information = models.TextField(
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField()
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    title = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    company = models.CharField(
+        max_length=200
+    )
+
+    street_address = models.CharField(
+        max_length=255
+    )
+
+    address_contd = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100
+    )
+
+    state = models.CharField(
+        max_length=100
+    )
+
+    zip_code = models.CharField(
+        max_length=30
+    )
+
+    phone = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    email = models.EmailField()
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.company} - {self.calendar_year} - {self.quantity} stickers"
+class SiteSettings(models.Model):
+    company_name = models.CharField(max_length=200, default="THE LABEL GROUP")
+    tagline = models.CharField(max_length=255, default="INDUSTRIAL PRINTS & DECALS")
+    phone = models.CharField(max_length=100, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    whatsapp = models.CharField(max_length=100, blank=True, default="")
+    facebook = models.URLField(blank=True, default="")
+    instagram = models.URLField(blank=True, default="")
+    tiktok = models.URLField(blank=True, default="")
+    linkedin = models.URLField(blank=True, default="")
+    youtube = models.URLField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.first()
+        if not obj:
+            obj = cls.objects.create(
+                company_name="THE LABEL GROUP",
+                tagline="INDUSTRIAL PRINTS & DECALS"
+            )
+        return obj
+
+
+
+    def get_intro_description(self):
+        if not self.description:
+            return ""
+        return self.description.split('\n\n')[0].strip()
+
+    def get_spec_table(self):
+        specs = []
+        if not self.description:
+            return specs
+        lines = self.description.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line.startswith('-'):
+                line = line[1:].strip()
+            if ':' in line:
+                parts = line.split(':', 1)
+                specs.append({'key': parts[0].strip(), 'value': parts[1].strip()})
+        return specs
+
+
+================================================================================
+FILE: products\templates\cart.html
+================================================================================
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f5f7fa;
+            --border: #e2e8f0;
+            --text: #172033;
+            --muted: #64748b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .topbar {
+            background: var(--navy-dark);
+            color: #fff;
+            font-size: 13px;
+            padding: 9px 20px;
+            text-align: center;
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-inner {
+            max-width: 1180px;
+            margin: auto;
+            min-height: 82px;
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .logo img {
+            width: 190px;
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 25px;
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .nav a:hover {
+            color: var(--orange);
+        }
+
+        .cart-badge {
+            background: var(--orange);
+            color: #fff;
+            border-radius: 20px;
+            padding: 7px 13px;
+        }
+
+        .hero {
+            background: linear-gradient(135deg, var(--navy), #12345c);
+            color: #fff;
+            padding: 45px 20px;
+        }
+
+        .hero-inner {
+            max-width: 1180px;
+            margin: auto;
+        }
+
+        .eyebrow {
+            color: #ffb36f;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 38px;
+        }
+
+        .hero p {
+            margin: 10px 0 0;
+            color: #dbe5f2;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 35px auto 70px;
+            padding: 0 20px;
+        }
+
+        .back {
+            display: inline-block;
+            color: var(--navy);
+            font-weight: 800;
+            margin-bottom: 22px;
+        }
+
+        .back:hover {
+            color: var(--orange);
+        }
+
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 25px rgba(11, 31, 58, 0.06);
+        }
+
+        .cart-items {
+            padding: 8px 22px;
+        }
+
+        .cart-item {
+            display: grid;
+            grid-template-columns: 105px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            padding: 22px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cart-item:last-child {
+            border-bottom: 0;
+        }
+
+        .product-image {
+            width: 105px;
+            height: 90px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid var(--border);
+        }
+
+        .category {
+            color: var(--orange);
+            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: .7px;
+        }
+
+        .product-name {
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--navy);
+            margin: 5px 0;
+        }
+
+        .product-code {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .price {
+            margin-top: 8px;
+            font-weight: 800;
+            color: var(--navy);
+        }
+
+        .quantity-form {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 13px;
+        }
+
+        .quantity-form input {
+            width: 62px;
+            padding: 9px;
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            text-align: center;
+        }
+
+        button,
+        .btn {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .update {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .update:hover {
+            background: var(--orange);
+        }
+
+        .remove {
+            display: inline-block;
+            margin-top: 9px;
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .remove:hover {
+            text-decoration: underline;
+        }
+
+        .item-total {
+            text-align: right;
+            font-size: 18px;
+            font-weight: 900;
+            color: var(--navy);
+            white-space: nowrap;
+        }
+
+        .summary {
+            padding: 24px;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary h2 {
+            margin: 0 0 20px;
+            color: var(--navy);
+            font-size: 22px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .summary-row.total {
+            border-bottom: 0;
+            font-size: 22px;
+            font-weight: 900;
+            color: var(--navy);
+            padding-top: 18px;
+        }
+
+        .checkout {
+            display: block;
+            width: 100%;
+            margin-top: 18px;
+            background: var(--orange);
+            color: #fff;
+            text-align: center;
+            padding: 14px;
+            border-radius: 9px;
+            font-weight: 900;
+        }
+
+        .checkout:hover {
+            background: var(--orange-dark);
+        }
+
+        .continue {
+            display: block;
+            text-align: center;
+            margin-top: 13px;
+            padding: 13px;
+            border: 1px solid var(--navy);
+            border-radius: 9px;
+            color: var(--navy);
+            font-weight: 800;
+        }
+
+        .continue:hover {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .clear {
+            display: inline-block;
+            margin-top: 20px;
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .empty {
+            padding: 70px 25px;
+            text-align: center;
+        }
+
+        .empty h2 {
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .empty p {
+            color: var(--muted);
+            margin-bottom: 25px;
+        }
+
+        footer {
+            background: var(--navy-dark);
+            color: #cbd5e1;
+            padding: 30px 20px;
+            text-align: center;
+            font-size: 13px;
+        }
+
+        @media (max-width: 850px) {
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero {
+                padding: 35px 20px;
+            }
+
+            h1 {
+                font-size: 30px;
+            }
+
+            .cart-item {
+                grid-template-columns: 75px 1fr;
+                gap: 13px;
+            }
+
+            .product-image {
+                width: 75px;
+                height: 70px;
+            }
+
+            .item-total {
+                grid-column: 2;
+                text-align: left;
+            }
+
+            .product-name {
+                font-size: 16px;
+            }
+
+            .nav {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation ? Durable custom printing ? Built for business
+</div>
+
+<header class="header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}" class="logo">
+            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
+        </a>
+
+        <nav class="nav">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">CONTINUE SHOPPING</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'cart' %}" class="cart-badge">CART</a>
+        </nav>
+
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="eyebrow">THE LABEL GROUP</div>
+        <h1>Your Shopping Cart</h1>
+        <p>Review your selected products before continuing to checkout.</p>
+    </div>
+</section>
+
+<main class="container">
+
+    <a href="{% url 'product_list' %}" class="back">
+        ? Back to Catalog
+    </a>
+
+    {% if cart_items %}
+
+    <div class="cart-layout">
+
+        <section class="card cart-items">
+
+            {% for item in cart_items %}
+
+            <article class="cart-item">
+
+                {% if item.product.image %}
+                    <img
+                        src="{{ item.product.image.url|slice:':-4' }}.webp"
+                        alt="{{ item.product.name }}"
+                        class="product-image"
+                    >
+                {% endif %}
+
+                <div>
+
+                    <div class="category">
+                        {{ item.product.category|default:"Industrial Printing" }}
+                    </div>
+
+                    <div class="product-name">
+                        {{ item.product.name }}
+                    </div>
+
+                    <div class="product-code">
+                        Product Code: {{ item.product.product_code|default:"N/A" }}
+                    </div>
+
+                    <div class="price">
+                        From ${{ item.product.price|floatformat:2 }}
+                    </div>
+
+                    <form method="post"
+                          action="{% url 'update_cart' item.product.id %}"
+                          class="quantity-form">
+
+                        {% csrf_token %}
+
+                        <label for="quantity-{{ item.product.id }}">Qty</label>
+
+                        <input
+                            id="quantity-{{ item.product.id }}"
+                            type="number"
+                            name="quantity"
+                            value="{{ item.quantity }}"
+                            min="1"
+                        >
+
+                        <button type="submit" class="update">
+                            UPDATE
+                        </button>
+
+                    </form>
+
+                    <a
+                        href="{% url 'remove_from_cart' item.product.id %}"
+                        class="remove"
+                    >
+                        Remove from cart
+                    </a>
+
+                </div>
+
+                <div class="item-total">
+                    ${{ item.subtotal|floatformat:2 }}
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+            <a href="{% url 'clear_cart' %}" class="clear">
+                Clear Cart
+            </a>
+
+        </section>
+
+        <aside class="card summary">
+
+            <h2>Order Summary</h2>
+
+            <div class="summary-row">
+                <span>Items</span>
+                <strong>{{ cart_items|length }}</strong>
+            </div>
+
+            <div class="summary-row total">
+                <span>Estimated Total</span>
+                <span>${{ total|floatformat:2 }}</span>
+            </div>
+
+            {% url 'checkout' as checkout_url %}
+
+            {% if checkout_url %}
+                <a href="{{ checkout_url }}" class="checkout">
+                    PROCEED TO CHECKOUT
+                </a>
+            {% else %}
+                <a href="{% url 'custom_order' %}" class="checkout">
+                    REQUEST ORDER QUOTE
+                </a>
+            {% endif %}
+
+            <div class="cart-navigation" style="display:flex;gap:12px;flex-wrap:wrap;">
+                <a href="{% url 'home' %}" class="continue">
+                    HOME
+                </a>
+                <a href="{% url 'product_list' %}" class="continue">
+                    CONTINUE SHOPPING
+                </a>
+            </div>
+
+        </aside>
+
+    </div>
+
+    {% else %}
+
+    <section class="card empty">
+
+        <h2>Your shopping cart is empty</h2>
+
+        <p>
+            You have not added any products yet.
+            Browse our industrial labels, decals and identification products.
+        </p>
+
+        <a href="{% url 'product_list' %}" class="checkout" style="max-width:280px;margin:0 auto;">
+            CONTINUE SHOPPING
+        </a>
+
+    </section>
+
+    {% endif %}
+
+</main>
+
+<footer>
+    ? THE LABEL GROUP ? Industrial Prints & Decals
+</footer>
+
+</body>
+</html>
+
+
+
+
+================================================================================
+FILE: products\templates\checkout.html
+================================================================================
+{% block title %}Checkout | THE LABEL GROUP{% endblock %}
+
+
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 50px 20px;">
+
+
+<div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 42px; margin-bottom: 10px;">
+        Checkout
+    </h1>
+
+    <p style="color: #666; font-size: 17px;">
+        Complete your details to place your order with THE LABEL GROUP.
+    </p>
+</div>
+
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div style="
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 30px;
+        align-items: start;
+    ">
+
+
+        <!-- CUSTOMER INFORMATION -->
+
+        <div style="
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 30px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Customer Information
+            </h2>
+
+            <div style="margin-top: 25px;">
+
+                <label for="customer_name">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="customer_name"
+                    name="customer_name"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="customer_email"
+                    name="customer_email"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="customer_phone"
+                    name="customer_phone"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <h2 style="margin-top: 35px;">
+                Shipping Information
+            </h2>
+
+
+            <div style="margin-top: 25px;">
+
+                <label for="shipping_address">
+                    Street Address
+                </label>
+
+                <textarea
+                    id="shipping_address"
+                    name="shipping_address"
+                    rows="3"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_city">
+                    City
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_city"
+                    name="shipping_city"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_state">
+                    State / Province
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_state"
+                    name="shipping_state"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_postal_code">
+                    Postal Code
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_postal_code"
+                    name="shipping_postal_code"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_country">
+                    Country
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_country"
+                    name="shipping_country"
+                    required
+                    placeholder="United States"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="notes">
+                    Order Notes
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    placeholder="Anything we should know about your order?"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <div style="
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Your Order
+            </h2>
+
+
+            {% for item in checkout_items %}
+
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 15px;
+                    padding: 15px 0;
+                    border-bottom: 1px solid #ddd;
+                ">
+
+                    <div>
+
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+
+                        <div style="
+                            color: #666;
+                            font-size: 14px;
+                            margin-top: 5px;
+                        ">
+                            Qty: {{ item.quantity }}
+                        </div>
+
+                    </div>
+
+                    <strong>
+                        ${{ item.item_total|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+            {% endfor %}
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+            ">
+
+                <span>
+                    Subtotal
+                </span>
+
+                <strong>
+                    ${{ subtotal|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 12px;
+            ">
+
+                <span>
+                    Shipping
+                </span>
+
+                <strong>
+                    FREE
+                </strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                border-top: 1px solid #ddd;
+                padding-top: 18px;
+                margin-top: 20px;
+                font-size: 21px;
+            ">
+
+                <strong>
+                    Total
+                </strong>
+
+                <strong>
+                    ${{ subtotal|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <button
+                type="submit"
+                style="
+                    width: 100%;
+                    border: none;
+                    padding: 16px;
+                    margin-top: 25px;
+                    border-radius: 8px;
+                    background: #f28c28;
+                    color: white;
+                    cursor: pointer;
+                    font-weight: 700;
+                    font-size: 17px;
+                "
+            >
+                Place Order
+            </button>
+
+
+            <a
+                href="{% url 'cart' %}"
+                style="
+                    display: block;
+                    text-align: center;
+                    margin-top: 15px;
+                    color: #174a7c;
+                    text-decoration: none;
+                    font-weight: 600;
+                "
+            >
+                â† Back to Cart
+            </a>
+
+        </div>
+
+    </div>
+
+</form>
+
+
+</div>
+
+

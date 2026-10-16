@@ -1,0 +1,222 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Request Submitted | THE LABEL GROUP</title>
+
+    <style>
+        :root {
+            --navy: #08233f;
+            --blue: #0d4f87;
+            --orange: #f58220;
+            --light: #f4f6f8;
+            --white: #ffffff;
+            --text: #182838;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        .topbar {
+            background: var(--navy);
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #d9e0e7;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: auto;
+            min-height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 20px;
+        }
+
+        .logo {
+            width: 250px;
+            max-width: 100%;
+        }
+
+        .page {
+            max-width: 800px;
+            margin: 70px auto;
+            padding: 0 20px;
+        }
+
+        .success-card {
+            background: white;
+            padding: 50px 35px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(8, 35, 63, 0.08);
+        }
+
+        .success-icon {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 25px;
+            border-radius: 50%;
+            background: #e8f7ed;
+            color: #218739;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+        }
+
+        h1 {
+            color: var(--navy);
+            margin-bottom: 15px;
+        }
+
+        p {
+            line-height: 1.7;
+            color: #657382;
+        }
+
+        .reference {
+            margin: 25px 0;
+            padding: 18px;
+            background: #f4f6f8;
+            border-radius: 8px;
+        }
+
+        .reference strong {
+            color: var(--navy);
+        }
+
+        .button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 14px 28px;
+            background: var(--orange);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #d9680b;
+        }
+
+        .footer {
+            background: var(--navy);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .footer img {
+            width: 220px;
+            max-width: 100%;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 700px) {
+            .header-inner {
+                justify-content: center;
+            }
+
+            .success-card {
+                padding: 35px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header class="header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}">
+            <img
+                src="{% static 'products/logo 2 (1).png' %}"
+                alt="THE LABEL GROUP"
+                class="logo"
+            >
+        </a>
+
+    </div>
+</header>
+
+<main class="page">
+
+    <div class="success-card">
+
+        <div class="success-icon">
+            ✓
+        </div>
+
+        <h1>Request Submitted Successfully</h1>
+
+        <p>
+            Thank you for submitting your Collection Calendar Sticker request.
+            Our team has received your information and will review your
+            requirements.
+        </p>
+
+        <div class="reference">
+            <strong>Request #{{ calendar_order.id }}</strong>
+            <br><br>
+            {{ calendar_order.company }}
+            <br>
+            {{ calendar_order.quantity }} stickers
+            <br>
+            Calendar Year: {{ calendar_order.calendar_year }}
+        </div>
+
+        <p>
+            We will use the information you provided to prepare your
+            Collection Calendar Sticker request.
+        </p>
+
+        <a href="{% url 'home' %}" class="button">
+            Return to Website
+        </a>
+
+    </div>
+
+</main>
+
+<footer class="footer">
+
+    <img
+        src="{% static 'products/logo 2 (1).png' %}"
+        alt="THE LABEL GROUP"
+    >
+
+    <div>
+        Professional Industrial Identification
+    </div>
+
+</footer>
+
+</body>
+</html>

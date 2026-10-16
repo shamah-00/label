@@ -1,7 +1,9 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 
+from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 
 SECRET_KEY = 'django-insecure-^kz!$&aquc9r8eyj%%p2ajai%q8#92+*i#xj3$m@0*#k*sz=rh'
@@ -35,6 +37,8 @@ INSTALLED_APPS = [
 
 
 MIDDLEWARE = [
+
+    'staff.dashboard_repair.DashboardCountsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -54,6 +58,9 @@ TEMPLATES = [
         'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
+            'libraries': {
+                'product_specifications': 'products.templatetags.product_specifications',
+            },
             'context_processors': [
                 
                 'products.context_processors.site_settings',
@@ -114,6 +121,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 

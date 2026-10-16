@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        The Label Group | Customers
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+
+        .sidebar {
+            width: 250px;
+            background: #111;
+            color: white;
+            padding: 25px 18px;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            overflow-y: auto;
+        }
+
+        .brand {
+            padding: 5px 10px 30px;
+            border-bottom: 1px solid #333;
+            margin-bottom: 25px;
+        }
+
+        .brand h1 {
+            font-size: 21px;
+        }
+
+        .brand p {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 6px;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 20px 10px 8px;
+        }
+
+        .sidebar a {
+            display: block;
+            color: #ddd;
+            text-decoration: none;
+            padding: 11px 12px;
+            border-radius: 6px;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        .sidebar a:hover {
+            background: #292929;
+            color: white;
+        }
+
+        .sidebar a.active {
+            background: #155eef;
+            color: white;
+        }
+
+        .logout {
+            margin-top: 25px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+
+        .logout a {
+            background: #8b0000;
+            text-align: center;
+            color: white;
+        }
+
+        .logout a:hover {
+            background: #b00000;
+        }
+
+        /* MAIN */
+
+        .main {
+            margin-left: 250px;
+            width: calc(100% - 250px);
+            padding: 30px;
+        }
+
+        .topbar {
+            background: white;
+            border-radius: 10px;
+            padding: 20px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .topbar h2 {
+            font-size: 25px;
+        }
+
+        .topbar p {
+            color: #777;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .staff-name {
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .staff-role {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+        }
+
+        /* SEARCH */
+
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .search-box form {
+            display: flex;
+            gap: 10px;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-box button {
+            border: none;
+            background: #155eef;
+            color: white;
+            padding: 12px 22px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .search-box button:hover {
+            background: #0d47c7;
+        }
+
+        .clear-search {
+            display: inline-block;
+            margin-top: 10px;
+            color: #777;
+            text-decoration: none;
+            font-size: 13px;
+        }
+
+        /* CUSTOMER LIST */
+
+        .customer-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .panel-header h2 {
+            font-size: 19px;
+        }
+
+        .panel-header p {
+            color: #777;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .customer-row {
+            padding: 20px 22px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .customer-row:last-child {
+            border-bottom: none;
+        }
+
+        .customer-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .customer-name {
+            font-size: 17px;
+            font-weight: bold;
+        }
+
+        .company {
+            color: #777;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+
+        .customer-contact {
+            margin-top: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .contact-item {
+            background: #f7f7f7;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .contact-label {
+            display: block;
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .contact-value {
+            font-size: 13px;
+            word-break: break-word;
+        }
+
+        .customer-meta {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 10px;
+            background: #eef5ff;
+            color: #155eef;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .quantity {
+            color: #777;
+            font-size: 12px;
+        }
+
+        .date {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .view-quote {
+            display: inline-block;
+            margin-top: 14px;
+            background: #111;
+            color: white;
+            padding: 9px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .view-quote:hover {
+            background: #333;
+        }
+
+        .empty {
+            padding: 50px 20px;
+            text-align: center;
+            color: #888;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 210px;
+            }
+
+            .main {
+                margin-left: 210px;
+                width: calc(100% - 210px);
+            }
+
+            .customer-contact {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+            }
+
+            .main {
+                margin-left: 0;
+                width: 100%;
+                padding: 15px;
+            }
+
+            .topbar {
+                display: block;
+            }
+
+            .staff-name {
+                text-align: left;
+                margin-top: 15px;
+            }
+
+            .search-box form {
+                display: block;
+            }
+
+            .search-box button {
+                width: 100%;
+                margin-top: 10px;
+            }
+
+            .customer-header {
+                display: block;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <h1>
+                The Label Group
+            </h1>
+
+            <p>
+                Print Shop Staff Management
+            </p>
+
+        </div>
+
+
+        <div class="menu-title">
+            Dashboard
+        </div>
+
+        <a href="{% url 'staff_dashboard' %}">
+            Dashboard
+        </a>
+
+
+        <div class="menu-title">
+            Management
+        </div>
+
+        <a href="{% url 'staff_product_list' %}">
+            Products
+        </a>
+
+        <a
+            href="{% url 'staff_customer_list' %}"
+            class="active"
+        >
+            Customers
+        </a>
+
+        <a href="{% url 'staff_quote_list' %}">
+            Quote Requests
+        </a>
+
+        <a href="#">
+            Orders
+        </a>
+
+
+        <div class="menu-title">
+            Website
+        </div>
+
+        <a href="#">
+            Business Information
+        </a>
+
+        <a href="#">
+            Website Content
+        </a>
+
+        <a href="#">
+            FAQs
+        </a>
+
+
+        {% if user.is_superuser %}
+
+        <div class="menu-title">
+            Owner
+        </div>
+
+        <a href="{% url 'boss_staff_management' %}">
+            Staff Management
+        </a>
+
+        <a href="{% url 'staff_activity_log' %}">
+            Activity Log
+        </a>
+
+        {% endif %}
+
+
+        <div class="menu-title">
+            Account
+        </div>
+
+        <a href="{% url 'staff_profile' %}">
+            Staff Profile
+        </a>
+
+
+        <div class="logout">
+
+            <a href="{% url 'staff_logout' %}">
+                Logout
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <h2>
+                    Customer Management
+                </h2>
+
+                <p>
+                    View customers and their quote history.
+                </p>
+
+            </div>
+
+
+            <div class="staff-name">
+
+                {{ user.username }}
+
+                <div class="staff-role">
+                    Authorized Staff
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SEARCH -->
+
+        <div class="search-box">
+
+            <form method="get">
+
+                <input
+                    type="text"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Search by name, company, email or phone"
+                >
+
+                <button type="submit">
+                    Search Customers
+                </button>
+
+            </form>
+
+
+            {% if search_query %}
+
+            <a
+                href="{% url 'staff_customer_list' %}"
+                class="clear-search"
+            >
+                Clear Search
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- CUSTOMER LIST -->
+
+        <div class="customer-panel">
+
+
+            <div class="panel-header">
+
+                <h2>
+                    Customers
+                </h2>
+
+                <p>
+                    Customers who have submitted quote requests.
+                </p>
+
+            </div>
+
+
+            {% for customer in customers %}
+
+            <div class="customer-row">
+
+
+                <div class="customer-header">
+
+                    <div>
+
+                        <div class="customer-name">
+                            {{ customer.customer_name }}
+                        </div>
+
+
+                        {% if customer.company_name %}
+
+                        <div class="company">
+                            {{ customer.company_name }}
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-contact">
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Email
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_email }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Phone
+                        </span>
+
+                        <span class="contact-value">
+                            {{ customer.customer_phone }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="contact-item">
+
+                        <span class="contact-label">
+                            Location
+                        </span>
+
+                        <span class="contact-value">
+
+                            {{ customer.city }}
+
+                            {% if customer.state %}
+                                , {{ customer.state }}
+                            {% endif %}
+
+                            {% if customer.country %}
+                                , {{ customer.country }}
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="customer-meta">
+
+                    <span class="status">
+                        {{ customer.get_status_display }}
+                    </span>
+
+
+                    <span class="quantity">
+
+                        {{ customer.total_quantity }}
+                        item{{ customer.total_quantity|pluralize }}
+
+                    </span>
+
+
+                    <span class="date">
+
+                        Quote submitted
+                        {{ customer.created_at|date:"M d, Y H:i" }}
+
+                    </span>
+
+                </div>
+
+
+                <a
+                    href="{% url 'staff_quote_detail' customer.id %}"
+                    class="view-quote"
+                >
+                    View Quote
+                </a>
+
+
+            </div>
+
+
+            {% empty %}
+
+            <div class="empty">
+
+                {% if search_query %}
+
+                    No customers found matching
+                    "{{ search_query }}".
+
+                {% else %}
+
+                    No customers have submitted quote requests yet.
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
+
+        </div>
+
+
+    </main>
+
+
+</div>
+
+
+</body>
+
+</html>

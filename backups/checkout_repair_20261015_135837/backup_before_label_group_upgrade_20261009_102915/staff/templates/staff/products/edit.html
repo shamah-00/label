@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Product | The Label Group</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .topbar {
+            background: #000;
+            color: #fff;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 21px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .top-links {
+            display: flex;
+            gap: 18px;
+        }
+
+        .top-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .top-links a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .heading {
+            margin-bottom: 25px;
+        }
+
+        .heading h1 {
+            margin: 0 0 8px;
+            font-size: 34px;
+        }
+
+        .heading p {
+            margin: 0;
+            color: #666;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 13px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 15px;
+            background: #fff;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #000;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .help {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .checkboxes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .checkbox {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 13px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .checkbox input {
+            width: auto;
+        }
+
+        .error {
+            color: #b00020;
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .non-field-errors {
+            background: #fff0f0;
+            border: 1px solid #e0a0a0;
+            color: #a00000;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .current-image {
+            margin-top: 12px;
+        }
+
+        .current-image img {
+            max-width: 180px;
+            max-height: 180px;
+            object-fit: contain;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+            background: #fff;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #ddd;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 13px 22px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-secondary {
+            background: #eee;
+            color: #111;
+        }
+
+        .btn-primary {
+            background: #000;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #222;
+        }
+
+        @media (max-width: 800px) {
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .checkboxes {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .buttons {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .btn {
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="topbar">
+
+    <div class="brand">
+        THE LABEL GROUP
+    </div>
+
+    <nav class="top-links">
+        <a href="/">Website</a>
+        <a href="{% url 'staff_dashboard' %}">Dashboard</a>
+        <a href="{% url 'staff_product_list' %}">Products</a>
+        <a href="{% url 'staff_logout' %}">Logout</a>
+    </nav>
+
+</header>
+
+
+<main class="container">
+
+    <div class="heading">
+
+        <h1>Edit Product</h1>
+
+        <p>
+            Update the product information for The Label Group.
+        </p>
+
+    </div>
+
+
+    <form method="POST" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        <div class="card">
+
+            {% if form.non_field_errors %}
+
+                <div class="non-field-errors">
+                    {{ form.non_field_errors }}
+                </div>
+
+            {% endif %}
+
+
+            <!-- PRODUCT INFORMATION -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Information
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+
+                        <label for="{{ form.product_type.id_for_label }}">
+                            Product Name
+                        </label>
+
+                        {{ form.product_type }}
+
+                        <div class="help">
+                            Select the official product name.
+                            Choose "Other / New Product" for a new product.
+                        </div>
+
+                        {% for error in form.product_type.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.name.id_for_label }}">
+                            New Product Name
+                        </label>
+
+                        {{ form.name }}
+
+                        <div class="help">
+                            Used when "Other / New Product" is selected.
+                        </div>
+
+                        {% for error in form.name.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.slug.id_for_label }}">
+                            URL Slug
+                        </label>
+
+                        {{ form.slug }}
+
+                        {% for error in form.slug.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.category.id_for_label }}">
+                            Category
+                        </label>
+
+                        {{ form.category }}
+
+                        {% for error in form.category.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="field full">
+
+                        <label for="{{ form.description.id_for_label }}">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        {% for error in form.description.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PRICING -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Pricing & Inventory
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+
+                        <label for="{{ form.brand.id_for_label }}">
+                            Brand
+                        </label>
+
+                        {{ form.brand }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.price.id_for_label }}">
+                            Price
+                        </label>
+
+                        {{ form.price }}
+
+                        {% for error in form.price.errors %}
+
+                            <div class="error">
+                                {{ error }}
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.discount_price.id_for_label }}">
+                            Discount Price
+                        </label>
+
+                        {{ form.discount_price }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.stock.id_for_label }}">
+                            Stock
+                        </label>
+
+                        {{ form.stock }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PRODUCT SPECIFICATIONS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Specifications
+                </div>
+
+                <div class="grid">
+
+                    <div class="field">
+
+                        <label for="{{ form.material.id_for_label }}">
+                            Material
+                        </label>
+
+                        {{ form.material }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.shape.id_for_label }}">
+                            Shape
+                        </label>
+
+                        {{ form.shape }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.finish.id_for_label }}">
+                            Finish
+                        </label>
+
+                        {{ form.finish }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.printing_method.id_for_label }}">
+                            Printing
+                        </label>
+
+                        {{ form.printing_method }}
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label for="{{ form.adhesive.id_for_label }}">
+                            Adhesive / Application
+                        </label>
+
+                        {{ form.adhesive }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- IMAGE -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Image
+                </div>
+
+                <div class="field">
+
+                    <label for="{{ form.image.id_for_label }}">
+                        Product Image
+                    </label>
+
+                    {{ form.image }}
+
+                    {% if product.image %}
+
+                        <div class="current-image">
+
+                            <div class="help">
+                                Current image:
+                            </div>
+
+                            <img
+                                src="{{ product.image.url }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <!-- STATUS -->
+
+            <div class="section">
+
+                <div class="section-title">
+                    Product Status
+                </div>
+
+                <div class="checkboxes">
+
+                    <label class="checkbox">
+
+                        {{ form.is_custom }}
+
+                        <span>
+                            Custom Product
+                        </span>
+
+                    </label>
+
+
+                    <label class="checkbox">
+
+                        {{ form.is_available }}
+
+                        <span>
+                            Available on Website
+                        </span>
+
+                    </label>
+
+
+                    <label class="checkbox">
+
+                        {{ form.is_featured }}
+
+                        <span>
+                            Featured Product
+                        </span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+            <div class="buttons">
+
+                <a
+                    href="{% url 'staff_product_list' %}"
+                    class="btn btn-secondary"
+                >
+                    Cancel
+                </a>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Save Changes
+                </button>
+
+            </div>
+
+        </div>
+
+    </form>
+
+</main>
+
+</body>
+</html>

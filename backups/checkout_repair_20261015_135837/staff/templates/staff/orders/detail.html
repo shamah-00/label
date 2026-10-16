@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Order #{{ order.id }} | The Label Group</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .topbar {
+            background: #102a43;
+            color: white;
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .topbar-right {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .layout {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: white;
+            border-right: 1px solid #e1e7ef;
+            padding: 25px 18px;
+        }
+
+        .sidebar-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #7b8794;
+            text-transform: uppercase;
+            margin: 10px 12px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 12px 14px;
+            margin-bottom: 5px;
+            color: #334e68;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .sidebar a:hover {
+            background: #edf4fb;
+            color: #0b63ce;
+        }
+
+        .sidebar a.active {
+            background: #e8f1fb;
+            color: #0b63ce;
+            font-weight: 700;
+        }
+
+        .main {
+            flex: 1;
+            padding: 32px;
+            max-width: 1400px;
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .breadcrumb a {
+            color: #0b63ce;
+        }
+
+        .breadcrumb span {
+            color: #7b8794;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 6px;
+            font-size: 30px;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #627d98;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: white;
+            color: #334e68;
+            border: 1px solid #d9e2ec;
+            padding: 11px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #f0f4f8;
+        }
+
+        .message {
+            padding: 14px 18px;
+            background: #e8f7ee;
+            color: #176b3a;
+            border: 1px solid #b7e4c7;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+            gap: 22px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e1e7ef;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 22px;
+            box-shadow: 0 3px 12px rgba(16, 42, 67, 0.04);
+        }
+
+        .card h2 {
+            margin: 0 0 20px;
+            font-size: 19px;
+        }
+
+        .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px;
+        }
+
+        .info-label {
+            display: block;
+            font-size: 12px;
+            color: #7b8794;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 15px;
+            font-weight: 600;
+            color: #243b53;
+            word-break: break-word;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .items-table th {
+            text-align: left;
+            padding: 12px;
+            background: #f5f8fb;
+            color: #52606d;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .items-table td {
+            padding: 15px 12px;
+            border-bottom: 1px solid #e8edf3;
+            vertical-align: middle;
+        }
+
+        .product-name {
+            font-weight: 700;
+            color: #243b53;
+        }
+
+        .product-code {
+            color: #829ab1;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .product-image {
+            width: 58px;
+            height: 58px;
+            object-fit: cover;
+            border-radius: 7px;
+            border: 1px solid #d9e2ec;
+            background: #f5f7fa;
+        }
+
+        .no-image {
+            width: 58px;
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 7px;
+            background: #f0f4f8;
+            color: #9fb3c8;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        .money {
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 11px 0;
+            border-bottom: 1px solid #edf1f5;
+        }
+
+        .summary-row:last-child {
+            border-bottom: 0;
+        }
+
+        .summary-label {
+            color: #627d98;
+        }
+
+        .summary-value {
+            font-weight: 700;
+        }
+
+        .total-row {
+            margin-top: 8px;
+            padding-top: 17px;
+            border-top: 2px solid #d9e2ec;
+            font-size: 19px;
+        }
+
+        .status-form label,
+        .status-form textarea {
+            display: block;
+        }
+
+        .status-form label {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #334e68;
+        }
+
+        .status-form select,
+        .status-form textarea {
+            width: 100%;
+            border: 1px solid #bcccdc;
+            border-radius: 8px;
+            padding: 12px;
+            font: inherit;
+            background: white;
+            margin-bottom: 18px;
+        }
+
+        .status-form select:focus,
+        .status-form textarea:focus {
+            outline: none;
+            border-color: #0b63ce;
+        }
+
+        .status-form textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .save-btn {
+            width: 100%;
+            border: 0;
+            background: #0b63ce;
+            color: white;
+            padding: 13px 18px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .save-btn:hover {
+            background: #084f9f;
+        }
+
+        .order-status {
+            display: inline-block;
+            padding: 7px 12px;
+            border-radius: 20px;
+            background: #e8f1fb;
+            color: #0b63ce;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .notes-box {
+            background: #f8fafc;
+            border-left: 4px solid #f28c28;
+            padding: 15px;
+            color: #52606d;
+            white-space: pre-wrap;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #829ab1;
+        }
+
+        @media (max-width: 1000px) {
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                width: 210px;
+            }
+
+        }
+
+        @media (max-width: 760px) {
+
+            .layout {
+                display: block;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: 0;
+                border-bottom: 1px solid #e1e7ef;
+            }
+
+            .main {
+                padding: 20px;
+            }
+
+            .page-header {
+                display: block;
+            }
+
+            .back-btn {
+                margin-top: 15px;
+            }
+
+            .customer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .items-table {
+                min-width: 700px;
+            }
+
+            .card.table-card {
+                overflow-x: auto;
+            }
+
+        }
+
+    </style>
+<!-- TLG-STAFF-PROFESSIONAL-THEME-V1 -->
+<style>
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-navy-dark: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-bg: #f3f6fa;
+    --tlg-white: #ffffff;
+    --tlg-text: #263449;
+    --tlg-muted: #68778b;
+    --tlg-border: #e0e6ee;
+    --tlg-radius: 12px;
+    --tlg-shadow: 0 5px 20px rgba(11,31,58,.07);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: var(--tlg-bg) !important;
+    color: var(--tlg-text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+}
+h1, h2, h3, h4 {
+    color: var(--tlg-navy);
+    line-height: 1.25;
+    margin-top: 0;
+}
+h1 { font-size: clamp(25px, 3vw, 34px); font-weight: 800; letter-spacing: -.6px; }
+h2 { font-size: 22px; font-weight: 750; }
+h3 { font-size: 17px; font-weight: 700; }
+p { color: var(--tlg-muted); }
+a { color: var(--tlg-navy); text-decoration: none; }
+a:hover { color: var(--tlg-orange-dark); }
+.wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap {
+    width: min(1240px, calc(100% - 40px));
+    margin: 30px auto;
+}
+.container {
+    width: min(1240px, calc(100% - 40px));
+    max-width: 1240px;
+    margin: 28px auto;
+    padding: 28px;
+    background: var(--tlg-white);
+    border: 1px solid var(--tlg-border);
+    border-radius: 16px;
+    box-shadow: var(--tlg-shadow);
+}
+.head, .page-header, .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+.head h1, .page-header h1 { margin-bottom: 7px; }
+.head p, .page-header p { margin: 0; }
+nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 14px;
+    border-radius: 8px;
+    color: var(--tlg-navy);
+    font-weight: 750;
+    transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+nav a:hover, .navbar a:hover, .topnav a:hover,
+.staff-nav a:hover, .navigation a:hover, .nav-links a:hover {
+    background: #fff0e5;
+    color: var(--tlg-orange-dark);
+    text-decoration: none;
+}
+.btn, button, input[type="submit"], input[type="button"], .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 10px 17px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--tlg-navy);
+    color: #fff !important;
+    font: inherit;
+    font-weight: 750;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none !important;
+    cursor: pointer;
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.btn:hover, button:hover, input[type="submit"]:hover,
+input[type="button"]:hover, .button:hover {
+    background: var(--tlg-navy-dark);
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(11,31,58,.16);
+    transform: translateY(-1px);
+}
+.btn.orange, .btn-primary, .btn-orange, .button-primary,
+button.orange, input.orange {
+    background: var(--tlg-orange);
+    color: #fff !important;
+}
+.btn.orange:hover, .btn-primary:hover, .btn-orange:hover,
+.button-primary:hover, button.orange:hover {
+    background: var(--tlg-orange-dark);
+}
+.btn.navy, .btn-secondary, .btn-outline {
+    background: var(--tlg-navy);
+    color: #fff !important;
+}
+.btn-danger, .delete-btn { background: #b42318 !important; }
+.btn-success, .success-btn { background: #18794e !important; }
+.filters, .filter-form, .search-form {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 22px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+}
+.filters input, .filters select, .filter-form input, .filter-form select,
+.search-form input, .search-form select { flex: 1 1 190px; }
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select, textarea {
+    width: 100%;
+    min-height: 43px;
+    padding: 10px 12px;
+    border: 1px solid #ccd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: var(--tlg-text);
+    font: inherit;
+    outline: none;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--tlg-orange) !important;
+    box-shadow: 0 0 0 3px rgba(244,123,32,.13);
+}
+textarea { min-height: 110px; resize: vertical; }
+label { display: block; margin-bottom: 6px; color: var(--tlg-navy); font-weight: 700; }
+form p { margin-bottom: 15px; }
+.tablebox, .table-container, .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin: 18px 0 0;
+    border: 1px solid var(--tlg-border);
+    border-radius: 12px;
+    background: #fff;
+}
+table {
+    width: 100%;
+    min-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+}
+thead th {
+    padding: 15px 16px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: left;
+    text-transform: uppercase;
+    letter-spacing: .45px;
+    white-space: nowrap;
+}
+tbody td {
+    padding: 15px 16px;
+    border-bottom: 1px solid #e9edf3;
+    vertical-align: middle;
+    color: #38475b;
+}
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:nth-child(even) { background: #f8fafc; }
+tbody tr:hover { background: #fff5ed; }
+td strong { color: var(--tlg-navy); }
+td .btn { min-height: 36px; padding: 8px 12px; white-space: nowrap; }
+.status, .badge, .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 10px;
+    border: 1px solid #f6d1b4;
+    border-radius: 999px;
+    background: #fff0e5;
+    color: #99420a;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.card, .stat-card, .metric-card, .dashboard-card, .panel, .section-card {
+    min-width: 0;
+    padding: 21px;
+    border: 1px solid var(--tlg-border);
+    border-radius: var(--tlg-radius);
+    background: #fff;
+    box-shadow: 0 3px 12px rgba(11,31,58,.04);
+}
+.cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+}
+.card h2, .stat-card h2, .metric-card h2,
+.dashboard-card h2 { margin-bottom: 8px; }
+.empty, .empty-state {
+    padding: 42px 22px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #f8fafc;
+    text-align: center;
+}
+hr { border: 0; border-top: 1px solid var(--tlg-border); margin: 24px 0; }
+.alert, .message, .messages li {
+    padding: 12px 15px;
+    margin: 12px 0;
+    border-radius: 8px;
+    background: #fff0e5;
+    color: #8a3b09;
+}
+footer {
+    color: var(--tlg-muted);
+    text-align: center;
+}
+@media (max-width: 700px) {
+    .wrap, .page-wrap, .page-container, .content-wrapper, .dashboard-wrap,
+    .container {
+        width: calc(100% - 24px);
+        margin: 12px auto;
+    }
+    .container { padding: 17px; border-radius: 12px; }
+    .head, .page-header, .section-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .head > a, .page-header > a { align-self: flex-start; }
+    .filters, .filter-form, .search-form {
+        align-items: stretch;
+        flex-direction: column;
+        padding: 12px;
+    }
+    .filters > *, .filter-form > *, .search-form > * { width: 100%; }
+    nav, .navbar, .topnav, .staff-nav, .navigation, .nav-links { gap: 5px; }
+    nav a, .navbar a, .topnav a, .staff-nav a, .navigation a, .nav-links a {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    .cards, .stats-grid, .dashboard-grid, .metrics-grid, .card-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+
+    <div class="brand">
+        THE LABEL GROUP
+    </div>
+
+    <div class="topbar-right">
+        Staff Management
+    </div>
+
+</div>
+
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-title">
+            Main
+        </div>
+
+        <a href="{% url 'staff_dashboard' %}">
+            Dashboard
+        </a>
+
+
+        <div class="sidebar-title">
+            Management
+        </div>
+
+        <a href="{% url 'staff_products' %}">
+            Products
+        </a>
+
+        <a href="{% url 'staff_customers' %}">
+            Customers
+        </a>
+
+        <a href="{% url 'staff_quotes' %}">
+            Quote Requests
+        </a>
+
+        <a href="{% url 'staff_orders' %}" class="active">
+            Orders
+        </a>
+<a href="{% url 'staff_shipping_dashboard' %}">Shipping</a>
+
+
+        <div class="sidebar-title">
+            Account
+        </div>
+
+        <a href="{% url 'staff_profile' %}">
+            Staff Profile
+        </a>
+
+        <a href="{% url 'staff_logout' %}">
+            Logout
+        </a>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="main">
+
+
+        <div class="breadcrumb">
+
+            <a href="{% url 'staff_orders' %}">
+                Orders
+            </a>
+<a href="{% url 'staff_shipping_dashboard' %}">Shipping</a>
+
+            <span>
+                / Order #{{ order.id }}
+            </span>
+
+        </div>
+
+
+        <div class="page-header">
+
+            <div>
+
+                <h1>
+                    Order #{{ order.id }}
+                </h1>
+
+                <p>
+                    Order submitted
+                    {{ order.created_at|date:"F d, Y H:i" }}
+                </p>
+
+            </div>
+
+            <a
+                href="{% url 'staff_orders' %}"
+                class="back-btn"
+            >
+                Back to Orders
+            </a>
+
+        </div>
+
+
+        {% if messages %}
+
+            {% for message in messages %}
+
+                <div class="message">
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        {% endif %}
+
+
+        <div class="grid">
+
+
+            <!-- LEFT COLUMN -->
+
+            <div>
+
+
+                <!-- CUSTOMER -->
+
+                <div class="card">
+
+                    <h2>
+                        Customer Information
+                    </h2>
+
+                    <div class="customer-grid">
+
+                        <div>
+
+                            <span class="info-label">
+                                Customer Name
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.customer_name }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Company
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.company_name|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Email
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.customer_email }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Phone
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.customer_phone }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- SHIPPING -->
+
+                <div class="card">
+
+                    <h2>
+                        Shipping Information
+                    </h2>
+
+                    <div class="customer-grid">
+
+                        <div>
+
+                            <span class="info-label">
+                                Street Address
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_address|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Address Continued
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_address_continued|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                City
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_city|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                State
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_state|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Postal Code
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_postal_code|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+
+                        <div>
+
+                            <span class="info-label">
+                                Country
+                            </span>
+
+                            <div class="info-value">
+                                {{ order.shipping_country|default:"Not provided" }}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PRODUCTS -->
+
+                <div class="card table-card">
+
+                    <h2>
+                        Ordered Products
+                    </h2>
+
+
+                    {% if items %}
+
+                    <table class="items-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Product
+                                </th>
+
+                                <th>
+                                    Code
+                                </th>
+
+                                <th>
+                                    Quantity
+                                </th>
+
+                                <th>
+                                    Unit Price
+                                </th>
+
+                                <th>
+                                    Total
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in items %}
+
+                            <tr>
+
+                                <td>
+
+                                    {% if item.product.image %}
+
+                                        <img
+                                            src="{{ item.product.image.url }}"
+                                            alt="{{ item.product_name }}"
+                                            class="product-image"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="no-image">
+                                            No Image
+                                        </div>
+
+                                    {% endif %}
+
+                                    <div class="product-name">
+                                        {{ item.product_name }}
+                                    </div>
+
+                                </td>
+
+
+                                <td>
+
+                                    {% if item.product_code %}
+
+                                        {{ item.product_code }}
+
+                                    {% else %}
+
+                                        Not provided
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td>
+                                    {{ item.quantity }}
+                                </td>
+
+
+                                <td class="money">
+
+                                    {% if item.unit_price %}
+
+                                        ${{ item.unit_price|floatformat:2 }}
+
+                                    {% else %}
+
+                                        Price on Request
+
+                                    {% endif %}
+
+                                </td>
+
+
+                                <td class="money">
+
+                                    {% if item.total_price %}
+
+                                        ${{ item.total_price|floatformat:2 }}
+
+                                    {% else %}
+
+                                        Price on Request
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    {% else %}
+
+                        <div class="empty">
+                            No products were found for this order.
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- ORDER NOTES -->
+
+                {% if order.notes %}
+
+                <div class="card">
+
+                    <h2>
+                        Order Notes
+                    </h2>
+
+                    <div class="notes-box">
+                        {{ order.notes }}
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+
+            </div>
+
+
+            <!-- RIGHT COLUMN -->
+
+            <div>
+
+
+                <!-- STATUS -->
+
+                <div class="card">
+
+                    <h2>
+                        Order Status
+                    </h2>
+
+                    <p>
+                        Current status:
+                    </p>
+
+                    <span class="order-status">
+                        {{ order.get_status_display }}
+                    </span>
+
+                </div>
+
+
+                <!-- UPDATE -->
+
+                <div class="card">
+
+                    <h2>
+                        Update Order
+                    </h2>
+
+                    <form
+                        method="post"
+                        class="status-form"
+                    >
+
+                        {% csrf_token %}
+
+
+                        <label for="status">
+                            Order Status
+                        </label>
+
+                        <select
+                            name="status"
+                            id="status"
+                            required
+                        >
+
+                            {% for value, label in status_choices %}
+
+                                <option
+                                    value="{{ value }}"
+                                    {% if order.status == value %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ label }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+
+                        <label for="notes">
+                            Staff Notes
+                        </label>
+
+                        <textarea
+                            name="notes"
+                            id="notes"
+                            placeholder="Add internal notes about this order..."
+                        >{{ order.notes }}</textarea>
+
+
+                        <button
+                            type="submit"
+                            class="save-btn"
+                        >
+                            Save Order Update
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <!-- FINANCIAL SUMMARY -->
+
+                <div class="card">
+
+                    <h2>
+                        Order Summary
+                    </h2>
+
+
+                    <div class="summary-row">
+
+                        <span class="summary-label">
+                            Subtotal
+                        </span>
+
+                        <span class="summary-value">
+
+                            {% if order.subtotal %}
+
+                                ${{ order.subtotal|floatformat:2 }}
+
+                            {% else %}
+
+                                $0.00
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-row">
+
+                        <span class="summary-label">
+                            Shipping
+                        </span>
+
+                        <span class="summary-value">
+
+                            {% if order.shipping_cost %}
+
+                                ${{ order.shipping_cost|floatformat:2 }}
+
+                            {% else %}
+
+                                $0.00
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="summary-row total-row">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <span class="summary-value">
+
+                            {% if order.total %}
+
+                                ${{ order.total|floatformat:2 }}
+
+                            {% else %}
+
+                                $0.00
+
+                            {% endif %}
+
+                        </span>
+
+                    </div>
+
+
+                    <p style="color:#7b8794;font-size:13px;margin-top:15px;">
+
+                        Currency:
+                        {{ order.currency|default:"USD" }}
+
+                    </p>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>
+

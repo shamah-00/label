@@ -1,0 +1,284 @@
+===== CUSTOMER URLS =====
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/clear/', views.clear_cart, name='clear_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('cart/', views.cart, name='cart'),
+    path('quote/', views.quote_cart, name='quote_cart'),
+    path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+    path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+    path('custom-orders/', views.custom_order, name='custom_order'),
+    path('shipping/', views.shipping, name='shipping'),
+    path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+]
+
+
+
+
+===== CUSTOMER QUOTE VIEWS =====
+301: 
+302: 
+303: def clear_cart(request):
+304:     from django.shortcuts import redirect
+305: 
+306:     request.session["cart"] = {}
+307:     request.session.modified = True
+308: 
+309:     return redirect("cart")
+310: 
+311: 
+312: 
+313: def custom_order(request):
+314:     from .models import QuoteRequest, QuoteRequestItem, Product
+315:     from django.shortcuts import render
+316:     from django.db import transaction
+317: 
+318:     if request.method == "POST":
+319:         customer_name = request.POST.get("customer_name", "").strip()
+320:         customer_email = request.POST.get("customer_email", "").strip()
+321:         customer_phone = request.POST.get("customer_phone", "").strip()
+322: 
+323:         if not customer_name or not customer_email or not customer_phone:
+324:             return render(request, "products/custom_order.html", {
+325:                 "error": "Please provide your name, email address, and phone number.",
+326:             })
+327: 
+328:         with transaction.atomic():
+329:             quote = QuoteRequest.objects.create(
+330:                 customer_name=customer_name,
+331:                 company_name=request.POST.get("company_name", "").strip(),
+332:                 customer_email=customer_email,
+333:                 customer_phone=customer_phone,
+334:                 street_address=request.POST.get("street_address", "").strip(),
+335:                 address_continued=request.POST.get("address_continued", "").strip(),
+336:                 city=request.POST.get("city", "").strip(),
+337:                 state=request.POST.get("state", "").strip(),
+338:                 postal_code=request.POST.get("postal_code", "").strip(),
+339:                 country=request.POST.get("country", "").strip(),
+340:                 requirements=request.POST.get("requirements", "").strip(),
+341:                 uploaded_file=request.FILES.get("uploaded_file"),
+342:             )
+343: 
+344:             cart = request.session.get("quote_cart", {})
+345:             for product_id, raw_quantity in cart.items():
+346:                 try:
+347:                     product = Product.objects.get(pk=int(product_id))
+348:                     quantity = max(1, int(raw_quantity))
+349:                 except (Product.DoesNotExist, TypeError, ValueError):
+350:                     continue
+351: 
+352:                 QuoteRequestItem.objects.create(
+353:                     quote_request=quote,
+354:                     product=product,
+355:                     product_name=str(product),
+356:                     product_code=str(
+357:                         getattr(product, "product_code", "")
+358:                         or getattr(product, "sku", "")
+359:                     ),
+360:                     quantity=quantity,
+361:                 )
+362: 
+363:         request.session["quote_cart"] = {}
+364:         request.session.modified = True
+365:         return render(request, "products/quote_success.html", {
+366:             "quote": quote,
+367:             "quote_id": quote.pk,
+368:         })
+369: 
+370:     return render(request, "products/custom_order.html", {})
+371: 
+372: 
+373: 
+374: 
+375: 
+376: 
+377: 
+378: 
+379: 
+380: # =========================================================
+381: # SHIPPING QUOTE DESK
+382: # =========================================================
+383: 
+384: def shipping_quote(request):
+385:     from .models import QuoteRequest, QuoteRequestItem, Product
+386:     from django.shortcuts import render
+387:     from django.db import transaction
+388: 
+389:     if request.method == "POST":
+390:         customer_name = request.POST.get("customer_name", "").strip()
+391:         customer_email = request.POST.get("customer_email", "").strip()
+392:         customer_phone = request.POST.get("customer_phone", "").strip()
+393: 
+394:         if not customer_name or not customer_email or not customer_phone:
+395:             return render(request, "products/shipping_quote.html", {
+396:                 "error": "Please provide your name, email address, and phone number.",
+397:             })
+398: 
+399:         with transaction.atomic():
+400:             quote = QuoteRequest.objects.create(
+401:                 customer_name=customer_name,
+402:                 company_name=request.POST.get("company_name", "").strip(),
+403:                 customer_email=customer_email,
+404:                 customer_phone=customer_phone,
+405:                 street_address=request.POST.get("street_address", "").strip(),
+406:                 address_continued=request.POST.get("address_continued", "").strip(),
+407:                 city=request.POST.get("city", "").strip(),
+408:                 state=request.POST.get("state", "").strip(),
+409:                 postal_code=request.POST.get("postal_code", "").strip(),
+410:                 country=request.POST.get("country", "").strip(),
+411:                 requirements=request.POST.get("requirements", "").strip(),
+412:                 uploaded_file=request.FILES.get("uploaded_file"),
+413:             )
+414: 
+415:             cart = request.session.get("quote_cart", {})
+416:             for product_id, raw_quantity in cart.items():
+417:                 try:
+418:                     product = Product.objects.get(pk=int(product_id))
+419:                     quantity = max(1, int(raw_quantity))
+420:                 except (Product.DoesNotExist, TypeError, ValueError):
+421:                     continue
+422: 
+423:                 QuoteRequestItem.objects.create(
+424:                     quote_request=quote,
+425:                     product=product,
+426:                     product_name=str(product),
+427:                     product_code=str(
+428:                         getattr(product, "product_code", "")
+429:                         or getattr(product, "sku", "")
+430:                     ),
+431:                     quantity=quantity,
+432:                 )
+433: 
+434:         request.session["quote_cart"] = {}
+435:         request.session.modified = True
+436:         return render(request, "products/quote_success.html", {
+437:             "quote": quote,
+438:             "quote_id": quote.pk,
+439:         })
+440: 
+441:     return render(request, "products/shipping_quote.html", {})
+442: 
+443: def custom_orders(request):
+444:     if request.method == 'POST':
+445:         from .models import CustomOrder
+446:         full_name = request.POST.get('full_name')
+447:         company_name = request.POST.get('company_name')
+448:         email = request.POST.get('email')
+449:         phone = request.POST.get('phone')
+450:         address = request.POST.get('street_address', '') + ', ' + request.POST.get('city', '')
+451:         requirements = request.POST.get('requirements')
+452:         artwork = request.FILES.get('artwork')
+453: 
+454:         CustomOrder.objects.create(
+455:             full_name=full_name,
+456:             company_name=company_name,
+457:             email=email,
+458:             phone=phone,
+459:             address=address,
+460:             requirements=requirements,
+461:             artwork=artwork
+462:         )
+463:         return render(request, 'products/custom_order_success.html', {'full_name': full_name})
+464: 
+465:     return render(request, 'products/custom_orders.html')
+
+===== INVOICE PAYMENT VIEW =====
+476: 
+477: # THE LABEL GROUP: invoice payment page foundation.
+478: # Connect a real payment provider before accepting payments.
+479: def invoice_payment(request):
+480:     from django.shortcuts import render
+481: 
+482:     invoice_number = ""
+483:     amount = ""
+484:     message = ""
+485: 
+486:     if request.method == "POST":
+487:         invoice_number = request.POST.get("invoice_number", "").strip()
+488:         amount = request.POST.get("amount", "").strip()
+489: 
+490:         if not invoice_number:
+491:             message = "Please enter your invoice number."
+492:         else:
+493:             try:
+494:                 value = float(amount)
+495:                 if value <= 0:
+496:                     raise ValueError
+497:                 amount = f"{value:.2f}"
+498:                 message = (
+499:                     "Your invoice details are ready. Online payment processing "
+500:                     "must be connected by the site administrator before payment "
+501:                     "can be completed. Please contact THE LABEL GROUP to arrange payment."
+502:                 )
+503:             except (TypeError, ValueError):
+504:                 message = "Please enter a valid invoice amount in USD."
+505: 
+506:     return render(
+507:         request,
+508:         "products/invoice_payment.html",
+509:         {
+510:             "invoice_number": invoice_number,
+511:             "amount": amount,
+512:             "message": message,
+513:         },
+514:     )
+
+===== STAFF QUOTE VIEWS =====
+
+> staff\views.py:331:def staff_quotes(request):
+  staff\views.py:332:    quotes = QuoteRequest.objects.all().order_by("-created_at")
+  staff\views.py:333:
+  staff\views.py:334:    return render(
+  staff\views.py:335:        request,
+  staff\views.py:336:        "staff/quotes.html",
+  staff\views.py:337:        {
+  staff\views.py:338:            "quotes": quotes,
+  staff\views.py:339:        },
+  staff\views.py:340:    )
+  staff\views.py:341:
+  staff\views.py:342:
+  staff\views.py:343:@staff_required
+> staff\views.py:344:def staff_quote_detail(request, pk):
+  staff\views.py:345:    quote = get_object_or_404(
+  staff\views.py:346:        QuoteRequest,
+  staff\views.py:347:        pk=pk,
+  staff\views.py:348:    )
+  staff\views.py:349:
+  staff\views.py:350:    if request.method == "POST":
+  staff\views.py:351:        status = request.POST.get("status")
+  staff\views.py:352:        staff_notes = request.POST.get("staff_notes", "")
+  staff\views.py:353:
+  staff\views.py:354:        if status:
+  staff\views.py:355:            quote.status = status
+  staff\views.py:356:
+  staff\views.py:357:        if hasattr(quote, "staff_notes"):
+  staff\views.py:358:            quote.staff_notes = staff_notes
+  staff\views.py:359:
+  staff\views.py:360:        quote.save()
+  staff\views.py:361:
+  staff\views.py:362:        profile = get_staff_profile(request.user)
+  staff\views.py:363:
+  staff\views.py:364:        log_staff_activity(
+  staff\views.py:365:            request,
+  staff\views.py:366:            profile,
+  staff\views.py:367:            "update",
+  staff\views.py:368:            f"Updated quote #{quote.pk}",
+  staff\views.py:369:            f"Quote #{quote.pk}",
+  staff\views.py:370:        )
+  staff\views.py:371:
+  staff\views.py:372:        messages.success(
+  staff\views.py:373:            request,
+  staff\views.py:374:            "Quote updated successfully.",
+
+
+

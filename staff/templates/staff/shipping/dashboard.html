@@ -1,0 +1,416 @@
+﻿{% extends "base.html" %}
+
+{% block extra_css %}
+<style>
+.shipping-page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 30px 20px 55px;
+    color: #17243a;
+}
+.shipping-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.shipping-heading h1 {
+    margin: 0 0 8px;
+    color: #0b1f3a;
+    font-size: clamp(1.7rem, 3vw, 2.25rem);
+}
+.shipping-heading p {
+    margin: 0;
+    color: #627086;
+    line-height: 1.6;
+}
+.shipping-count {
+    background: #fff2e8;
+    color: #a94c08;
+    border: 1px solid #ffd4b5;
+    border-radius: 999px;
+    padding: 9px 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+.shipping-card {
+    background: #fff;
+    border: 1px solid #dce3ec;
+    border-radius: 14px;
+    margin: 22px 0;
+    overflow: hidden;
+    box-shadow: 0 5px 18px rgba(11, 31, 58, .06);
+}
+.shipping-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 22px;
+    background: #f7f9fc;
+    border-bottom: 1px solid #e3e8ef;
+}
+.shipping-card-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: #0b1f3a;
+}
+.shipping-status {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 6px 11px;
+    background: #fff0dc;
+    color: #8b480b;
+    font-size: .84rem;
+    font-weight: 700;
+}
+.shipping-card-body {
+    padding: 22px;
+}
+.shipping-info {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 22px;
+}
+.shipping-info-item {
+    min-width: 0;
+    padding: 13px 15px;
+    background: #f8fafc;
+    border: 1px solid #e8edf3;
+    border-radius: 9px;
+}
+.shipping-info-item.full {
+    grid-column: 1 / -1;
+}
+.shipping-info-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #637087;
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.shipping-info-item span,
+.shipping-info-item a {
+    overflow-wrap: anywhere;
+    line-height: 1.5;
+}
+.shipping-section {
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid #e4e9f0;
+}
+.shipping-section h3 {
+    margin: 0 0 7px;
+    color: #0b1f3a;
+    font-size: 1.08rem;
+}
+.shipping-help {
+    margin: 0 0 16px;
+    color: #66748a;
+    font-size: .92rem;
+    line-height: 1.55;
+}
+.shipping-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+.shipping-field {
+    min-width: 0;
+}
+.shipping-field.full {
+    grid-column: 1 / -1;
+}
+.shipping-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #24344d;
+    font-size: .9rem;
+    font-weight: 700;
+}
+.shipping-field input,
+.shipping-field select,
+.shipping-field textarea {
+    display: block;
+    width: 100%;
+    min-height: 43px;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #fff;
+    color: #17243a;
+    font: inherit;
+}
+.shipping-field textarea {
+    min-height: 85px;
+    resize: vertical;
+}
+.shipping-field input:focus,
+.shipping-field select:focus,
+.shipping-field textarea:focus {
+    outline: 2px solid rgba(244, 123, 32, .25);
+    border-color: #f47b20;
+}
+.shipping-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 17px;
+}
+.shipping-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 7px;
+    padding: 11px 17px;
+    min-height: 42px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+}
+.shipping-button.primary {
+    background: #0b1f3a;
+    color: #fff;
+}
+.shipping-button.orange {
+    background: #f47b20;
+    color: #fff;
+}
+.shipping-button:hover {
+    filter: brightness(.95);
+}
+.shipping-warning {
+    padding: 12px 14px;
+    border: 1px solid #ffd7b5;
+    border-radius: 8px;
+    background: #fff8f1;
+    color: #81400b;
+    font-size: .9rem;
+    line-height: 1.55;
+    margin: 13px 0;
+}
+.shipping-empty {
+    background: #fff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 30px;
+    color: #66748a;
+    text-align: center;
+}
+.shipping-page .messages {
+    margin-bottom: 20px;
+}
+.shipping-page .message {
+    padding: 12px 15px;
+    margin: 9px 0;
+    border: 1px solid #dce3ec;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+@media (max-width: 650px) {
+    .shipping-page {
+        padding: 22px 12px 38px;
+    }
+    .shipping-card-header,
+    .shipping-card-body {
+        padding: 16px;
+    }
+    .shipping-info,
+    .shipping-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .shipping-info-item.full,
+    .shipping-field.full {
+        grid-column: auto;
+    }
+    .shipping-actions .shipping-button {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shipping-page">
+    <header class="shipping-heading">
+        <div>
+            <h1>The Label Group Shipping Management</h1>
+            <p>Manage shipment progress, tracking information, and shipping labels.</p>
+        </div>
+        <div class="shipping-count">
+            {{ shipments|length }} shipment{{ shipments|length|pluralize }}
+        </div>
+    </header>
+
+    {% if messages %}
+    <div class="messages" aria-live="polite">
+        {% for message in messages %}
+        <div class="message">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% for shipment in shipments %}
+    <article class="shipping-card">
+        <div class="shipping-card-header">
+            <h2>Order #{{ shipment.order_id }}</h2>
+            <span class="shipping-status">{{ shipment.get_status_display }}</span>
+        </div>
+
+        <div class="shipping-card-body">
+            <div class="shipping-info">
+                <div class="shipping-info-item">
+                    <strong>Customer</strong>
+                    <span>{{ shipment.order.customer_name|default:"Not provided" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Email</strong>
+                    <span>{{ shipment.order.customer_email|default:"Not provided" }}</span>
+                </div>
+                <div class="shipping-info-item full">
+                    <strong>Destination</strong>
+                    <span>{{ shipment.shipping_destination|default:"Address not provided" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Carrier</strong>
+                    <span>{{ shipment.carrier|default:"Not set" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Shipping method</strong>
+                    <span>{{ shipment.shipping_method|default:"Not set" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Tracking number</strong>
+                    <span>{{ shipment.tracking_number|default:"Not available" }}</span>
+                </div>
+                <div class="shipping-info-item">
+                    <strong>Estimated delivery</strong>
+                    <span>{{ shipment.estimated_delivery|default:"Not set" }}</span>
+                </div>
+            </div>
+
+            {% if shipment.label_url %}
+            <p><strong>Shipping label:</strong>
+                <a href="{{ shipment.label_url }}" target="_blank" rel="noopener noreferrer">Open / print label</a>
+            </p>
+            {% endif %}
+
+            {% if shipment.tracking_url %}
+            <p><a href="{{ shipment.tracking_url }}" target="_blank" rel="noopener noreferrer">Track shipment with carrier</a></p>
+            {% endif %}
+
+            {% if shipment.shippo_transaction_id %}
+            <p class="shipping-help">Shippo transaction reference: {{ shipment.shippo_transaction_id }}</p>
+            {% endif %}
+
+            <section class="shipping-section">
+    <h3>Shipping label — Shippo</h3>
+
+    {% if shipment.label_url %}
+        <p class="shipping-help">
+            A label is already recorded. Review the existing label before taking further action.
+        </p>
+    {% else %}
+        {% if shipment.shippo_rate_id %}
+            <p><strong>Selected carrier:</strong> {{ shipment.carrier|default:"Provided by Shippo" }}</p>
+            <p><strong>Shipping service:</strong> {{ shipment.shipping_method|default:"Not specified" }}</p>
+            <p class="shipping-help">
+                Saved Shippo rate ID: <code>{{ shipment.shippo_rate_id }}</code>
+            </p>
+            <p class="shipping-warning">
+                A saved rate may expire. Verify the rate and shipment details in Shippo before purchasing.
+                Live label purchasing remains subject to the server-side safety restriction.
+            </p>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                <input type="hidden" name="action" value="purchase_label">
+                <input type="hidden" name="shippo_rate_id" value="{{ shipment.shippo_rate_id }}">
+                <button class="shipping-button orange" type="submit"
+                    onclick="return confirm('A real label purchase may charge your Shippo account. Have you verified the rate and shipment details in Shippo?');">
+                    Purchase label through Shippo
+                </button>
+            </form>
+        {% else %}
+            <p class="shipping-warning">
+                No Shippo rate is saved for this shipment. Obtain a valid rate through Shippo first.
+            </p>
+        {% endif %}
+    {% endif %}
+</section>
+
+            <section class="shipping-section">
+                <h3>Update shipment details</h3>
+                <p class="shipping-help">Save the latest shipment status and any available carrier or tracking details.</p>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+                    <input type="hidden" name="action" value="update">
+
+                    <div class="shipping-form-grid">
+                        <div class="shipping-field">
+                            <label for="status-{{ shipment.id }}">Status</label>
+                            <select id="status-{{ shipment.id }}" name="status">
+                                {% for value,label in status_choices %}
+                                <option value="{{ value }}" {% if shipment.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="shipping-field">
+                            <label for="carrier-{{ shipment.id }}">Carrier</label>
+                            <input id="carrier-{{ shipment.id }}" name="carrier"
+                                   value="{{ shipment.carrier }}" maxlength="100">
+                        </div>
+
+                        <div class="shipping-field">
+                            <label for="method-{{ shipment.id }}">Shipping method</label>
+                            <input id="method-{{ shipment.id }}" name="shipping_method"
+                                   value="{{ shipment.shipping_method }}" maxlength="100">
+                        </div>
+
+                        <div class="shipping-field">
+                            <label for="delivery-{{ shipment.id }}">Estimated delivery</label>
+                            <input id="delivery-{{ shipment.id }}" name="estimated_delivery"
+                                   type="date"
+                                   value="{{ shipment.estimated_delivery|date:'Y-m-d' }}">
+                        </div>
+
+                        <div class="shipping-field">
+                            <label for="tracking-{{ shipment.id }}">Tracking number</label>
+                            <input id="tracking-{{ shipment.id }}" name="tracking_number"
+                                   value="{{ shipment.tracking_number }}" maxlength="200">
+                        </div>
+
+                        <div class="shipping-field full">
+                            <label for="notes-{{ shipment.id }}">Notes</label>
+                            <textarea id="notes-{{ shipment.id }}" name="notes" rows="3">{{ shipment.notes }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="shipping-actions">
+                        <button class="shipping-button primary" type="submit">Save shipment details</button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </article>
+    {% empty %}
+    <div class="shipping-empty">
+        <h2>No shipments yet</h2>
+        <p>Shipments will appear here when they are linked to existing orders.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

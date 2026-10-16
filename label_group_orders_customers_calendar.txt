@@ -1,0 +1,604 @@
+
+========== .\products\models.py ==========
+
+
+> products\models.py:222:class Order(models.Model):
+  products\models.py:223:
+  products\models.py:224:    STATUS_CHOICES = [
+  products\models.py:225:        ("pending", "Pending"),
+  products\models.py:226:        ("confirmed", "Confirmed"),
+  products\models.py:227:        ("processing", "Processing"),
+  products\models.py:228:        ("packed", "Packed"),
+  products\models.py:229:        ("shipped", "Shipped"),
+  products\models.py:230:        ("completed", "Completed"),
+  products\models.py:231:        ("cancelled", "Cancelled"),
+  products\models.py:232:    ]
+  products\models.py:233:
+  products\models.py:234:    customer_name = models.CharField(
+  products\models.py:235:        max_length=200
+  products\models.py:236:    )
+  products\models.py:237:
+  products\models.py:238:    customer_email = models.EmailField()
+  products\models.py:239:
+  products\models.py:240:    customer_phone = models.CharField(
+  products\models.py:241:        max_length=50
+  products\models.py:242:    )
+  products\models.py:243:
+  products\models.py:244:    shipping_address = models.TextField()
+  products\models.py:245:
+  products\models.py:246:    shipping_city = models.CharField(
+  products\models.py:247:        max_length=100
+  products\models.py:248:    )
+  products\models.py:249:
+  products\models.py:250:    shipping_state = models.CharField(
+  products\models.py:251:        max_length=100,
+  products\models.py:252:        blank=True
+  products\models.py:253:    )
+  products\models.py:254:
+  products\models.py:255:    shipping_postal_code = models.CharField(
+  products\models.py:256:        max_length=30,
+  products\models.py:257:        blank=True
+  products\models.py:258:    )
+  products\models.py:259:
+  products\models.py:260:    shipping_country = models.CharField(
+  products\models.py:261:        max_length=100
+  products\models.py:262:    )
+  products\models.py:263:
+  products\models.py:264:    subtotal = models.DecimalField(
+  products\models.py:265:        max_digits=12,
+  products\models.py:266:        decimal_places=2,
+  products\models.py:267:        default=0
+  products\models.py:268:    )
+  products\models.py:269:
+  products\models.py:270:    shipping_cost = models.DecimalField(
+  products\models.py:271:        max_digits=12,
+  products\models.py:272:        decimal_places=2,
+  products\models.py:273:        default=0
+  products\models.py:274:    )
+  products\models.py:275:
+  products\models.py:276:    total = models.DecimalField(
+  products\models.py:277:        max_digits=12,
+  products\models.py:278:        decimal_places=2,
+  products\models.py:279:        default=0
+  products\models.py:280:    )
+  products\models.py:281:
+  products\models.py:282:    currency = models.CharField(
+  products\models.py:283:        max_length=3,
+  products\models.py:284:        default="USD"
+  products\models.py:285:    )
+  products\models.py:286:
+  products\models.py:287:    status = models.CharField(
+  products\models.py:288:        max_length=30,
+  products\models.py:289:        choices=STATUS_CHOICES,
+  products\models.py:290:        default="pending"
+  products\models.py:291:    )
+  products\models.py:292:
+  products\models.py:293:    notes = models.TextField(
+  products\models.py:294:        blank=True
+  products\models.py:295:    )
+  products\models.py:296:
+  products\models.py:297:    created_at = models.DateTimeField(
+> products\models.py:309:class OrderItem(models.Model):
+  products\models.py:310:
+  products\models.py:311:    order = models.ForeignKey(
+  products\models.py:312:        Order,
+  products\models.py:313:        on_delete=models.CASCADE,
+  products\models.py:314:        related_name="items"
+  products\models.py:315:    )
+  products\models.py:316:
+  products\models.py:317:    product = models.ForeignKey(
+  products\models.py:318:        Product,
+  products\models.py:319:        on_delete=models.PROTECT,
+  products\models.py:320:        related_name="order_items"
+  products\models.py:321:    )
+  products\models.py:322:
+  products\models.py:323:    product_name = models.CharField(
+  products\models.py:324:        max_length=200
+  products\models.py:325:    )
+  products\models.py:326:
+  products\models.py:327:    quantity = models.PositiveIntegerField(
+  products\models.py:328:        default=1
+  products\models.py:329:    )
+  products\models.py:330:
+  products\models.py:331:    unit_price = models.DecimalField(
+  products\models.py:332:        max_digits=12,
+  products\models.py:333:        decimal_places=2,
+  products\models.py:334:        blank=True,
+  products\models.py:335:        null=True
+  products\models.py:336:    )
+  products\models.py:337:
+  products\models.py:338:    total_price = models.DecimalField(
+  products\models.py:339:        max_digits=12,
+  products\models.py:340:        decimal_places=2,
+  products\models.py:341:        blank=True,
+  products\models.py:342:        null=True
+  products\models.py:343:    )
+  products\models.py:344:
+  products\models.py:345:    currency = models.CharField(
+  products\models.py:346:        max_length=3,
+  products\models.py:347:        default="USD"
+  products\models.py:348:    )
+  products\models.py:349:
+  products\models.py:350:    def __str__(self):
+  products\models.py:351:        return f"{self.product_name} x {self.quantity}"
+  products\models.py:352:
+  products\models.py:353:
+  products\models.py:354:class Shipment(models.Model):
+  products\models.py:355:
+  products\models.py:356:    STATUS_CHOICES = [
+  products\models.py:357:        ("pending", "Pending"),
+  products\models.py:358:        ("processing", "Preparing Shipment"),
+  products\models.py:359:        ("packed", "Packed"),
+  products\models.py:360:        ("shipped", "Shipped"),
+  products\models.py:361:        ("in_transit", "In Transit"),
+  products\models.py:362:        ("out_for_delivery", "Out for Delivery"),
+  products\models.py:363:        ("delivered", "Delivered"),
+  products\models.py:364:        ("delayed", "Delayed"),
+  products\models.py:365:        ("returned", "Returned"),
+  products\models.py:366:        ("cancelled", "Cancelled"),
+  products\models.py:367:    ]
+  products\models.py:368:
+  products\models.py:369:    order = models.OneToOneField(
+  products\models.py:370:        Order,
+  products\models.py:371:        on_delete=models.CASCADE,
+  products\models.py:372:        related_name="shipment"
+  products\models.py:373:    )
+  products\models.py:374:
+  products\models.py:375:    carrier = models.CharField(
+  products\models.py:376:        max_length=100,
+  products\models.py:377:        blank=True
+  products\models.py:378:    )
+  products\models.py:379:
+  products\models.py:380:    shipping_method = models.CharField(
+  products\models.py:381:        max_length=100,
+  products\models.py:382:        blank=True
+  products\models.py:383:    )
+  products\models.py:384:
+> products\models.py:464:class QuoteRequest(models.Model):
+  products\models.py:465:
+  products\models.py:466:    STATUS_CHOICES = [
+  products\models.py:467:        ("new", "New"),
+  products\models.py:468:        ("reviewing", "Being Reviewed"),
+  products\models.py:469:        ("quoted", "Quote Sent"),
+  products\models.py:470:        ("approved", "Approved"),
+  products\models.py:471:        ("in_production", "In Production"),
+  products\models.py:472:        ("completed", "Completed"),
+  products\models.py:473:        ("cancelled", "Cancelled"),
+  products\models.py:474:    ]
+  products\models.py:475:
+  products\models.py:476:    customer_name = models.CharField(
+  products\models.py:477:        max_length=200
+  products\models.py:478:    )
+  products\models.py:479:
+  products\models.py:480:    company_name = models.CharField(
+  products\models.py:481:        max_length=200,
+  products\models.py:482:        blank=True
+  products\models.py:483:    )
+  products\models.py:484:
+  products\models.py:485:    customer_email = models.EmailField()
+  products\models.py:486:
+  products\models.py:487:    customer_phone = models.CharField(
+  products\models.py:488:        max_length=50
+  products\models.py:489:    )
+  products\models.py:490:
+  products\models.py:491:    street_address = models.CharField(
+  products\models.py:492:        max_length=255,
+  products\models.py:493:        blank=True
+  products\models.py:494:    )
+  products\models.py:495:
+  products\models.py:496:    address_continued = models.CharField(
+  products\models.py:497:        max_length=255,
+  products\models.py:498:        blank=True
+  products\models.py:499:    )
+  products\models.py:500:
+  products\models.py:501:    city = models.CharField(
+  products\models.py:502:        max_length=100,
+  products\models.py:503:        blank=True
+  products\models.py:504:    )
+  products\models.py:505:
+  products\models.py:506:    state = models.CharField(
+  products\models.py:507:        max_length=100,
+  products\models.py:508:        blank=True
+  products\models.py:509:    )
+  products\models.py:510:
+  products\models.py:511:    postal_code = models.CharField(
+  products\models.py:512:        max_length=30,
+  products\models.py:513:        blank=True
+  products\models.py:514:    )
+  products\models.py:515:
+  products\models.py:516:    country = models.CharField(
+  products\models.py:517:        max_length=100,
+  products\models.py:518:        blank=True
+  products\models.py:519:    )
+  products\models.py:520:
+  products\models.py:521:    requirements = models.TextField(
+  products\models.py:522:        blank=True
+  products\models.py:523:    )
+  products\models.py:524:
+  products\models.py:525:    uploaded_file = models.FileField(
+  products\models.py:526:        upload_to="quote_requests/",
+  products\models.py:527:        blank=True,
+  products\models.py:528:        null=True
+  products\models.py:529:    )
+  products\models.py:530:
+  products\models.py:531:    status = models.CharField(
+  products\models.py:532:        max_length=30,
+  products\models.py:533:        choices=STATUS_CHOICES,
+  products\models.py:534:        default="new"
+  products\models.py:535:    )
+  products\models.py:536:
+  products\models.py:537:    staff_notes = models.TextField(
+  products\models.py:538:        blank=True
+  products\models.py:539:    )
+
+
+
+
+========== .\staff\views.py ==========
+
+
+> staff\views.py:306:def staff_customers(request):
+  staff\views.py:307:    customers = (
+  staff\views.py:308:        Order.objects
+  staff\views.py:309:        .values(
+  staff\views.py:310:            "customer_name",
+  staff\views.py:311:            "customer_email",
+  staff\views.py:312:            "customer_phone",
+  staff\views.py:313:        )
+  staff\views.py:314:        .distinct()
+  staff\views.py:315:        .order_by("customer_name")
+  staff\views.py:316:    )
+  staff\views.py:317:
+  staff\views.py:318:    return render(
+  staff\views.py:319:        request,
+  staff\views.py:320:        "staff/customers.html",
+  staff\views.py:321:        {
+  staff\views.py:322:            "customers": customers,
+  staff\views.py:323:        },
+  staff\views.py:324:    )
+  staff\views.py:325:
+  staff\views.py:326:
+  staff\views.py:327:@staff_required
+> staff\views.py:328:def staff_orders(request):
+  staff\views.py:329:    orders = Order.objects.all().order_by("-created_at")
+  staff\views.py:330:
+  staff\views.py:331:    return render(
+  staff\views.py:332:        request,
+  staff\views.py:333:        "staff/orders.html",
+  staff\views.py:334:        {
+  staff\views.py:335:            "orders": orders,
+  staff\views.py:336:        },
+  staff\views.py:337:    )
+  staff\views.py:338:
+  staff\views.py:339:
+  staff\views.py:340:
+  staff\views.py:341:@boss_required
+  staff\views.py:342:def owner_create_staff(request):
+  staff\views.py:343:    if request.method == "POST":
+  staff\views.py:344:        form = OwnerStaffForm(request.POST)
+  staff\views.py:345:
+  staff\views.py:346:        if form.is_valid():
+  staff\views.py:347:            with transaction.atomic():
+  staff\views.py:348:                user = form.save(commit=False)
+  staff\views.py:349:
+  staff\views.py:350:                password = form.cleaned_data.get("password1")
+  staff\views.py:351:
+  staff\views.py:352:                if password:
+  staff\views.py:353:                    user.set_password(password)
+  staff\views.py:354:
+  staff\views.py:355:                user.is_active = True
+  staff\views.py:356:                user.is_staff = True
+  staff\views.py:357:                user.save()
+  staff\views.py:358:
+  staff\views.py:359:                profile = StaffProfile.objects.create(
+  staff\views.py:360:                    user=user,
+  staff\views.py:361:                    approved=True,
+  staff\views.py:362:                    status="approved",
+  staff\views.py:363:                    approved_at=timezone.now(),
+  staff\views.py:364:                )
+  staff\views.py:365:
+  staff\views.py:366:            log_staff_activity(
+  staff\views.py:367:                request,
+  staff\views.py:368:                get_staff_profile(request.user),
+  staff\views.py:369:                "create",
+  staff\views.py:370:                f"Boss created staff account: {user.username}",
+  staff\views.py:371:                user.username,
+  staff\views.py:372:            )
+  staff\views.py:373:
+  staff\views.py:374:            messages.success(
+  staff\views.py:375:                request,
+  staff\views.py:376:                f"Staff account for {user.username} created successfully.",
+  staff\views.py:377:            )
+  staff\views.py:378:
+  staff\views.py:379:            return redirect("boss_staff_management")
+  staff\views.py:380:    else:
+  staff\views.py:381:        form = OwnerStaffForm()
+  staff\views.py:382:
+  staff\views.py:383:    return render(
+  staff\views.py:384:        request,
+  staff\views.py:385:        "staff/boss/create_staff.html",
+  staff\views.py:386:        {
+  staff\views.py:387:            "form": form,
+  staff\views.py:388:        },
+  staff\views.py:389:    )
+  staff\views.py:390:
+  staff\views.py:391:
+  staff\views.py:392:@boss_required
+  staff\views.py:393:@transaction.atomic
+  staff\views.py:394:def approve_staff(request, pk):
+  staff\views.py:395:    if request.method != "POST":
+  staff\views.py:396:        return redirect("boss_staff_management")
+  staff\views.py:397:
+  staff\views.py:398:    profile = get_object_or_404(
+  staff\views.py:399:        StaffProfile,
+  staff\views.py:400:        pk=pk,
+  staff\views.py:401:    )
+  staff\views.py:402:
+  staff\views.py:403:    if profile.user == request.user:
+  staff\views.py:404:        messages.warning(
+  staff\views.py:405:            request,
+  staff\views.py:406:            "The Boss account cannot be changed here.",
+  staff\views.py:407:        )
+  staff\views.py:408:        return redirect("boss_staff_management")
+  staff\views.py:409:
+  staff\views.py:410:    if profile.user.is_superuser:
+  staff\views.py:411:        messages.warning(
+  staff\views.py:412:            request,
+  staff\views.py:413:            "A superuser account cannot be changed here.",
+  staff\views.py:414:        )
+  staff\views.py:415:        return redirect("boss_staff_management")
+  staff\views.py:416:
+  staff\views.py:417:    profile.approved = True
+  staff\views.py:418:    profile.status = "approved"
+  staff\views.py:419:    profile.approved_at = timezone.now()
+  staff\views.py:420:    profile.rejection_reason = ""
+  staff\views.py:421:
+  staff\views.py:422:    profile.user.is_active = True
+  staff\views.py:423:    profile.user.is_staff = True
+  staff\views.py:424:    profile.user.save(
+  staff\views.py:425:        update_fields=[
+  staff\views.py:426:            "is_active",
+  staff\views.py:427:            "is_staff",
+  staff\views.py:428:        ]
+> staff\views.py:742:def staff_calendar_orders(request):
+  staff\views.py:743:    from django.db.models import Q
+  staff\views.py:744:    from products.models import Order, CollectionCalendarStickerOrder
+  staff\views.py:745:
+  staff\views.py:746:    search = request.GET.get("search", "").strip()
+  staff\views.py:747:    orders = Order.objects.all().order_by("-created_at")
+  staff\views.py:748:    calendar_orders = CollectionCalendarStickerOrder.objects.all().order_by("-created_at")
+  staff\views.py:749:
+  staff\views.py:750:    if search:
+  staff\views.py:751:        orders = orders.filter(
+  staff\views.py:752:            Q(customer_name__icontains=search) |
+  staff\views.py:753:            Q(customer_email__icontains=search) |
+  staff\views.py:754:            Q(status__icontains=search)
+  staff\views.py:755:        )
+  staff\views.py:756:        calendar_orders = calendar_orders.filter(
+  staff\views.py:757:            Q(name__icontains=search) |
+  staff\views.py:758:            Q(company__icontains=search) |
+  staff\views.py:759:            Q(email__icontains=search) |
+  staff\views.py:760:            Q(status__icontains=search)
+  staff\views.py:761:        )
+  staff\views.py:762:
+  staff\views.py:763:    return render(request, "staff/calendar_orders.html", {
+  staff\views.py:764:        "orders": orders,
+  staff\views.py:765:        "calendar_orders": calendar_orders,
+  staff\views.py:766:        "search": search,
+  staff\views.py:767:    })
+  staff\views.py:768:
+  staff\views.py:769:
+  staff\views.py:770:@staff_required
+> staff\views.py:771:def staff_calendar_order_detail(request, pk):
+  staff\views.py:772:    order = get_object_or_404(
+  staff\views.py:773:        CollectionCalendarStickerOrder,
+  staff\views.py:774:        pk=pk,
+  staff\views.py:775:    )
+  staff\views.py:776:
+  staff\views.py:777:    if request.method == "POST":
+  staff\views.py:778:        status = request.POST.get("status")
+  staff\views.py:779:        staff_notes = request.POST.get(
+  staff\views.py:780:            "staff_notes",
+  staff\views.py:781:            "",
+  staff\views.py:782:        )
+  staff\views.py:783:
+  staff\views.py:784:        if status:
+  staff\views.py:785:            order.status = status
+  staff\views.py:786:
+  staff\views.py:787:        if hasattr(order, "staff_notes"):
+  staff\views.py:788:            order.staff_notes = staff_notes
+  staff\views.py:789:
+  staff\views.py:790:        order.save()
+  staff\views.py:791:
+  staff\views.py:792:        profile = get_staff_profile(request.user)
+  staff\views.py:793:
+  staff\views.py:794:        log_staff_activity(
+  staff\views.py:795:            request,
+  staff\views.py:796:            profile,
+  staff\views.py:797:            "update",
+  staff\views.py:798:            f"Updated calendar sticker order #{order.pk}",
+  staff\views.py:799:            f"Calendar Sticker Order #{order.pk}",
+  staff\views.py:800:        )
+  staff\views.py:801:
+  staff\views.py:802:        messages.success(
+  staff\views.py:803:            request,
+  staff\views.py:804:            "Calendar sticker order updated successfully.",
+  staff\views.py:805:        )
+  staff\views.py:806:
+  staff\views.py:807:        return redirect(
+  staff\views.py:808:            "staff_calendar_order_detail",
+  staff\views.py:809:            pk=order.pk,
+  staff\views.py:810:        )
+  staff\views.py:811:
+  staff\views.py:812:    return render(
+  staff\views.py:813:        request,
+  staff\views.py:814:        "staff/calendar_order_detail.html",
+  staff\views.py:815:        {
+  staff\views.py:816:            "order": order,
+  staff\views.py:817:            "status_choices": getattr(
+  staff\views.py:818:                CollectionCalendarStickerOrder,
+  staff\views.py:819:                "STATUS_CHOICES",
+  staff\views.py:820:                [],
+  staff\views.py:821:            ),
+  staff\views.py:822:        },
+  staff\views.py:823:    )
+  staff\views.py:824:
+  staff\views.py:825:@boss_required
+  staff\views.py:826:def boss_site_settings(request):
+  staff\views.py:827:    from products.models import SiteSettings
+  staff\views.py:828:
+  staff\views.py:829:    settings_obj = SiteSettings.get_settings()
+  staff\views.py:830:
+  staff\views.py:831:    if request.method == "POST":
+  staff\views.py:832:        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+  staff\views.py:833:        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+  staff\views.py:834:        settings_obj.phone = request.POST.get("phone", "").strip()
+  staff\views.py:835:        settings_obj.email = request.POST.get("email", "").strip()
+  staff\views.py:836:        settings_obj.address = request.POST.get("address", "").strip()
+  staff\views.py:837:        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+  staff\views.py:838:        settings_obj.facebook = request.POST.get("facebook", "").strip()
+  staff\views.py:839:        settings_obj.instagram = request.POST.get("instagram", "").strip()
+  staff\views.py:840:        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+  staff\views.py:841:        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+  staff\views.py:842:        settings_obj.youtube = request.POST.get("youtube", "").strip()
+  staff\views.py:843:        settings_obj.save()
+  staff\views.py:844:        messages.success(request, "Website settings updated successfully.")
+  staff\views.py:845:        return redirect("boss_site_settings")
+  staff\views.py:846:
+  staff\views.py:847:    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+  staff\views.py:848:
+  staff\views.py:849:
+  staff\views.py:850:
+  staff\views.py:851:@staff_required
+  staff\views.py:852:def staff_product_image_delete(request, pk):
+  staff\views.py:853:    profile = get_staff_profile(request.user)
+  staff\views.py:854:
+  staff\views.py:855:    product = get_object_or_404(
+  staff\views.py:856:        Product,
+  staff\views.py:857:        pk=pk
+  staff\views.py:858:    )
+  staff\views.py:859:
+  staff\views.py:860:    if request.method == "POST":
+  staff\views.py:861:        product_name = product.name
+  staff\views.py:862:
+  staff\views.py:863:        if product.image:
+  staff\views.py:864:            product.image.delete(save=False)
+  staff\views.py:865:            product.image = None
+  staff\views.py:866:            product.save()
+  staff\views.py:867:
+  staff\views.py:868:            log_staff_activity(
+  staff\views.py:869:                request,
+  staff\views.py:870:                profile,
+  staff\views.py:871:                "update",
+> staff\views.py:1054:def staff_customers(request):
+  staff\views.py:1055:    from products.models import Order, QuoteRequest
+  staff\views.py:1056:
+  staff\views.py:1057:    search = request.GET.get("search", "").strip()
+  staff\views.py:1058:    people = {}
+  staff\views.py:1059:
+  staff\views.py:1060:    def add_person(name, email, phone, company, kind, record):
+  staff\views.py:1061:        name = (name or "").strip()
+  staff\views.py:1062:        email = (email or "").strip()
+  staff\views.py:1063:        phone = (phone or "").strip()
+  staff\views.py:1064:        company = (company or "").strip()
+  staff\views.py:1065:        key = email.casefold() if email else (
+  staff\views.py:1066:            (name.casefold(), phone) if name or phone
+  staff\views.py:1067:            else ("record", kind, record.pk)
+  staff\views.py:1068:        )
+  staff\views.py:1069:        person = people.get(key)
+  staff\views.py:1070:        if person is None:
+  staff\views.py:1071:            person = {
+  staff\views.py:1072:                "name": name or "Customer",
+  staff\views.py:1073:                "email": email,
+  staff\views.py:1074:                "phone": phone,
+  staff\views.py:1075:                "company": company,
+  staff\views.py:1076:                "orders_count": 0,
+  staff\views.py:1077:                "quotes_count": 0,
+  staff\views.py:1078:                "last_seen": getattr(record, "created_at", None),
+  staff\views.py:1079:            }
+  staff\views.py:1080:            people[key] = person
+  staff\views.py:1081:        else:
+  staff\views.py:1082:            for field, value in (
+  staff\views.py:1083:                ("name", name), ("email", email),
+  staff\views.py:1084:                ("phone", phone), ("company", company)
+  staff\views.py:1085:            ):
+  staff\views.py:1086:                if value and (not person[field] or person[field] == "Customer"):
+  staff\views.py:1087:                    person[field] = value
+  staff\views.py:1088:            created = getattr(record, "created_at", None)
+  staff\views.py:1089:            if created and (not person["last_seen"] or created > person["last_seen"]):
+  staff\views.py:1090:                person["last_seen"] = created
+  staff\views.py:1091:
+  staff\views.py:1092:        person["orders_count" if kind == "order" else "quotes_count"] += 1
+  staff\views.py:1093:
+  staff\views.py:1094:    for obj in Order.objects.all().order_by("-created_at"):
+  staff\views.py:1095:        add_person(
+  staff\views.py:1096:            getattr(obj, "customer_name", ""),
+  staff\views.py:1097:            getattr(obj, "customer_email", ""),
+  staff\views.py:1098:            getattr(obj, "customer_phone", ""),
+  staff\views.py:1099:            "", "order", obj
+  staff\views.py:1100:        )
+  staff\views.py:1101:
+  staff\views.py:1102:    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+  staff\views.py:1103:        add_person(
+  staff\views.py:1104:            getattr(obj, "customer_name", ""),
+  staff\views.py:1105:            getattr(obj, "customer_email", ""),
+  staff\views.py:1106:            getattr(obj, "customer_phone", ""),
+  staff\views.py:1107:            getattr(obj, "company_name", ""),
+  staff\views.py:1108:            "quote", obj
+  staff\views.py:1109:        )
+  staff\views.py:1110:
+  staff\views.py:1111:    customers = list(people.values())
+  staff\views.py:1112:    if search:
+  staff\views.py:1113:        term = search.casefold()
+  staff\views.py:1114:        customers = [
+  staff\views.py:1115:            p for p in customers
+  staff\views.py:1116:            if any(term in str(p.get(f, "") or "").casefold()
+  staff\views.py:1117:                   for f in ("name", "email", "phone", "company"))
+  staff\views.py:1118:        ]
+  staff\views.py:1119:
+  staff\views.py:1120:    customers.sort(
+  staff\views.py:1121:        key=lambda p: p["last_seen"] or datetime.min.replace(tzinfo=None),
+  staff\views.py:1122:        reverse=True
+  staff\views.py:1123:    )
+  staff\views.py:1124:    return render(request, "staff/customers.html", {
+  staff\views.py:1125:        "customers": customers,
+  staff\views.py:1126:        "total_customers": len(customers),
+  staff\views.py:1127:        "search": search,
+  staff\views.py:1128:    })
+  staff\views.py:1129:
+  staff\views.py:1130:
+  staff\views.py:1131:@staff_required
+  staff\views.py:1132:def staff_quote_detail(request, pk):
+  staff\views.py:1133:    from django.shortcuts import get_object_or_404
+  staff\views.py:1134:    from products.models import QuoteRequest
+  staff\views.py:1135:
+  staff\views.py:1136:    quote = get_object_or_404(QuoteRequest, pk=pk)
+  staff\views.py:1137:
+  staff\views.py:1138:    if request.method == "POST":
+  staff\views.py:1139:        from django.contrib import messages
+  staff\views.py:1140:
+  staff\views.py:1141:        field_names = {
+  staff\views.py:1142:            field.name for field in QuoteRequest._meta.get_fields()
+  staff\views.py:1143:            if getattr(field, "concrete", False)
+  staff\views.py:1144:        }
+  staff\views.py:1145:
+  staff\views.py:1146:        new_status = request.POST.get("status", "").strip()
+  staff\views.py:1147:        if new_status and "status" in field_names:
+  staff\views.py:1148:            valid_statuses = {
+  staff\views.py:1149:                str(choice[0])
+  staff\views.py:1150:                for choice in getattr(
+  staff\views.py:1151:                    QuoteRequest, "STATUS_CHOICES", ()
+  staff\views.py:1152:                )
+  staff\views.py:1153:            }
+  staff\views.py:1154:
+> staff\views.py:1213:def staff_order_detail(request, pk):
+  staff\views.py:1214:    order = get_object_or_404(Order, pk=pk)
+  staff\views.py:1215:    if request.method == "POST":
+  staff\views.py:1216:        if order.status != "completed":
+  staff\views.py:1217:            order.status = "completed"
+  staff\views.py:1218:            order.save()
+  staff\views.py:1219:        return redirect("staff_order_detail", pk=pk)
+  staff\views.py:1220:    return render(request, "staff/order_detail.html", {"order": order})
+
+
+

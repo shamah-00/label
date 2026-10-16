@@ -1,0 +1,12 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<div style="max-width: 400px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h2>Staff Registration</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px;">Register Staff</button>
+    </form>
+    <p style="margin-top: 15px; text-align: center;"><a href="{% url 'staff_login' %}">Already have an account? Login</a></p>
+</div>
+{% endblock %}

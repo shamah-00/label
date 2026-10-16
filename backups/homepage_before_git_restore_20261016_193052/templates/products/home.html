@@ -1,0 +1,1379 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>THE LABEL GROUP | Industrial Prints & Decals</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --white: #ffffff;
+            --light: #f5f7fa;
+            --border: #e2e7ed;
+            --text: #263342;
+            --muted: #687585;
+            --shadow: 0 15px 40px rgba(6, 21, 42, .10);
+            --radius: 14px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--text);
+            background: var(--white);
+            line-height: 1.6;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        .topbar {
+            background: var(--navy-dark);
+            color: #fff;
+            text-align: center;
+            padding: 9px 20px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: .3px;
+        }
+
+        .header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-inner {
+            max-width: 1250px;
+            margin: auto;
+            min-height: 82px;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .brand img {
+            width: 150px; height: 55px;
+        }
+
+        .nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: var(--navy);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: .3px;
+            transition: .2s ease;
+        }
+
+        .nav a:hover {
+            color: var(--orange);
+        }
+
+        .nav .nav-quote {
+            background: var(--orange);
+            color: #fff;
+            padding: 11px 17px;
+            border-radius: 7px;
+        }
+
+        .nav .nav-quote:hover {
+            background: var(--orange-dark);
+            color: #fff;
+        }
+
+        .hero {
+            min-height: 590px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            background:
+                linear-gradient(90deg, rgba(6,21,42,.96) 0%, rgba(6,21,42,.84) 45%, rgba(6,21,42,.38) 100%),
+                url("{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}") center/cover no-repeat;
+        }
+
+        .hero-inner {
+            width: 100%;
+            max-width: 1250px;
+            margin: auto;
+            padding: 80px 24px;
+        }
+
+        .hero-content {
+            max-width: 690px;
+            color: #fff;
+        }
+
+        .eyebrow {
+            color: var(--orange);
+            font-size: 14px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 {
+            font-size: clamp(42px, 6vw, 76px);
+            line-height: 1.02;
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+        }
+
+        .hero h1 span {
+            color: var(--orange);
+        }
+
+        .hero p {
+            font-size: 19px;
+            color: #e7edf4;
+            max-width: 620px;
+            margin-bottom: 32px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 13px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 48px;
+            padding: 13px 22px;
+            border-radius: 7px;
+            font-weight: 900;
+            font-size: 13px;
+            letter-spacing: .3px;
+            transition: .2s ease;
+        }
+
+        .btn-orange {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .btn-orange:hover {
+            background: var(--orange-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-white {
+            background: #fff;
+            color: var(--navy);
+        }
+
+        .btn-white:hover {
+            background: #edf1f5;
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--navy);
+            color: var(--navy);
+            background: transparent;
+        }
+
+        .btn-outline:hover {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .trust-strip {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .trust-inner {
+            max-width: 1250px;
+            margin: auto;
+            padding: 22px 24px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            text-align: center;
+        }
+
+        .trust-item strong {
+            display: block;
+            font-size: 20px;
+        }
+
+        .trust-item span {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: .95;
+            text-transform: uppercase;
+            letter-spacing: .6px;
+        }
+
+        .section {
+            padding: 82px 24px;
+        }
+
+        .section-light {
+            background: var(--light);
+        }
+
+        .section-heading {
+            max-width: 1250px;
+            margin: 0 auto 42px;
+        }
+
+        .section-heading .eyebrow {
+            margin-bottom: 8px;
+        }
+
+        .section-heading h2 {
+            color: var(--navy);
+            font-size: clamp(30px, 4vw, 46px);
+            line-height: 1.1;
+            margin-bottom: 12px;
+        }
+
+        .section-heading p {
+            max-width: 720px;
+            color: var(--muted);
+            font-size: 16px;
+        }
+
+        .industry-grid {
+            max-width: 1250px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 18px;
+        }
+
+        .industry-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(6,21,42,.06);
+            transition: .25s ease;
+        }
+
+        .industry-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        .industry-image {
+            height: 360px !important;
+            background: #edf1f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .industry-image img {
+            width: 150px; height: 55px;
+            object-fit: contain;
+        }
+
+        .industry-content {
+            padding: 18px;
+        }
+
+        .industry-content h3 {
+            color: var(--navy);
+            font-size: 17px;
+            margin-bottom: 6px;
+        }
+
+        .industry-content p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 13px;
+        }
+
+        .industry-link {
+            color: var(--orange);
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .why-grid {
+            max-width: 1250px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .why-card {
+            padding: 30px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+
+        .why-number {
+            width: 150px; height: 55px;
+            border-radius: 50%;
+            background: var(--orange);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            margin-bottom: 18px;
+        }
+
+        .why-card h3 {
+            color: var(--navy);
+            margin-bottom: 8px;
+            font-size: 19px;
+        }
+
+        .why-card p {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .products-wrap {
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .product-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 7px 24px rgba(6,21,42,.06);
+        }
+
+        .product-image {
+            height: 245px;
+            background: #f2f4f7;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image img {
+            width: 150px; height: 55px;
+            object-fit: contain !important;
+        }
+
+        .product-body {
+            padding: 21px;
+        }
+
+        .product-code {
+            color: var(--orange);
+            font-size: 11px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .product-body h3 {
+            color: var(--navy);
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .product-body p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 17px;
+        }
+
+        .product-button {
+            display: inline-flex;
+            min-height: 42px;
+            padding: 11px 16px;
+            background: var(--navy);
+            color: #fff;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .product-button:hover {
+            background: var(--orange);
+        }
+
+        .catalogue-banner {
+            max-width: 1250px;
+            margin: 42px auto 0;
+            background: var(--navy);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 25px;
+        }
+
+        .catalogue-banner h3 {
+            font-size: 25px;
+            margin-bottom: 5px;
+        }
+
+        .catalogue-banner p {
+            color: #cdd7e3;
+            font-size: 14px;
+        }
+
+        .services-grid {
+            max-width: 1250px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .service-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 30px;
+            border-radius: var(--radius);
+        }
+
+        .service-card h3 {
+            color: var(--navy);
+            margin-bottom: 9px;
+        }
+
+        .service-card p {
+            color: var(--muted);
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .custom-section {
+            background:
+                linear-gradient(90deg, rgba(6,21,42,.96), rgba(11,31,58,.84)),
+                url("{% static 'products/Custom Industrial Sticker Catalog Collage (1).png' %}") center/cover;
+            color: #fff;
+            padding: 85px 24px;
+        }
+
+        .custom-inner {
+            max-width: 1250px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 50px;
+        }
+
+        .custom-content {
+            max-width: 700px;
+        }
+
+        .custom-content h2 {
+            font-size: clamp(31px, 4vw, 48px);
+            line-height: 1.1;
+            margin-bottom: 15px;
+        }
+
+        .custom-content p {
+            color: #dce4ed;
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+
+        footer {
+            background: var(--navy-dark);
+            color: #fff;
+            padding: 60px 24px 20px;
+        }
+
+        .footer-grid {
+            max-width: 1250px;
+            margin: auto;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 50px;
+        }
+
+        .footer-logo {
+            width: 190px;
+            margin-bottom: 18px;
+            background: #fff;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        footer p {
+            color: #b9c5d2;
+            font-size: 14px;
+            max-width: 390px;
+        }
+
+        footer h3 {
+            margin-bottom: 15px;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        footer a {
+            display: block;
+            color: #b9c5d2;
+            font-size: 13px;
+            margin: 8px 0;
+        }
+
+        footer a:hover {
+            color: var(--orange);
+        }
+
+        .copyright {
+            max-width: 1250px;
+            margin: 45px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,.12);
+            color: #91a0b0;
+            font-size: 12px;
+        }
+
+        @media (max-width: 1000px) {
+            .industry-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .product-grid,
+            .services-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header-inner {
+                flex-direction: column;
+            }
+
+            .nav {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .hero {
+                min-height: 520px;
+            }
+
+            .hero h1 {
+                letter-spacing: -1px;
+            }
+
+            .trust-inner,
+            .industry-grid,
+            .why-grid,
+            .product-grid,
+            .services-grid,
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .catalogue-banner,
+            .custom-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .nav {
+                gap: 13px;
+            }
+
+            .nav a {
+                font-size: 11px;
+            }
+
+            .section {
+                padding: 60px 18px;
+            }
+        }
+    .tlg-featured-grid .tlg-product-card:nth-child(1) .tlg-product-image{content:url("/static/products/truck and motors.webp");}.tlg-featured-grid .tlg-product-card:nth-child(2) .tlg-product-image{content:url("/static/products/waste and company.webp");}.tlg-featured-grid .tlg-product-card:nth-child(3) .tlg-product-image{content:url("/static/products/construction.webp");}.tlg-featured-grid .tlg-product-card:nth-child(4) .tlg-product-image{content:url("/static/products/pool decal.webp");}.tlg-featured-grid .tlg-product-card:nth-child(5) .tlg-product-image{content:url("/static/products/government contractor.webp");}.tlg-featured-grid .tlg-product-card:nth-child(6) .tlg-product-image{content:url("/static/products/Custom Industrial Sticker Catalog Collage (1).png");}.tlg-product-image{object-fit:contain!important;} </style>
+
+<style>
+/* THE LABEL GROUP — LARGE INDUSTRY IMAGES */
+.tlg-industry-grid,
+.industry-grid {
+    align-items: stretch !important;
+}
+
+.tlg-industry-card,
+.industry-card {
+    overflow: hidden !important;
+}
+
+.tlg-industry-card .industry-image,
+.industry-card .industry-image,
+.tlg-industry-card .card-image,
+.industry-card .card-image {
+    width: 100% !important;
+    height: 360px !important;
+    min-height: 360px !important;
+    padding: 12px !important;
+    background: #f4f7fa !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+.tlg-industry-card .industry-image img,
+.industry-card .industry-image img,
+.tlg-industry-card .card-image img,
+.industry-card .card-image img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+}
+
+@media (max-width: 900px) {
+    .tlg-industry-card .industry-image,
+    .industry-card .industry-image,
+    .tlg-industry-card .card-image,
+    .industry-card .card-image {
+        height: 360px !important;
+        min-height: 300px !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .tlg-industry-card .industry-image,
+    .industry-card .industry-image,
+    .tlg-industry-card .card-image,
+    .industry-card .card-image {
+        height: 360px !important;
+        min-height: 280px !important;
+    }
+}
+</style>
+
+
+<style>
+/* =========================================================
+   THE LABEL GROUP — PRODUCT IMAGE PRESENTATION
+   Keep existing images. Improve size and visibility only.
+   ========================================================= */
+
+.tlg-product-card,
+.product-card {
+    overflow: hidden !important;
+}
+
+.tlg-product-card .tlg-product-image,
+.tlg-product-card .product-image,
+.product-card .product-image {
+    width: 100% !important;
+    height: 430px !important;
+    min-height: 430px !important;
+    padding: 8px !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+.tlg-product-card .tlg-product-image img,
+.tlg-product-card .product-image img,
+.product-card .product-image img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    margin: 0 auto !important;
+}
+
+/* Product information remains clean and compact */
+.tlg-product-card .product-content,
+.product-card .product-content {
+    padding: 20px !important;
+}
+
+/* Product code */
+.tlg-product-card .tlg-product-code,
+.product-card .tlg-product-code {
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1.2px !important;
+    margin-bottom: 7px !important;
+}
+
+/* Product title */
+.tlg-product-card h3,
+.product-card h3 {
+    font-size: 20px !important;
+    line-height: 1.3 !important;
+    margin: 0 0 10px !important;
+}
+
+/* View product button */
+.tlg-product-card a,
+.product-card a {
+    transition: transform .18s ease, box-shadow .18s ease !important;
+}
+
+.tlg-product-card a:hover,
+.product-card a:hover {
+    transform: translateY(-1px);
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    .tlg-product-card .tlg-product-image,
+    .tlg-product-card .product-image,
+    .product-card .product-image {
+        height: 370px !important;
+        min-height: 370px !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .tlg-product-card .tlg-product-image,
+    .tlg-product-card .product-image,
+    .product-card .product-image {
+        height: 320px !important;
+        min-height: 320px !important;
+        padding: 6px !important;
+    }
+
+    .tlg-product-card h3,
+    .product-card h3 {
+        font-size: 18px !important;
+    }
+}
+</style>
+
+
+<style>
+/* =========================================================
+   THE LABEL GROUP — LARGE INDUSTRY CATEGORY IMAGES
+   Same presentation standard as the product images.
+   ========================================================= */
+
+.tlg-industry-card,
+.industry-card {
+    overflow: hidden !important;
+}
+
+.tlg-industry-card .industry-image,
+.industry-card .industry-image,
+.tlg-industry-card .card-image,
+.industry-card .card-image {
+    width: 100% !important;
+    height: 430px !important;
+    min-height: 430px !important;
+    padding: 8px !important;
+    background: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+.tlg-industry-card .industry-image img,
+.industry-card .industry-image img,
+.tlg-industry-card .card-image img,
+.industry-card .card-image img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    margin: 0 auto !important;
+}
+
+.tlg-industry-card .industry-content,
+.industry-card .industry-content {
+    padding: 22px !important;
+}
+
+.tlg-industry-card h3,
+.industry-card h3 {
+    font-size: 22px !important;
+    line-height: 1.25 !important;
+    margin-bottom: 10px !important;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    .tlg-industry-card .industry-image,
+    .industry-card .industry-image,
+    .tlg-industry-card .card-image,
+    .industry-card .card-image {
+        height: 370px !important;
+        min-height: 370px !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+    .tlg-industry-card .industry-image,
+    .industry-card .industry-image,
+    .tlg-industry-card .card-image,
+    .industry-card .card-image {
+        height: 320px !important;
+        min-height: 320px !important;
+        padding: 6px !important;
+    }
+
+    .tlg-industry-card h3,
+    .industry-card h3 {
+        font-size: 19px !important;
+    }
+}
+</style>
+
+
+<style>
+/* THE LABEL GROUP compact layout improvements */
+.industry-grid,.industries-grid,.industry-cards,.category-grid{
+    gap:16px !important;
+}
+.industry-section,.industries-section,.category-section,
+section.industry-section,section.industries-section{
+    margin-top:24px !important;
+    margin-bottom:28px !important;
+    padding-top:20px !important;
+    padding-bottom:20px !important;
+}
+.industry-card,.industry-item,.category-card{
+    min-width:0;
+}
+@media(max-width:768px){
+    .industry-grid,.industries-grid,.industry-cards,.category-grid{
+        gap:12px !important;
+    }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header class="header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}" class="brand">
+            <img src="{% static 'logo 2 (1).webp' %}" alt="THE LABEL GROUP" style="width:150px;height:auto;max-height:55px;object-fit:contain;">
+        </a>
+
+        <nav class="nav">
+            <a href="{% url 'home' %}">HOME</a>
+            
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+            <a href="{% url 'shipping_quote' %}" class="nav-quote">REQUEST A QUOTE</a>
+        </nav>
+
+    </div>
+</header>
+
+
+<section class="hero">
+    <div class="hero-inner">
+        <div class="hero-content">
+
+            <div class="eyebrow">
+                Industrial Printing & Identification
+            </div>
+
+            <h1>
+                Professional prints that make your <span>brand stick.</span>
+            </h1>
+
+            <p>
+                Commercial decals, equipment identification labels,
+                safety graphics and custom industrial printing built
+                for demanding applications.
+            </p>
+
+            <div class="buttons">
+                
+
+                <a href="{% url 'shipping_quote' %}" class="btn btn-white">
+                    REQUEST A QUOTE
+                </a>
+
+                <a href="{% url 'custom_order' %}" class="btn btn-white">
+                    CUSTOM ORDERS
+                </a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+
+<section class="trust-strip">
+    <div class="trust-inner">
+
+        <div class="trust-item">
+            <strong>100+</strong>
+            <span>Products</span>
+        </div>
+
+        <div class="trust-item">
+            <strong>5</strong>
+            <span>Core Industries</span>
+        </div>
+
+        <div class="trust-item">
+            <strong>Custom</strong>
+            <span>Order Support</span>
+        </div>
+
+        <div class="trust-item">
+            <strong>Commercial</strong>
+            <span>Printing Solutions</span>
+        </div>
+
+    </div>
+</section>
+
+
+<section class="section section-light">
+
+    <div class="section-heading">
+        <div class="eyebrow">Built Around Your Industry</div>
+
+        <h2>Printing solutions for the work you do.</h2>
+
+        <p>
+            Browse products by industry to quickly find decals,
+            identification labels and commercial print solutions
+            suited to your application.
+        </p>
+    </div>
+
+    <div class="industry-grid">
+
+        <a href="{% url 'industry_products' 'motor' %}" class="industry-card">
+            <div class="industry-image">
+                <img src="{% static 'products/truck and motors.webp' %}" alt="Truck and Motor Products">
+            </div>
+            <div class="industry-content">
+                <h3>Truck & Motor</h3>
+                <p>Fleet identification, vehicle decals and motor-related graphics.</p>
+                <span class="industry-link">Explore Products →</span>
+            </div>
+        </a>
+
+        <a href="{% url 'industry_products' 'waste' %}" class="industry-card">
+            <div class="industry-image">
+                <img src="{% static 'products/waste and company.webp' %}" alt="Waste Company Products">
+            </div>
+            <div class="industry-content">
+                <h3>Waste Companies</h3>
+                <p>Durable decals and identification solutions for waste operations.</p>
+                <span class="industry-link">Explore Products →</span>
+            </div>
+        </a>
+
+        <a href="{% url 'industry_products' 'construction' %}" class="industry-card">
+            <div class="industry-image">
+                <img src="{% static 'products/construction.webp' %}" alt="Construction Products">
+            </div>
+            <div class="industry-content">
+                <h3>Construction</h3>
+                <p>Equipment, safety and job-site identification graphics.</p>
+                <span class="industry-link">Explore Products →</span>
+            </div>
+        </a>
+
+        <a href="{% url 'industry_products' 'pool' %}" class="industry-card">
+            <div class="industry-image">
+                <img src="{% static 'products/pool decal.webp' %}" alt="Pool Company Products">
+            </div>
+            <div class="industry-content">
+                <h3>Pool Companies</h3>
+                <p>Professional pool service decals and equipment graphics.</p>
+                <span class="industry-link">Explore Products →</span>
+            </div>
+        </a>
+
+        <a href="{% url 'industry_products' 'government' %}" class="industry-card">
+            <div class="industry-image">
+                <img src="{% static 'products/government contractor.webp' %}" alt="Government Contractor Products">
+            </div>
+            <div class="industry-content">
+                <h3>Government Contractors</h3>
+                <p>Identification and compliance-focused printing solutions.</p>
+                <span class="industry-link">Explore Products →</span>
+            </div>
+        </a>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="section-heading">
+        <div class="eyebrow">Why The Label Group</div>
+
+        <h2>Made for real working environments.</h2>
+
+        <p>
+            We focus on practical industrial printing solutions that
+            help businesses identify equipment, communicate information
+            and present a professional image.
+        </p>
+    </div>
+
+    <div class="why-grid">
+
+        <div class="why-card">
+            <div class="why-number">01</div>
+            <h3>Built for Business</h3>
+            <p>
+                Product solutions designed around commercial,
+                industrial and operational applications.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <div class="why-number">02</div>
+            <h3>Clear Identification</h3>
+            <p>
+                Make vehicles, equipment, facilities and products
+                easier to identify with professional graphics.
+            </p>
+        </div>
+
+        <div class="why-card">
+            <div class="why-number">03</div>
+            <h3>Custom When You Need It</h3>
+            <p>
+                Have a unique requirement? Submit a custom order
+                and our team can review your application.
+            </p>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section section-light">
+
+    <div class="section-heading">
+        <div class="eyebrow">Featured Selection</div>
+
+        <h2>A look at our product range.</h2>
+
+        <p>
+            This is a curated selection from the catalogue.
+            Visit the full catalogue to see all available products.
+        </p>
+    </div>
+
+    <div class="products-wrap">
+
+        <div class="product-grid">
+
+            {% for product in products|slice:":6" %}
+
+            <article class="product-card">
+
+                <div class="product-image">
+
+                    {% if product.image %}
+                        <img src="{% with trimmed_path=product.image.url|slice:":-4" %}{{ trimmed_path }}_trimmed.webp{% endwith %}" alt="{{ product.name }}" loading="lazy" decoding="async" onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='{{ product.image.url }}';}">
+                    {% elif product.id <= 20 %}
+                        <img src="{% static 'products/truck and motors.webp' %}" alt="{{ product.name }}">
+                    {% elif product.id <= 40 %}
+                        <img src="{% static 'products/waste and company.webp' %}" alt="{{ product.name }}">
+                    {% elif product.id <= 60 %}
+                        <img src="{% static 'products/construction.webp' %}" alt="{{ product.name }}">
+                    {% elif product.id <= 80 %}
+                        <img src="{% static 'products/pool decal.webp' %}" alt="{{ product.name }}">
+                    {% elif product.id <= 100 %}
+                        <img src="{% static 'products/government contractor.webp' %}" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}" alt="{{ product.name }}">
+                    {% endif %}
+
+                </div>
+
+                <div class="product-body">
+
+                    {% if product.code %}
+                        <div class="product-code">
+                            Product {{ product.code }}
+                        </div>
+                    {% endif %}
+
+                    <div class="tlg-product-code" style="font-size:12px;font-weight:800;letter-spacing:1px;color:#f47b20;margin-bottom:6px;">PRODUCT #{{ product.product_code|default:"" }}</div><h3>{{ product.name }}</h3>
+
+                    {% if product.description %}
+                        <p>{{ product.description|truncatewords:18 }}</p>
+                    {% else %}
+                        <p>
+                            Professional industrial printing and
+                            identification solution.
+                        </p>
+                    {% endif %}
+
+                    <a href="{% url 'product_detail' product.id %}" class="product-button">
+                        VIEW PRODUCT
+                    </a>
+
+                </div>
+
+            </article>
+
+            {% endfor %}
+
+        </div>
+
+
+        <div class="catalogue-banner">
+
+            <div>
+                <h3>Need the full catalogue?</h3>
+                <p>
+                    Explore all available products and browse by industry.
+                </p>
+            </div>
+
+            <a href="{% url 'product_list' %}" class="btn btn-orange">
+                SHOP ALL PRODUCTS
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <div class="section-heading">
+        <div class="eyebrow">Services</div>
+
+        <h2>More than a product catalogue.</h2>
+
+        <p>
+            Whether you already know what you need or need help
+            specifying a solution, choose the path that fits your project.
+        </p>
+    </div>
+
+    <div class="services-grid">
+
+        <div class="service-card">
+            <h3>Request a Quote</h3>
+            <p>
+                Tell us what you need and provide your project
+                information for a commercial quotation.
+            </p>
+            <a href="{% url 'shipping_quote' %}" class="btn btn-outline">
+                REQUEST A QUOTE
+            </a>
+        </div>
+
+        <div class="service-card">
+            <h3>Custom Orders</h3>
+            <p>
+                Need something outside the standard catalogue?
+                Submit your custom requirements and artwork.
+            </p>
+            <a href="{% url 'custom_order' %}" class="btn btn-outline">
+                START CUSTOM ORDER
+            </a>
+        </div>
+
+        <div class="service-card">
+            <h3>Shipping & Delivery</h3>
+            <p>
+                Review delivery information, commercial shipping
+                options and the order process.
+            </p>
+            <a href="{% url 'shipping' %}" class="btn btn-outline">
+                SHIPPING INFORMATION
+            </a>
+        </div>
+
+    </div>
+
+</section>
+
+
+<section class="custom-section">
+
+    <div class="custom-inner">
+
+        <div class="custom-content">
+
+            <div class="eyebrow">Custom Printing</div>
+
+            <h2>Have a specific application in mind?</h2>
+
+            <p>
+                From unique equipment labels to custom industrial
+                graphics, send us your requirements and let our team
+                review what you need.
+            </p>
+
+            <div class="buttons">
+
+                <a href="{% url 'custom_order' %}" class="btn btn-orange">
+                    START A CUSTOM ORDER
+                </a>
+
+                <a href="{% url 'shipping_quote' %}" class="btn btn-white">
+                    REQUEST A QUOTE
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<footer>
+
+    <div class="footer-grid">
+
+        <div>
+            <img
+                class="footer-logo"
+                src="{% static 'logo 2 (1).webp' %}"
+                alt="THE LABEL GROUP Logo"
+             style="width:150px;height:auto;max-height:55px;object-fit:contain;">
+
+            <p>
+                Your complete industrial source for commercial prints,
+                safety decals and equipment identification labels.
+            </p>
+        </div>
+
+
+        <div>
+
+            <h3>Quick Links</h3>
+
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'product_list' %}">All Products</a>
+            <a href="{% url 'shipping_quote' %}">Request a Quote</a>
+            <a href="{% url 'custom_order' %}">Custom Orders</a>
+            <a href="{% url 'shipping' %}">Shipping Info</a>
+            <a href="{% url 'quote_cart' %}">Quote Cart</a>
+            <a href="/staff/login/">Staff Login</a>
+
+        </div>
+
+
+        <div>
+
+            <h3>Industries</h3>
+
+            <a href="{% url 'industry_products' 'motor' %}">
+                Truck & Fleet
+            </a>
+
+            <a href="{% url 'industry_products' 'waste' %}">
+                Waste Management
+            </a>
+
+            <a href="{% url 'industry_products' 'construction' %}">
+                Construction
+            </a>
+
+            <a href="{% url 'industry_products' 'pool' %}">
+                Pool Companies
+            </a>
+
+            <a href="{% url 'industry_products' 'government' %}">
+                Government Contractors
+            </a>
+
+            <a href="{% url 'product_list' %}?industry=other">
+                Other Products
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="copyright">
+        © 2026 THE LABEL GROUP. All Rights Reserved.
+    </div>
+
+</footer>
+
+</body>
+</html>
+
+
+
+
+

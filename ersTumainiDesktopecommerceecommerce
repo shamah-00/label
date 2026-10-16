@@ -1,0 +1,65 @@
+[1mdiff --git a/staff/templates/staff/orders/detail.html b/staff/templates/staff/orders/detail.html[m
+[1mindex 6dc3154..2a42a62 100644[m
+[1m--- a/staff/templates/staff/orders/detail.html[m
+[1m+++ b/staff/templates/staff/orders/detail.html[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿<!DOCTYPE html>[m
+[32m+[m[32m<!DOCTYPE html>[m
+ <html lang="en">[m
+ <head>[m
+     <meta charset="UTF-8">[m
+[36m@@ -715,7 +715,7 @@[m [mfooter {[m
+             Quote Requests[m
+         </a>[m
+ [m
+[31m-        <a href="{% url 'staff_order_list' %}" class="active">[m
+[32m+[m[32m        <a href="{% url 'staff_orders' %}" class="active">[m
+             Orders[m
+         </a>[m
+ [m
+[36m@@ -742,7 +742,7 @@[m [mfooter {[m
+ [m
+         <div class="breadcrumb">[m
+ [m
+[31m-            <a href="{% url 'staff_order_list' %}">[m
+[32m+[m[32m            <a href="{% url 'staff_orders' %}">[m
+                 Orders[m
+             </a>[m
+ [m
+[36m@@ -769,7 +769,7 @@[m [mfooter {[m
+             </div>[m
+ [m
+             <a[m
+[31m-                href="{% url 'staff_order_list' %}"[m
+[32m+[m[32m                href="{% url 'staff_orders' %}"[m
+                 class="back-btn"[m
+             >[m
+                 Back to Orders[m
+[1mdiff --git a/staff/templates/staff/orders/list.html b/staff/templates/staff/orders/list.html[m
+[1mindex c586921..ff8b0d4 100644[m
+[1m--- a/staff/templates/staff/orders/list.html[m
+[1m+++ b/staff/templates/staff/orders/list.html[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-﻿<!DOCTYPE html>[m
+[32m+[m[32m<!DOCTYPE html>[m
+ [m
+ <html lang="en">[m
+ <head>[m
+[36m@@ -709,7 +709,7 @@[m [mfooter {[m
+ </a>[m
+ [m
+ <a[m
+[31m-    href="{% url 'staff_order_list' %}"[m
+[32m+[m[32m    href="{% url 'staff_orders' %}"[m
+     class="nav-link active"[m
+ >[m
+     Orders[m
+[36m@@ -919,7 +919,7 @@[m [mfooter {[m
+             <div style="margin-top: 12px;">[m
+ [m
+                 <a[m
+[31m-                    href="{% url 'staff_order_list' %}"[m
+[32m+[m[32m                    href="{% url 'staff_orders' %}"[m
+                     class="clear-filter"[m
+                 >[m
+                     Clear Filters[m

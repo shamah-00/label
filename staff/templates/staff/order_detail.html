@@ -1,0 +1,443 @@
+
+{% extends "staff/base.html" %}
+
+{% block content %}
+<style>
+    .order-page {
+        --navy: #0b1f3a;
+        --navy-dark: #06152a;
+        --orange: #f47b20;
+        --border: #e4e9f0;
+        --muted: #68778a;
+        max-width: 1250px;
+        margin: 24px auto;
+        padding: 0 18px 40px;
+        color: var(--navy);
+    }
+
+    .order-page * { box-sizing: border-box; }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .order-header h1 {
+        font-size: 28px;
+        margin: 0 0 7px;
+        font-weight: 800;
+    }
+
+    .order-subtitle { color: var(--muted); font-size: 14px; }
+
+    .order-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 11px 17px;
+        border-radius: 7px;
+        border: 1px solid var(--border);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .order-btn-back { color: var(--navy); background: white; }
+    .order-btn-save { background: var(--orange); color: white; border: 0; }
+    .order-btn-save:hover { background: #d9620d; }
+
+    .order-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    .order-main, .order-sidebar {
+        display: grid;
+        gap: 20px;
+        min-width: 0;
+    }
+
+    .order-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 3px 12px rgba(11, 31, 58, .04);
+    }
+
+    .order-card-heading {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--border);
+        font-size: 16px;
+        font-weight: 800;
+    }
+
+    .order-card-body { padding: 20px; }
+
+    .order-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .order-label {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+
+    .order-value {
+        font-size: 14px;
+        font-weight: 650;
+        overflow-wrap: anywhere;
+    }
+
+    .order-field { margin-bottom: 18px; }
+    .order-field:last-child { margin-bottom: 0; }
+
+    .order-field label {
+        display: block;
+        font-size: 13px;
+        font-weight: 750;
+        margin-bottom: 8px;
+    }
+
+    .order-field select, .order-field textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #cfd8e3;
+        border-radius: 7px;
+        background: #fff;
+        color: var(--navy);
+        font: inherit;
+        font-size: 14px;
+    }
+
+    .order-field textarea { min-height: 125px; resize: vertical; }
+
+    .order-status {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 30px;
+        background: #fff2df;
+        color: #96500b;
+        font-size: 12px;
+        font-weight: 800;
+    }
+
+    .order-status-completed { background: #dcfce7; color: #166534; }
+    .order-status-cancelled { background: #fee2e2; color: #991b1b; }
+    .order-status-shipped { background: #dbeafe; color: #1d4ed8; }
+
+    .order-table-wrap { overflow-x: auto; }
+
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    .order-table th {
+        background: #f6f8fb;
+        color: #526176;
+        text-align: left;
+        padding: 12px;
+        white-space: nowrap;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+    }
+
+    .order-table td {
+        padding: 15px 12px;
+        border-top: 1px solid var(--border);
+        vertical-align: top;
+    }
+
+    .order-table th:last-child,
+    .order-table td:last-child { text-align: right; }
+
+    .order-product { font-weight: 750; }
+    .order-product-code { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+    .order-total-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 13px;
+        font-size: 14px;
+    }
+
+    .order-total-row span:first-child { color: var(--muted); }
+    .order-grand-total {
+        border-top: 1px solid var(--border);
+        padding-top: 16px;
+        margin-top: 16px;
+        font-size: 19px;
+        font-weight: 850;
+    }
+
+    .order-muted { color: var(--muted); font-size: 13px; }
+    .order-notes { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+
+    .order-messages { margin-bottom: 20px; }
+    .order-message {
+        padding: 12px 15px;
+        border-radius: 7px;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    .order-message.success { background: #dcfce7; color: #166534; }
+    .order-message.error { background: #fee2e2; color: #991b1b; }
+
+    @media (max-width: 850px) {
+        .order-grid { grid-template-columns: 1fr; }
+        .order-header h1 { font-size: 24px; }
+    }
+
+    @media (max-width: 520px) {
+        .order-page { padding: 0 10px 25px; }
+        .order-card-body { padding: 15px; }
+        .order-info-grid { grid-template-columns: 1fr; gap: 16px; }
+        .order-header { align-items: flex-start; }
+        .order-header .order-btn { width: 100%; }
+    }
+</style>
+
+<div class="order-page">
+    <div class="order-header">
+        <div>
+            <h1>Order #{{ order.id }}</h1>
+            <div class="order-subtitle">
+                {% if order.created_at %}
+                    Order submitted {{ order.created_at|date:"F j, Y H:i" }}
+                {% else %}
+                    The Label Group order details
+                {% endif %}
+            </div>
+        </div>
+
+        <a href="{% url 'staff_orders' %}" class="order-btn order-btn-back">
+            &larr; Back to Orders
+        </a>
+    </div>
+
+    {% if messages %}
+        <div class="order-messages">
+            {% for message in messages %}
+                <div class="order-message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="order-grid">
+        <div class="order-main">
+
+            <section class="order-card">
+                <div class="order-card-heading">Customer Information</div>
+                <div class="order-card-body">
+                    <div class="order-info-grid">
+                        <div>
+                            <span class="order-label">Customer Name</span>
+                            <div class="order-value">{{ order.customer_name|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Company</span>
+                            <div class="order-value">{{ order.company_name|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Email</span>
+                            <div class="order-value">{{ order.customer_email|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Phone</span>
+                            <div class="order-value">{{ order.customer_phone|default:"Not provided" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="order-card">
+                <div class="order-card-heading">Shipping Information</div>
+                <div class="order-card-body">
+                    <div class="order-info-grid">
+                        <div>
+                            <span class="order-label">Street Address</span>
+                            <div class="order-value">{{ order.shipping_address|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Address Continued</span>
+                            <div class="order-value">{{ order.shipping_address2|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">City</span>
+                            <div class="order-value">{{ order.shipping_city|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">State</span>
+                            <div class="order-value">{{ order.shipping_state|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Postal Code</span>
+                            <div class="order-value">{{ order.shipping_postal_code|default:"Not provided" }}</div>
+                        </div>
+                        <div>
+                            <span class="order-label">Country</span>
+                            <div class="order-value">{{ order.shipping_country|default:"Not provided" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="order-card">
+                <div class="order-card-heading">Ordered Products</div>
+                <div class="order-table-wrap">
+                    <table class="order-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Unit Price (USD)</th>
+                                <th>Line Total (USD)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in items %}
+                                <tr>
+                                    <td>
+                                        <div class="order-product">
+                                            {{ item.product.name|default:item.product }}
+                                        </div>
+                                        {% if item.product.code %}
+                                            <div class="order-product-code">
+                                                Code: {{ item.product.code }}
+                                            </div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ item.unit_price|default:item.price|floatformat:2 }}</td>
+                                    <td>
+                                        <strong>${{ item.line_total|default:item.total_price|floatformat:2 }}</strong>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="order-muted">
+                                        No product items were found for this order.
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="order-card">
+                <div class="order-card-heading">Order Notes</div>
+                <div class="order-card-body">
+                    {% if order.notes %}
+                        <div class="order-notes">{{ order.notes }}</div>
+                    {% else %}
+                        <div class="order-muted">No order notes have been added.</div>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="order-sidebar">
+            <section class="order-card">
+                <div class="order-card-heading">Order Status</div>
+                <div class="order-card-body">
+                    <span class="order-label">Current status</span>
+                    <span class="order-status
+                        {% if order.status == 'completed' %}order-status-completed
+                        {% elif order.status == 'cancelled' %}order-status-cancelled
+                        {% elif order.status == 'shipped' %}order-status-shipped
+                        {% endif %}">
+                        {{ order.get_status_display|default:order.status|title }}
+                    </span>
+
+                    <form method="post" style="margin-top: 22px;" id="order-update-form">
+                        {% csrf_token %}
+
+                        <div class="order-field">
+                            <label for="id_status">Update Order Status</label>
+                            <select name="status" id="id_status" required>
+                                {% for value, label in status_choices %}
+                                    <option value="{{ value }}"
+                                        {% if order.status == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="order-field">
+                            <label for="id_notes">Staff Notes</label>
+                            <textarea name="notes" id="id_notes"
+                                placeholder="Add internal notes about this order...">{{ order.notes|default:"" }}</textarea>
+                        </div>
+
+                        <button type="submit" class="order-btn order-btn-save" id="save-order-btn" style="width:100%;">
+                            Save Order Update
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section class="order-card">
+                <div class="order-card-heading">Order Summary</div>
+                <div class="order-card-body">
+                    <div class="order-total-row">
+                        <span>Subtotal</span>
+                        <strong>${{ order.subtotal|default:order.total_amount|floatformat:2 }}</strong>
+                    </div>
+
+                    <div class="order-total-row">
+                        <span>Shipping</span>
+                        <strong>
+                            {% if order.shipping_amount != None %}
+                                ${{ order.shipping_amount|floatformat:2 }}
+                            {% else %}
+                                $0.00
+                            {% endif %}
+                        </strong>
+                    </div>
+
+                    <div class="order-total-row order-grand-total">
+                        <span>Total</span>
+                        <strong>${{ order.total_amount|default:0|floatformat:2 }}</strong>
+                    </div>
+
+                    <p class="order-muted" style="margin-bottom:0;">Currency: USD</p>
+                </div>
+            </section>
+        </aside>
+    </div>
+</div>
+
+<script>
+(function () {
+    const form = document.getElementById("order-update-form");
+    const button = document.getElementById("save-order-btn");
+
+    if (form && button) {
+        form.addEventListener("submit", function () {
+            button.disabled = true;
+            button.style.opacity = "0.65";
+            button.textContent = "Saving...";
+        });
+    }
+})();
+</script>
+{% endblock %}

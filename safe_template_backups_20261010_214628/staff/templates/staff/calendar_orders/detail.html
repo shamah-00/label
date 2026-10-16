@@ -1,0 +1,64 @@
+{% extends "staff/ops_base.html" %}
+{% block title %}Calendar Job #{{ calendar_order.pk }}{% endblock %}
+{% block content %}
+<div class="intro">
+<a href="/staff/calendar-orders/">← Back to order calendar</a>
+<h1 style="margin-top:12px">Calendar Job #{{ calendar_order.pk }}</h1>
+<div class="muted">Received {{ calendar_order.created_at|date:"d M Y, H:i" }} · Last updated {{ calendar_order.updated_at|date:"d M Y, H:i" }}</div>
+</div>
+<div class="cards">
+<div class="card"><div class="metric">{{ calendar_order.calendar_year }}</div><div class="metric-label">Calendar year</div></div>
+<div class="card"><div class="metric">{{ calendar_order.quantity }}</div><div class="metric-label">Units requested</div></div>
+<div class="card"><div class="metric">{{ calendar_order.get_status_display|default:calendar_order.status }}</div><div class="metric-label">Job status</div></div>
+</div>
+<div class="grid2">
+<section class="panel">
+<h2>Customer and delivery address</h2>
+<div class="field"><label>Company</label>{{ calendar_order.company|default:"Not supplied" }}</div>
+<div class="field"><label>Contact name</label>{{ calendar_order.name }}</div>
+<div class="field"><label>Job title</label>{{ calendar_order.title|default:"Collection calendar" }}</div>
+<div class="field"><label>Email</label>{% if calendar_order.email %}<a href="mailto:{{ calendar_order.email }}">{{ calendar_order.email }}</a>{% else %}Not supplied{% endif %}</div>
+<div class="field"><label>Phone</label>{{ calendar_order.phone|default:"Not supplied" }}</div>
+<div class="field"><label>Address</label>{{ calendar_order.street_address }} {{ calendar_order.address_contd }}<br>{{ calendar_order.city }}{% if calendar_order.state %}, {{ calendar_order.state }}{% endif %} {{ calendar_order.zip_code }}<br>{{ calendar_order.country }}</div>
+</section>
+<section class="panel">
+<h2>Production notes and status</h2>
+<form method="post">
+{% csrf_token %}
+<div class="field"><label for="status">Job status</label><select id="status" name="status" required style="width:100%">
+{% for key,label in status_choices %}
+<option value="{{ key }}"{% if calendar_order.status == key %} selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select></div>
+<div class="field"><label for="staff_notes">Internal staff notes</label><textarea id="staff_notes" name="staff_notes" rows="8" placeholder="Artwork, proof approval, print run, finishing, packing and dispatch notes">{{ calendar_order.staff_notes }}</textarea></div>
+<button type="submit">Save job updates</button>
+</form>
+</section>
+</div>
+<section class="panel" style="margin-top:16px">
+<h2>Collection schedule supplied by customer</h2>
+<div class="grid2">
+<div>
+<div class="field"><label>Trash collection</label>{{ calendar_order.trash_collection_day|default:"Not specified" }}</div>
+<div class="field"><label>Trash frequency</label>{{ calendar_order.trash_collection_frequency|default:"Not specified" }}</div>
+<div class="field"><label>Other trash frequency</label>{{ calendar_order.other_trash_frequency|default:"Not specified" }}</div>
+<div class="field"><label>Recycling collection</label>{{ calendar_order.recycling_collection_day|default:"Not specified" }}</div>
+<div class="field"><label>Recycling frequency</label>{{ calendar_order.recycling_collection_frequency|default:"Not specified" }}</div>
+<div class="field"><label>Other recycling frequency</label>{{ calendar_order.other_recycling_frequency|default:"Not specified" }}</div>
+</div>
+<div>
+<div class="field"><label>Other collection information</label>{{ calendar_order.other_collection_information|default:"No additional information supplied"|linebreaksbr }}</div>
+<div class="field"><label>Top bar color</label>{{ calendar_order.top_bar_color|default:"Default" }}</div>
+<div class="field"><label>Include company logo</label>{% if calendar_order.include_company_logo %}Yes{% else %}No{% endif %}</div>
+<div class="field"><label>New Year's Day</label>{% if calendar_order.new_years_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Memorial Day</label>{% if calendar_order.memorial_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Independence Day</label>{% if calendar_order.independence_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Labor Day</label>{% if calendar_order.labor_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Thanksgiving</label>{% if calendar_order.thanksgiving_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Christmas</label>{% if calendar_order.christmas_day %}Included{% else %}Not selected{% endif %}</div>
+<div class="field"><label>Other holidays</label>{{ calendar_order.other_holiday_1 }} {{ calendar_order.other_holiday_2 }} {{ calendar_order.other_holiday_3 }}</div>
+</div>
+</div>
+<div class="actions"><a class="btn light" href="/staff/calendar-orders/">Return to calendar orders</a></div>
+</section>
+{% endblock %}

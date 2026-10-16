@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quote #{{ quote.id }} | THE LABEL GROUP</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7fa;color:#172033}.top{background:#06152a;color:#fff;padding:14px 30px;font-size:13px}.wrap{max-width:1100px;margin:auto;padding:30px}.head{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}.head h1{color:#0b1f3a}.btn{display:inline-block;padding:11px 17px;border-radius:8px;text-decoration:none;font-weight:bold;border:0;cursor:pointer}.orange{background:#f47b20;color:#fff}.navy{background:#0b1f3a;color:#fff}.card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;margin-bottom:20px}.card h2{color:#0b1f3a;border-bottom:2px solid #f47b20;padding-bottom:10px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}.field label{display:block;font-size:11px;text-transform:uppercase;font-weight:bold;color:#64748b;margin-bottom:5px}.field div{line-height:1.5}select,textarea{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px}textarea{min-height:140px;resize:vertical}.file{display:inline-block;margin-top:15px;padding:11px 15px;background:#eef4f9;color:#0b1f3a;border-radius:8px;text-decoration:none;font-weight:bold}
+@media(max-width:700px){.wrap{padding:18px}.head{display:block}.grid{grid-template-columns:1fr}.head .btn{margin-top:10px}}
+</style>
+</head>
+<body>
+<div class="top">THE LABEL GROUP &nbsp; • &nbsp; QUOTE MANAGEMENT</div>
+<div class="wrap">
+
+<div class="head">
+<h1>Quote Request #{{ quote.id }}</h1>
+<a class="btn navy" href="/staff/quotes/">← Quote Requests</a>
+</div>
+
+<div class="card">
+<h2>Customer Information</h2>
+<div class="grid">
+<div class="field"><label>Customer</label><div>{{ quote.customer_name }}</div></div>
+<div class="field"><label>Company</label><div>{{ quote.company_name|default:"Not provided" }}</div></div>
+<div class="field"><label>Email</label><div>{{ quote.customer_email }}</div></div>
+<div class="field"><label>Phone</label><div>{{ quote.customer_phone }}</div></div>
+<div class="field"><label>Submitted</label><div>{{ quote.created_at|date:"F d, Y H:i" }}</div></div>
+<div class="field"><label>Last Updated</label><div>{{ quote.updated_at|date:"F d, Y H:i" }}</div></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Address</h2>
+<div class="grid">
+<div class="field"><label>Street</label><div>{{ quote.street_address|default:"Not provided" }}</div></div>
+<div class="field"><label>City</label><div>{{ quote.city|default:"Not provided" }}</div></div>
+<div class="field"><label>State</label><div>{{ quote.state|default:"Not provided" }}</div></div>
+<div class="field"><label>Postal Code</label><div>{{ quote.postal_code|default:"Not provided" }}</div></div>
+<div class="field"><label>Country</label><div>{{ quote.country|default:"Not provided" }}</div></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Customer Requirements</h2>
+<div>{{ quote.requirements|default:"No requirements were provided."|linebreaksbr }}</div>
+{% if quote.uploaded_file %}<a class="file" href="{{ quote.uploaded_file.url }}" target="_blank">📎 Open Uploaded Artwork / File</a>{% endif %}
+</div>
+
+<div class="card">
+<h2>Staff Management</h2>
+<form method="post">
+{% csrf_token %}
+<p><strong>Status</strong></p>
+<select name="status">
+{% for value,label in status_choices %}
+<option value="{{ value }}" {% if quote.status == value %}selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+<p><strong>Staff Notes</strong></p>
+<textarea name="staff_notes" placeholder="Add internal notes about this quotation...">{{ quote.staff_notes }}</textarea>
+<br><br>
+<button class="btn orange" type="submit">Save Quote Update</button>
+</form>
+</div>
+
+</div>
+</body>
+</html>

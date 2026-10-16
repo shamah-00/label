@@ -1,441 +1,256 @@
-﻿{% load static %}
-
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shipping & Delivery | THE LABEL GROUP</title>
-
-    <style>
-        :root {
-            --navy: #0b1f3a;
-            --navy-dark: #071426;
-            --orange: #f47b20;
-            --orange-dark: #d96512;
-            --white: #ffffff;
-            --light: #f4f6f8;
-            --lighter: #fafbfc;
-            --border: #e3e7eb;
-            --text: #17212b;
-            --muted: #66717d;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            color: var(--text);
-            background: var(--white);
-            line-height: 1.6;
-        }
-
-        a {
-            color: inherit;
-            text-decoration: none;
-        }
-
-        /* TOP BAR & HEADER */
-        .topbar {
-            background: var(--navy-dark);
-            color: #fff;
-            font-size: 13px;
-        }
-
-        .topbar-inner {
-            max-width: 1400px;
-            margin: auto;
-            padding: 9px 24px;
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            gap: 28px;
-        }
-
-        .topbar a:hover {
-            color: var(--orange);
-        }
-
-        .header {
-            background: #fff;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-inner {
-            max-width: 1400px;
-            margin: auto;
-            padding: 17px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .logo-main {
-            color: var(--navy);
-            font-size: 26px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            line-height: 1;
-        }
-
-        .logo-sub {
-            color: var(--orange);
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 2px;
-            margin-top: 5px;
-        }
-
-        .cart-link {
-            background: var(--navy);
-            color: #fff;
-            padding: 12px 17px;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .cart-link:hover {
-            background: var(--orange);
-        }
-
-        /* NAVBAR */
-        .nav {
-            background: var(--navy);
-            color: #fff;
-        }
-
-        .nav-inner {
-            max-width: 1400px;
-            margin: auto;
-            display: flex;
-        }
-
-        .nav-item > a {
-            display: block;
-            padding: 15px 20px;
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: .3px;
-        }
-
-        .nav-item:hover > a {
-            background: var(--orange);
-        }
-
-        /* HERO BANNER */
-        .hero-banner {
-            background: linear-gradient(90deg, var(--navy-dark), var(--navy));
-            color: #fff;
-            padding: 50px 24px;
-            border-bottom: 3px solid var(--orange);
-        }
-
-        .hero-inner {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            color: var(--orange);
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            transition: color .2s;
-        }
-
-        .back-link:hover {
-            color: #fff;
-        }
-
-        .hero-banner h1 {
-            font-size: 38px;
-            font-weight: 900;
-            margin-bottom: 10px;
-        }
-
-        .hero-banner p {
-            color: #dce3ea;
-            font-size: 16px;
-            max-width: 680px;
-        }
-
-        /* MAIN CONTENT LAYOUT */
-        .container {
-            max-width: 1200px;
-            margin: 50px auto;
-            padding: 0 24px;
-        }
-
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 24px;
-            margin-bottom: 50px;
-        }
-
-        .feature-card {
-            background: var(--lighter);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            padding: 28px;
-            border-top: 4px solid var(--navy);
-        }
-
-        .feature-card.highlight {
-            border-top-color: var(--orange);
-        }
-
-        .feature-card h3 {
-            color: var(--navy);
-            font-size: 18px;
-            font-weight: 800;
-            margin-bottom: 12px;
-        }
-
-        .feature-card p {
-            color: var(--muted);
-            font-size: 14px;
-            line-height: 1.5;
-        }
-
-        /* DETAILS SECTION */
-        .info-section {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 40px;
-            margin-top: 30px;
-        }
-
-        .info-box {
-            margin-bottom: 35px;
-        }
-
-        .info-box h2 {
-            color: var(--navy);
-            font-size: 22px;
-            font-weight: 900;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .info-box p {
-            color: #334155;
-            font-size: 15px;
-            margin-bottom: 12px;
-        }
-
-        .bullet-list {
-            margin-left: 20px;
-            color: var(--text);
-            font-size: 14px;
-        }
-
-        .bullet-list li {
-            margin-bottom: 8px;
-        }
-
-        /* SIDEBAR CARD */
-        .sidebar-card {
-            background: var(--navy);
-            color: #fff;
-            padding: 30px;
-            border-radius: 6px;
-            height: fit-content;
-        }
-
-        .sidebar-card h3 {
-            font-size: 20px;
-            font-weight: 900;
-            margin-bottom: 12px;
-        }
-
-        .sidebar-card p {
-            color: #dce3ea;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        .btn-sidebar {
-            display: block;
-            width: 100%;
-            text-align: center;
-            background: var(--orange);
-            color: #fff;
-            padding: 13px;
-            border-radius: 4px;
-            font-weight: 900;
-            font-size: 13px;
-            letter-spacing: .5px;
-        }
-
-        .btn-sidebar:hover {
-            background: var(--orange-dark);
-        }
-
-        /* FOOTER */
-        footer {
-            background: var(--navy-dark);
-            color: #fff;
-            margin-top: 70px;
-            padding: 40px 24px 20px;
-        }
-
-        .footer-inner {
-            max-width: 1200px;
-            margin: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,.1);
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: auto;
-            color: #84919d;
-            font-size: 12px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        @media (max-width: 900px) {
-            .grid-3 { grid-template-columns: 1fr; }
-            .info-section { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shipping &amp; Delivery | THE LABEL GROUP</title>
+<meta name="description" content="Shipping options, production timelines, tracking and commercial delivery information from The Label Group.">
+<style>
+:root {
+    --navy:#0b1f3a;
+    --navy-dark:#06152a;
+    --orange:#f47b20;
+    --orange-dark:#d9620d;
+    --white:#fff;
+    --light:#f5f7fa;
+    --border:#e2e7ee;
+    --text:#344054;
+    --muted:#667085;
+}
+* {box-sizing:border-box;margin:0;padding:0}
+body {font-family:Arial,Helvetica,sans-serif;color:var(--text);line-height:1.65}
+a {text-decoration:none;color:inherit}
+.announcement {background:var(--navy-dark);color:white;text-align:center;padding:8px 15px;font-size:12px}
+.utility {background:#f7f9fc;border-bottom:1px solid var(--border)}
+.utility-inner,.header-inner,.hero-inner,.main,.footer-inner {max-width:1152px;margin:auto}
+.utility-inner {display:flex;justify-content:flex-end;gap:22px;padding:9px 22px;font-size:12px;font-weight:bold}
+header {border-bottom:1px solid var(--border);background:white}
+.header-inner {min-height:88px;padding:15px 22px;display:flex;align-items:center;justify-content:space-between;gap:25px}
+.brand {color:var(--navy);font-size:20px;font-weight:900;line-height:1.2;letter-spacing:1px}
+.tagline {font-size:10px;color:var(--orange-dark);letter-spacing:1.3px;margin-top:5px}
+nav {display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+nav a {font-size:12px;font-weight:800;color:var(--navy)}
+a:hover {color:var(--orange-dark)}
+.cart {background:var(--orange);color:white;padding:9px 13px;border-radius:4px}
+.hero {background:linear-gradient(115deg,var(--navy-dark),var(--navy));color:white;padding:54px 22px}
+.breadcrumb {font-size:12px;color:#d4dce7;margin-bottom:22px}
+.eyebrow {font-size:11px;color:var(--orange);font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px}
+h1 {font-size:clamp(30px,5vw,46px);line-height:1.2;margin-bottom:16px}
+.hero p {max-width:720px;color:#d8e0eb;font-size:15px}
+.hero-note {margin-top:22px;font-size:12px;display:inline-block;padding:9px 13px;background:#ffffff12;border:1px solid #ffffff30;border-radius:5px}
+.main {padding:45px 22px 60px}
+.section {margin-bottom:43px}
+.section-heading {margin-bottom:22px}
+h2 {font-size:27px;color:var(--navy);line-height:1.3;margin-bottom:8px}
+.section-heading p {font-size:14px;color:var(--muted);max-width:760px}
+.grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.card {border:1px solid var(--border);border-radius:10px;padding:23px;background:white;box-shadow:0 6px 20px #0b1f3a0b}
+.icon {font-size:23px;margin-bottom:12px;color:var(--orange-dark)}
+h3 {font-size:16px;color:var(--navy);margin-bottom:9px}
+.card p,.option p,.step p,.faq p {font-size:13px;color:var(--muted)}
+.delivery {background:var(--light);border:1px solid var(--border);border-radius:10px;padding:28px;margin-bottom:43px}
+.delivery-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:22px}
+.option {background:white;border:1px solid var(--border);border-radius:8px;padding:20px}
+.time {display:inline-block;background:#fff0e4;color:var(--orange-dark);padding:5px 8px;font-size:11px;font-weight:bold;margin-bottom:11px;border-radius:4px}
+.notice {background:white;border-left:4px solid var(--orange);padding:14px;margin-top:18px;font-size:12px;color:var(--muted)}
+.steps {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-top:20px}
+.step {border:1px solid var(--border);border-radius:8px;padding:18px}
+.number {background:var(--navy);color:white;width:30px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-weight:bold;margin-bottom:12px}
+.tracking {display:flex;align-items:center;justify-content:space-between;gap:24px;background:var(--navy);color:white;padding:30px;border-radius:10px;margin-bottom:43px}
+.tracking h2 {color:white;font-size:23px}
+.tracking p {font-size:13px;color:#d8e0eb;max-width:720px}
+.button {display:inline-block;background:var(--orange);color:white!important;padding:12px 17px;font-size:12px;font-weight:900;border-radius:4px;text-align:center}
+.button:hover {background:var(--orange-dark)}
+.faq-list {display:grid;gap:12px}
+.faq {border:1px solid var(--border);border-radius:8px;padding:17px 20px}
+.cta {text-align:center;background:#fff5ec;border:1px solid #ffdfc5;border-radius:10px;padding:38px 22px}
+.cta p {font-size:13px;color:var(--muted);max-width:680px;margin:10px auto 22px}
+footer {background:var(--navy-dark);color:white;padding:32px 22px 17px}
+.footer-top {display:flex;justify-content:space-between;gap:25px;flex-wrap:wrap;padding-bottom:22px}
+.footer-description {font-size:12px;color:#c5cfdd;max-width:380px}
+.footer-links {display:flex;flex-wrap:wrap;gap:17px;font-size:12px}
+.footer-bottom {border-top:1px solid #ffffff25;padding-top:15px;font-size:11px;color:#b9c4d3;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media(max-width:850px) {
+ .header-inner {align-items:flex-start;flex-direction:column}
+ .grid,.delivery-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+ .steps {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px) {
+ .utility-inner {justify-content:center;gap:13px}
+ .header-inner {padding:16px}
+ nav {gap:12px}
+ nav a {font-size:11px}
+ .hero {padding:38px 18px}
+ .main {padding:32px 16px 42px}
+ .grid,.delivery-grid,.steps {grid-template-columns:1fr}
+ .delivery {padding:19px}
+ .tracking {align-items:flex-start;flex-direction:column;padding:23px}
+ .footer-top {flex-direction:column}
+}
+</style>
 </head>
-
 <body>
 
-<!-- TOP BAR -->
-<div class="topbar">
-    <div class="topbar-inner">
-        <a href="{% url 'product_list' %}">Request a Catalog</a>
+<div class="announcement">Free quote consultation &bull; Durable custom printing &bull; Built for business</div>
+
+<div class="utility">
+    <div class="utility-inner">
+        <a href="{% url 'home' %}#catalogue">Request a Catalog</a>
         <a href="{% url 'quote_cart' %}">Quote Cart</a>
-        <a href="{% url 'shipping' %}">Contact Us</a>
+        <a href="{% url 'home' %}#contact">Contact Us</a>
     </div>
 </div>
 
-<!-- HEADER -->
-<header class="header">
+<header>
     <div class="header-inner">
-        <a href="/" class="logo">
-            <div class="logo-main">THE LABEL GROUP</div>
-            <div class="logo-sub">INDUSTRIAL PRINTS & DECALS</div>
+        <a class="brand" href="{% url 'home' %}">
+            THE LABEL GROUP
+            <div class="tagline">INDUSTRIAL PRINTS &amp; DECALS</div>
         </a>
-
-        <a href="{% url 'cart' %}" class="cart-link">VIEW CART</a>
+        <nav aria-label="Main navigation">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'home' %}#catalogue">SHOP ALL</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a class="cart" href="{% url 'quote_cart' %}">VIEW CART</a>
+        </nav>
     </div>
 </header>
 
-<!-- NAV -->
-<nav class="nav">
-    <div class="nav-inner">
-        <div class="nav-item"><a href="/">HOME</a></div>
-        <div class="nav-item"><a href="{% url 'product_list' %}">SHOP ALL</a></div>
-        <div class="nav-item"><a href="{% url 'quote_cart' %}">CUSTOM ORDERS</a></div>
-        <div class="nav-item"><a href="{% url 'shipping' %}">SHIPPING</a></div>
-    </div>
-</nav>
-
-<!-- HERO BANNER -->
-<section class="hero-banner">
+<section class="hero">
     <div class="hero-inner">
-        <a href="/" class="back-link">&larr; Back to Home</a>
-        <h1>Shipping & Commercial Delivery</h1>
-        <p>Reliable logistics and fast fulfillment for standard decals, heavy-duty labels, and custom industrial production orders.</p>
+        <div class="breadcrumb"><a href="{% url 'home' %}">Home</a> &nbsp; &rsaquo; &nbsp; Shipping &amp; Delivery</div>
+        <div class="eyebrow">Commercial Shipping Solutions</div>
+        <h1>Shipping &amp; Commercial Delivery</h1>
+        <p>Reliable logistics and careful packaging for standard decals, heavy-duty labels, fleet graphics, and custom industrial production orders.</p>
+        <div class="hero-note">Delivery options tailored to your order and destination</div>
     </div>
 </section>
 
-<!-- MAIN CONTENT -->
-<div class="container">
-
-    <!-- 3 KEY HIGHLIGHT CARDS -->
-    <div class="grid-3">
-        <div class="feature-card highlight">
-            <h3>Fast Production Turnaround</h3>
-            <p>Standard catalog products ship within 1 to 2 business days. Custom printed decals complete proof approval in 3 to 5 business days.</p>
+<main class="main">
+    <section class="section">
+        <div class="section-heading">
+            <h2>Shipping Built Around Your Business</h2>
+            <p>From individual product orders to large commercial projects, we help coordinate production, packaging, and delivery according to your requirements.</p>
         </div>
-
-        <div class="feature-card">
-            <h3>Industrial Heavy Packaging</h3>
-            <p>Orders are packaged with protective vinyl sheets and weather-sealed wrap to ensure decals arrive flat, undamaged, and ready to install.</p>
+        <div class="grid">
+            <article class="card">
+                <div class="icon">&#9201;</div>
+                <h3>Fast Production Turnaround</h3>
+                <p>Standard catalog orders are typically prepared for dispatch within 1 to 2 business days. Custom orders may require 3 to 5 business days after artwork proof approval, depending on complexity and volume.</p>
+            </article>
+            <article class="card">
+                <div class="icon">&#9633;</div>
+                <h3>Protective Packaging</h3>
+                <p>Products are packaged according to their material, size, and handling requirements to help prevent creasing, surface damage, and other transit issues.</p>
+            </article>
+            <article class="card">
+                <div class="icon">&#10148;</div>
+                <h3>Commercial &amp; Bulk Shipping</h3>
+                <p>Large orders may require palletized freight, coordinated deliveries, or split shipments for contractors, fleets, and multi-site operations. Availability is confirmed individually.</p>
+            </article>
         </div>
+    </section>
 
-        <div class="feature-card">
-            <h3>Commercial Fleet & Bulk Shipping</h3>
-            <p>Direct freight, bulk palletizing, and split-shipments available for multi-site contractors and government facilities.</p>
+    <section class="delivery">
+        <div class="section-heading">
+            <h2>Standard &amp; Expedited Delivery Options</h2>
+            <p>Service availability and shipping charges depend on destination, package dimensions, weight, and the carrier service selected.</p>
         </div>
-    </div>
+        <div class="delivery-grid">
+            <article class="option">
+                <h3>Ground Shipping</h3>
+                <div class="time">Estimated 3–5 business days</div>
+                <p>A practical option for standard orders and routine business deliveries. Transit times vary by destination and carrier.</p>
+            </article>
+            <article class="option">
+                <h3>Expedited Air Shipping</h3>
+                <div class="time">Estimated 1–2 business days</div>
+                <p>Priority delivery for time-sensitive orders where eligible carrier services are available. Additional charges may apply.</p>
+            </article>
+            <article class="option">
+                <h3>Freight Shipping</h3>
+                <div class="time">Quoted per shipment</div>
+                <p>For oversized packages, palletized shipments, and high-volume orders. Freight suitability and pricing are confirmed individually.</p>
+            </article>
+        </div>
+        <div class="notice"><strong>Important:</strong> These are indicative estimates, not guaranteed service commitments. Transit time does not include production, proof approval, weekends, holidays, or unexpected carrier delays. The confirmed carrier service determines the applicable estimate.</div>
+    </section>
 
-    <!-- DETAILED INFORMATION SECTION -->
-    <div class="info-section">
+    <section class="section">
+        <div class="section-heading">
+            <h2>How Your Order Gets to You</h2>
+            <p>We keep production and delivery as clear as possible throughout the order process.</p>
+        </div>
+        <div class="steps">
+            <article class="step"><div class="number">1</div><h3>Order Review</h3><p>We review your products, quantities, delivery address, and special shipping instructions.</p></article>
+            <article class="step"><div class="number">2</div><h3>Production &amp; Approval</h3><p>Custom artwork is reviewed and approved where required before production begins.</p></article>
+            <article class="step"><div class="number">3</div><h3>Packing &amp; Dispatch</h3><p>Your order is packaged and handed to the selected carrier when it is ready to ship.</p></article>
+            <article class="step"><div class="number">4</div><h3>Tracking &amp; Delivery</h3><p>Where tracking is available, shipment details are provided after dispatch.</p></article>
+        </div>
+    </section>
+
+    <section class="tracking">
         <div>
-            <div class="info-box">
-                <h2>Standard & Expedited Delivery Options</h2>
-                <p>We work with commercial carriers to provide reliable freight and package delivery across all regions:</p>
-                <ul class="bullet-list">
-                    <li><strong>Ground Shipping:</strong> 3 to 5 business days for all standard orders.</li>
-                    <li><strong>Expedited Air Shipping:</strong> 1 to 2 business days for priority job-site deadlines.</li>
-                    <li><strong>Freight Shipping:</strong> Recommended for bulk container decals, dumpster labels, and large volume orders over 50 lbs.</li>
-                </ul>
-            </div>
-
-            <div class="info-box">
-                <h2>Order Tracking & Verification</h2>
-                <p>As soon as your shipment leaves our facility, an automated shipping confirmation email with tracking details will be issued to your specified billing email address.</p>
-            </div>
-
-            <div class="info-box">
-                <h2>Custom Order Timelines</h2>
-                <p>Custom government contractor decals, customized equipment markings, or custom die-cut vinyl require artwork proofing before production. Production timelines start immediately following digital proof confirmation.</p>
-            </div>
+            <h2>Order Tracking &amp; Verification</h2>
+            <p>Once your order has been dispatched and tracking information is available, we will provide the applicable tracking details. Keep your order number and checkout email available when requesting an update.</p>
         </div>
+        <a class="button" href="{% url 'track_order' %}">TRACK YOUR ORDER</a>
+    </section>
 
-        <!-- SIDEBAR -->
-        <div>
-            <div class="sidebar-card">
-                <h3>Have Questions About Your Order?</h3>
-                <p>Need urgent delivery to a construction site or custom freight instructions?</p>
-                <a href="{% url 'quote_cart' %}" class="btn-sidebar">REQUEST CUSTOM SHIPPING QUOTE</a>
-            </div>
+    <section class="section">
+        <div class="section-heading">
+            <h2>Custom Order Timelines</h2>
+            <p>Custom contractor decals, equipment markings, fleet graphics, and die-cut vinyl products may need additional preparation before manufacturing.</p>
         </div>
-    </div>
+        <div class="grid">
+            <article class="card"><div class="icon">&#9998;</div><h3>Artwork &amp; Proofing</h3><p>Where a digital proof is required, production scheduling begins after approval and confirmation of the necessary order details.</p></article>
+            <article class="card"><div class="icon">&#9881;</div><h3>Production Scheduling</h3><p>Production time depends on artwork complexity, materials, quantities, and current workload. We will confirm the timeline for your job.</p></article>
+            <article class="card"><div class="icon">&#9878;</div><h3>Special Delivery Needs</h3><p>Tell us about job-site delivery windows, receiving restrictions, multiple destinations, or other commercial requirements when requesting a quote.</p></article>
+        </div>
+    </section>
 
-</div>
+    <section class="section">
+        <div class="section-heading">
+            <h2>Shipping Questions</h2>
+            <p>Helpful information before you place your order.</p>
+        </div>
+        <div class="faq-list">
+            <article class="faq"><h3>When does the delivery period begin?</h3><p>Transit time begins when the carrier accepts the shipment. Production and preparation happen before dispatch and should be considered separately.</p></article>
+            <article class="faq"><h3>Can I request expedited delivery?</h3><p>Yes. Tell us your deadline and destination so we can review available carrier services and confirm applicable options and charges.</p></article>
+            <article class="faq"><h3>Can large orders be shipped to multiple locations?</h3><p>Multiple destinations or split shipments may be possible. Contact us with the quantities and delivery addresses so we can assess the requirements.</p></article>
+            <article class="faq"><h3>How are shipping charges calculated?</h3><p>Charges may depend on destination, package weight and dimensions, selected service, and handling or freight requirements. Live checkout prices should reflect the available carrier service and shipment details.</p></article>
+            <article class="faq"><h3>What if tracking information is unavailable?</h3><p>Tracking may not appear immediately after a label is created. If it remains unavailable after dispatch, contact us with your order number.</p></article>
+        </div>
+    </section>
 
-<!-- FOOTER -->
+    <section class="cta">
+        <h2>Have Questions About Your Shipment?</h2>
+        <p>Need urgent delivery, bulk freight, a multi-site shipment, or special job-site instructions? Send us your requirements so we can review available shipping options.</p>
+        <a class="button" href="{% url 'custom_order' %}">REQUEST CUSTOM SHIPPING QUOTE</a>
+    </section>
+</main>
+
 <footer>
     <div class="footer-inner">
-        <div>
-            <h2 style="font-size: 20px;">THE LABEL <strong style="color:var(--orange);">GROUP</strong></h2>
-            <p style="color:#aeb9c4; font-size:12px; margin-top:5px;">Industrial Print & Decal Solutions</p>
+        <div class="footer-top">
+            <div>
+                <div class="brand" style="color:white;margin-bottom:9px">THE LABEL GROUP</div>
+                <p class="footer-description">Industrial Print &amp; Decal Solutions for commercial businesses, contractors, fleets, and custom projects.</p>
+            </div>
+            <nav class="footer-links" aria-label="Footer navigation">
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'home' %}#catalogue">Catalog</a>
+                <a href="{% url 'custom_order' %}">Custom Quote</a>
+                <a href="{% url 'shipping' %}">Shipping</a>
+                <a href="{% url 'home' %}#contact">Contact</a>
+            </nav>
         </div>
-        <div>
-            <a href="/" style="color:#aeb9c4; font-size:13px; margin-right:20px;">Home</a>
-            <a href="{% url 'product_list' %}" style="color:#aeb9c4; font-size:13px; margin-right:20px;">Catalog</a>
-            <a href="{% url 'quote_cart' %}" style="color:#aeb9c4; font-size:13px;">Custom Quote</a>
+        <div class="footer-bottom">
+            <span>&copy; {% now "Y" %} THE LABEL GROUP. All Rights Reserved.</span>
+            <span>Industrial Delivery Logistics</span>
         </div>
-    </div>
-    <div class="footer-bottom">
-        <div>&copy; 2026 THE LABEL GROUP. All Rights Reserved.</div>
-        <div>Industrial Delivery Logistics</div>
     </div>
 </footer>
 

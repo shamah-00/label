@@ -1,0 +1,1476 @@
+
+========== CHECKOUT FUNCTION ==========
+523: def checkout(request):
+524:     # LABEL_GROUP_US_ONLY_SHIPPING_GUARD
+525:     # This checkout is configured for US domestic shipping only.
+526:     # Normalize the fixed checkout country before downstream validation
+527:     # and Shippo rate requests so inconsistent browser values cannot break checkout.
+528:     if request.method == "POST":
+529:         request.POST = request.POST.copy()
+530:         request.POST["shipping_country"] = "United States"
+531: 
+532:     import hashlib
+533:     import json
+534:     import os
+535:     import time
+536:     from decimal import Decimal, InvalidOperation
+537: 
+538:     import requests
+539:     from django.contrib import messages
+540:     from django.db import transaction
+541:     from django.shortcuts import render, redirect
+542: 
+543:     from .models import Product, Order, OrderItem
+544: 
+545:     ZERO = Decimal("0.00")
+546:     SESSION_RATES = "shippo_checkout_rates"
+547:     SESSION_SIGNATURE = "shippo_checkout_signature"
+548:     SESSION_TIME = "shippo_checkout_rates_time"
+549: 
+550:     def render_checkout(items, subtotal, rates=None, error="", shipping_cost=ZERO):
+551:         total = subtotal + shipping_cost
+552:         context = {
+553:             "checkout_items": items,
+554:             "cart_items": items,
+555:             "items": items,
+556:             "subtotal": subtotal,
+557:             "cart_total": subtotal,
+558:             "shipping_cost": shipping_cost,
+559:             "total": total,
+560:             "grand_total": total,
+561:             "shipping_rates": rates or [],
+562:             "shipping_rate_error": error,
+563:             "rate_error": error,
+564:         }
+565:         return render(request, "checkout.html", context)
+566: 
+567:     def get_items():
+568:         items = []
+569:         cart = request.session.get("cart", {})
+570: 
+571:         if not isinstance(cart, dict):
+572:             return items
+573: 
+574:         for product_id, raw_quantity in cart.items():
+575:             try:
+576:                 quantity = int(raw_quantity)
+577:                 if quantity < 1:
+578:                     continue
+579: 
+580:                 product = Product.objects.get(
+581:                     pk=int(product_id),
+582:                     is_available=True,
+583:                 )
+584: 
+585:                 unit_price = (
+586:                     product.discount_price
+587:                     if product.discount_price is not None
+588:                     and product.discount_price > ZERO
+589:                     else product.price
+590:                 )
+591:                 unit_price = Decimal(str(unit_price))
+592:                 line_total = unit_price * quantity
+593: 
+594:                 items.append({
+595:                     "product": product,
+596:                     "quantity": quantity,
+597:                     "unit_price": unit_price,
+598:                     "subtotal": line_total,
+599:                     "total_price": line_total,
+600:                     "item_total": line_total,
+601:                 })
+602:             except (
+603:                 Product.DoesNotExist,
+604:                 ValueError,
+605:                 TypeError,
+606:                 InvalidOperation,
+607:             ):
+608:                 continue
+609: 
+610:         return items
+611: 
+612:     def country_code(value):
+613:         value = (value or "").strip()
+614:         if len(value) == 2 and value.isalpha():
+615:             return value.upper()
+616: 
+617:         aliases = {
+618:             "UNITED STATES": "US",
+619:             "UNITED STATES OF AMERICA": "US",
+620:             "USA": "US",
+621:             "UNITED KINGDOM": "GB",
+622:             "GREAT BRITAIN": "GB",
+623:             "KENYA": "KE",
+624:             "PHILIPPINES": "PH",
+625:             "CANADA": "CA",
+626:             "AUSTRALIA": "AU",
+627:             "NEW ZEALAND": "NZ",
+628:             "SOUTH AFRICA": "ZA",
+629:             "INDIA": "IN",
+630:             "UGANDA": "UG",
+631:             "TANZANIA": "TZ",
+632:         }
+633:         return aliases.get(value.upper(), "")
+634: 
+635:     def build_packages(items):
+636:         packages = []
+637:         missing = []
+638: 
+639:         for item in items:
+640:             product = item["product"]
+641:             quantity = item["quantity"]
+642: 
+643:             try:
+644:                 weight = Decimal(str(product.shipping_weight_lb))
+645:                 length = Decimal(str(product.shipping_length_in))
+646:                 width = Decimal(str(product.shipping_width_in))
+647:                 height = Decimal(str(product.shipping_height_in))
+648: 
+649:                 if any(v <= 0 for v in (weight, length, width, height)):
+650:                     raise ValueError("measurements must be greater than zero")
+651: 
+652:             except (ValueError, TypeError, InvalidOperation):
+653:                 missing.append(
+654:                     "{} ({})".format(
+655:                         product.name,
+656:                         getattr(product, "product_code", product.pk),
+657:                     )
+658:                 )
+659:                 continue
+660: 
+661:             # Each unit is represented as a parcel. This deliberately avoids
+662:             # inventing combined-package dimensions for multiple quantities.
+663:             for unused in range(quantity):
+664:                 packages.append({
+665:                     "length": str(length),
+666:                     "width": str(width),
+667:                     "height": str(height),
+668:                     "distance_unit": "in",
+669:                     "weight": str(weight),
+670:                     "mass_unit": "lb",
+671:                 })
+672: 
+673:         if missing:
+674:             raise ValueError(
+675:                 "Shipping measurements are missing or invalid for: "
+676:                 + ", ".join(missing[:12])
+677:                 + (
+678:                     " and additional products"
+679:                     if len(missing) > 12 else ""
+680:                 )
+681:                 + ". Enter the actual packed weight and outside dimensions "
+682:                   "for each product, then calculate shipping again."
+683:             )
+684: 
+685:         if not packages:
+686:             raise ValueError("There are no valid packages to ship.")
+687: 
+688:         if len(packages) > 100:
+689:             raise ValueError(
+690:                 "This order contains more than 100 individual parcels. "
+691:                 "Please request a shipping quote so the packages can be "
+692:                 "consolidated and priced correctly."
+693:             )
+694: 
+695:         return packages
+696: 
+
+========== SHIPPO RATE REQUEST ==========
+697:     def checkout_signature(address, items, packages):
+698:         payload = {
+699:             "address": address,
+700:             "cart": [
+701:                 {
+702:                     "product_id": item["product"].pk,
+703:                     "quantity": item["quantity"],
+704:                     "unit_price": str(item["unit_price"]),
+705:                 }
+706:                 for item in items
+707:             ],
+708:             "packages": packages,
+709:         }
+710:         encoded = json.dumps(
+711:             payload,
+712:             sort_keys=True,
+713:             separators=(",", ":"),
+714:         ).encode("utf-8")
+715:         return hashlib.sha256(encoded).hexdigest()
+716: 
+717:     def get_shippo_shipping_rates(address, packages, order_subtotal):
+718:         """Fetch actual available carrier rates from Shippo. Never use estimates as fallback."""
+719:         import logging
+720:         from decimal import Decimal, InvalidOperation
+721: 
+722:         token = os.environ.get("SHIPPO_API_TOKEN", "").strip()
+723:         if not token:
+724:             raise ValueError(
+725:                 "Live shipping is not configured yet. Add your Shippo API token "
+726:                 "and try calculating shipping again."
+727:             )
+728: 
+729:         address_from = {
+730:             "name": "The Label Group LLC",
+731:             "company": "The Label Group LLC",
+732:             "street1": "580 St. James Avenue",
+733:             "city": "Springfield",
+734:             "state": "MA",
+735:             "zip": "01109",
+736:             "country": "US",
+737:             "phone": "4137316700",
+738:             "email": "labelgroup@comcast.net",
+739:         }
+740: 
+741:         address_to = {
+742:             "name": address.get("name", ""),
+743:             "street1": address.get("street1", ""),
+744:             "city": address.get("city", "").split(",")[0].strip(),
+745:             "state": address.get("state", ""),
+746:             "zip": address.get("zip", ""),
+747:             "country": "US",
+748:             "phone": address.get("phone", ""),
+749:             "email": address.get("email", ""),
+750:         }
+751: 
+752:         try:
+753:             shippo_packages = [
+754:                 {
+755:                     "length": float(package["length"]),
+756:                     "width": float(package["width"]),
+757:                     "height": float(package["height"]),
+758:                     "distance_unit": "in",
+759:                     "weight": float(package["weight"]),
+760:                     "mass_unit": "lb",
+761:                 }
+762:                 for package in packages
+763:             ]
+764:         except (KeyError, TypeError, ValueError, OverflowError) as exc:
+765:             raise ValueError(
+766:                 "A parcel has invalid shipping measurements. Check the product "
+767:                 "weights and dimensions before calculating rates."
+768:             ) from exc
+769: 
+770:         payload = {
+771:             "address_from": address_from,
+772:             "address_to": address_to,
+773:             "parcels": shippo_packages,
+774:             "async": False,
+775:         }
+776: 
+777:         try:
+778:             response = requests.post(
+779:                 "https://api.goshippo.com/shipments/",
+780:                 headers={
+781:                     "Authorization": "ShippoToken " + token,
+782:                     "Content-Type": "application/json",
+783:                     "SHIPPO-API-VERSION": "2018-02-08",
+784:                 },
+785:                 json=payload,
+786:                 timeout=45,
+787:             )
+788:         except requests.RequestException as exc:
+789:             logging.getLogger(__name__).exception(
+790:                 "Shippo rate request failed."
+791:             )
+792:             raise ValueError(
+793:                 "We could not connect to the shipping service. Please try again."
+794:             ) from exc
+795: 
+796:         try:
+797:             data = response.json()
+798:         except ValueError as exc:
+799:             logging.getLogger(__name__).error(
+800:                 "Shippo returned a non-JSON response (HTTP %s).",
+801:                 response.status_code,
+802:             )
+803:             raise ValueError(
+804:                 "The shipping service returned an unexpected response. Please try again."
+805:             ) from exc
+806: 
+807:         if not response.ok:
+808:             logging.getLogger(__name__).error(
+809:                 "Shippo rate request returned HTTP %s: %s",
+810:                 response.status_code,
+811:                 str(data.get("detail", data))[:1000]
+812:                 if isinstance(data, dict) else str(data)[:1000],
+813:             )
+814:             if response.status_code == 401:
+815:                 raise ValueError(
+816:                     "Shippo rejected the API token. Check your token in the "
+817:                     "server environment and restart Django."
+818:                 )
+819:             raise ValueError(
+820:                 "Shippo could not calculate rates for this shipment. Check the "
+821:                 "delivery address, parcel measurements, and Shippo carrier accounts."
+822:             )
+823: 
+824:         raw_rates = data.get("rates", []) if isinstance(data, dict) else []
+825:         try:
+826:             _diag_rates = [
+827:                 {
+828:                     "provider": str(r.get("provider") or r.get("carrier") or ""),
+829:                     "service": str(
+830:                         (r.get("servicelevel") or {}).get("name", "")
+831:                         if isinstance(r.get("servicelevel") or {}, dict)
+832:                         else ""
+833:                     ),
+834:                     "currency": str(r.get("currency") or ""),
+835:                     "amount_present": r.get("amount") not in (None, ""),
+836:                     "rate_id_present": bool(r.get("object_id")),
+837:                 }
+838:                 for r in raw_rates[:30]
+839:                 if isinstance(r, dict)
+840:             ]
+841:             __import__("logging").getLogger(__name__).warning(
+842:                 "SHIPPO_DIAGNOSTIC raw_rate_count=%s rate_summary=%s",
+843:                 len(raw_rates),
+844:                 _diag_rates,
+845:             )
+846:         except Exception:
+847:             __import__("logging").getLogger(__name__).exception(
+848:                 "SHIPPO_DIAGNOSTIC logging_failed"
+849:             )
+850:         rates = []
+851: 
+852:         for rate in raw_rates:
+853:             if not isinstance(rate, dict):
+854:                 continue
+855: 
+856:             provider = str(
+857:                 rate.get("provider") or rate.get("carrier") or ""
+858:             ).strip()
+859:             provider = html.unescape(provider)
+860: 
+861:             servicelevel = rate.get("servicelevel") or {}
+862:             if not isinstance(servicelevel, dict):
+863:                 servicelevel = {}
+864: 
+865:             service = str(
+866:                 servicelevel.get("name") or rate.get("service") or ""
+867:             ).strip()
+868: 
+869:             service_token = str(
+870:                 servicelevel.get("token") or ""
+871:             ).strip().lower()
+872: 
+873:             # The Label Group does not offer USPS services.
+874:             carrier_text = provider.lower()
+875:             if (
+876:                 "usps" in carrier_text
+877:                 or "usps" in service.lower()
+878:                 or "usps" in service_token
+879:             ):
+880:                 continue
+881: 
+882:             rate_id = str(rate.get("object_id") or "").strip()
+883:             if not rate_id:
+884:                 continue
+885: 
+886:             try:
+887:                 amount = Decimal(str(rate.get("amount")))
+888:             except (InvalidOperation, TypeError, ValueError):
+889:                 continue
+890: 
+891:             currency = str(rate.get("currency") or "").upper()
+892:             if amount < 0 or currency != "USD":
+893:                 continue
+894: 
+895:             rates.append({
+896:                 "object_id": rate_id,
+897:                 "provider": provider or "Shippo carrier",
+898:                 "service": service or "Shipping service",
+899:                 "amount": format(amount.quantize(Decimal("0.01")), ".2f"),
+900:                 "currency": "USD",
+901:                 "estimated_days": rate.get("estimated_days"),
+902:                 "carrier": provider,
+903:                 "shippo_shipment_id": str(data.get("object_id") or ""),
+904:                 "servicelevel_token": service_token,
+905:             })
+906: 
+907:         rates.sort(key=lambda rate: Decimal(rate["amount"]))
+908: 
+909:         if not rates:
+910:             raise ValueError(
+911:                 "Shippo returned no eligible non-USPS shipping rates for this "
+912:                 "address and package. Check your connected carrier accounts "
+913:                 "and parcel measurements, or contact us for assistance."
+914:             )
+915: 
+916:         return rates
+917:     items = get_items()
+918:     subtotal = sum(
+919:         (item["subtotal"] for item in items),
+920:         ZERO,
+921:     )
+922: 
+923:     if not items:
+924:         messages.error(
+925:             request,
+
+========== CHECKOUT RATE VALIDATION AND ORDER CREATION ==========
+1030:     request._post = normalized_post
+1031: 
+1032:     address = {
+1033:         "name": customer_name,
+1034:         "street1": street,
+1035:         "city": city,
+1036:         "state": state,
+1037:         "zip": postal_code,
+1038:         "country": country,
+1039:         "phone": customer_phone,
+1040:         "email": customer_email,
+1041:     }
+1042: 
+1043:     try:
+1044:         packages = build_packages(items)
+1045:     except ValueError as exc:
+1046:         request.session.pop(SESSION_RATES, None)
+1047:         request.session.pop(SESSION_SIGNATURE, None)
+1048:         request.session.pop(SESSION_TIME, None)
+1049:         return render_checkout(items, subtotal, error=str(exc))
+1050: 
+1051:     signature = checkout_signature(address, items, packages)
+1052:     cached_rates = request.session.get(SESSION_RATES, [])
+1053:     cached_signature = request.session.get(SESSION_SIGNATURE)
+1054:     cached_time = request.session.get(SESSION_TIME, 0)
+1055:     cache_valid = (
+1056:         cached_signature == signature
+1057:         and time.time() - float(cached_time or 0) <= 900
+1058:         and isinstance(cached_rates, list)
+1059:         and bool(cached_rates)
+1060:     )
+1061: 
+1062:     if action == "get_rates":
+1063:         try:
+1064:             rates = get_shippo_shipping_rates(address, packages, subtotal)
+1065:         except ValueError as exc:
+1066:             request.session.pop(SESSION_RATES, None)
+1067:             request.session.pop(SESSION_SIGNATURE, None)
+1068:             request.session.pop(SESSION_TIME, None)
+1069:             return render_checkout(items, subtotal, error=str(exc))
+1070: 
+1071:         if not rates:
+1072:             request.session.pop(SESSION_RATES, None)
+1073:             request.session.pop(SESSION_SIGNATURE, None)
+1074:             request.session.pop(SESSION_TIME, None)
+1075:             return render_checkout(
+1076:                 items,
+1077:                 subtotal,
+1078:                 error=(
+1079:                     "No shipping services were returned. Check the delivery "
+1080:                     "address and package measurements, or request a quote."
+1081:                 ),
+1082:             )
+1083: 
+1084:         request.session[SESSION_RATES] = rates
+1085:         request.session[SESSION_SIGNATURE] = signature
+1086:         request.session[SESSION_TIME] = time.time()
+1087:         request.session.modified = True
+1088: 
+1089:         return render_checkout(items, subtotal, rates=rates)
+1090: 
+1091:     if action != "place_order":
+1092:         return render_checkout(
+1093:             items,
+1094:             subtotal,
+1095:             error="Please calculate shipping before placing your order.",
+1096:         )
+1097: 
+1098:     # Recalculate server-side if the cached rate expired or changed.
+1099:     if not cache_valid:
+1100:         try:
+1101:             cached_rates = get_shippo_shipping_rates(
+1102:                 address, packages, subtotal
+1103:             )
+1104:         except ValueError as exc:
+1105:             request.session.pop(SESSION_RATES, None)
+1106:             request.session.pop(SESSION_SIGNATURE, None)
+1107:             request.session.pop(SESSION_TIME, None)
+1108:             return render_checkout(items, subtotal, error=str(exc))
+1109: 
+1110:         if not cached_rates:
+1111:             return render_checkout(
+1112:                 items, subtotal,
+1113:                 error="No shipping estimate is available. Please try again.",
+1114:             )
+1115: 
+1116:         request.session[SESSION_RATES] = cached_rates
+1117:         request.session[SESSION_SIGNATURE] = signature
+1118:         request.session[SESSION_TIME] = time.time()
+1119:         request.session.modified = True
+1120: 
+1121: 
+1122:     selected_id = request.POST.get("shipping_rate_id", "").strip()
+1123:     if not selected_id and len(cached_rates) == 1:
+1124:         selected_id = cached_rates[0].get("object_id", "")
+1125: 
+1126:     selected_rate = next(
+1127:         (
+1128:             rate for rate in cached_rates
+1129:             if rate.get("object_id") == selected_id
+1130:         ),
+1131:         None,
+1132:     )
+1133: 
+1134:     if not selected_rate:
+1135:         return render_checkout(
+1136:             items,
+1137:             subtotal,
+1138:             rates=cached_rates,
+1139:             error="Select one of the available shipping services.",
+1140:         )
+1141: 
+1142:     try:
+1143:         shipping_cost = Decimal(str(selected_rate["amount"]))
+1144:     except (InvalidOperation, KeyError, TypeError):
+1145:         return render_checkout(
+1146:             items,
+1147:             subtotal,
+1148:             rates=cached_rates,
+1149:             error="The selected shipping price is invalid. Calculate rates again.",
+1150:         )
+1151: 
+1152:     if shipping_cost < ZERO:
+1153:         return render_checkout(
+1154:             items,
+1155:             subtotal,
+1156:             rates=cached_rates,
+1157:             error="The selected shipping price is invalid.",
+1158:         )
+1159: 
+1160:     total = subtotal + shipping_cost
+1161:     service_note = (
+1162:         "Shipping provider: {}. Service: {}. "
+1163:         "Rate reference: {}. Shipping amount: ${} USD."
+1164:     ).format(
+1165:         selected_rate.get("provider", ""),
+1166:         selected_rate.get("service", ""),
+1167:         selected_rate.get("object_id", ""),
+1168:         format(shipping_cost, ".2f"),
+1169:     )
+1170:     combined_notes = "\n".join(part for part in (notes, service_note) if part)
+1171: 
+1172:     try:
+1173:         with transaction.atomic():
+1174:             order = Order.objects.create(
+1175:                 customer_name=customer_name,
+1176:                 customer_email=customer_email,
+1177:                 customer_phone=customer_phone,
+1178:                 shipping_address=street,
+1179:                 shipping_city=city,
+1180:                 shipping_state=state,
+1181:                 shipping_postal_code=postal_code,
+1182:                 shipping_country=country,
+1183:                 subtotal=subtotal,
+1184:                 shipping_cost=shipping_cost,
+1185:                 total=total,
+1186:                 currency="USD",
+1187:                 notes=combined_notes,
+1188:             )
+1189: 
+1190:             for item in items:
+1191:                 OrderItem.objects.create(
+1192:                     order=order,
+1193:                     product=item["product"],
+1194:                     product_name=item["product"].name,
+1195:                     quantity=item["quantity"],
+1196:                     unit_price=item["unit_price"],
+1197:                     total_price=item["subtotal"],
+1198:                     currency="USD",
+1199:                 )
+1200: 
+1201:             from .models import Shipment
+1202: 
+1203:             Shipment.objects.create(
+1204:                 order=order,
+1205:                 carrier=str(selected_rate.get("provider") or "")[:100],
+1206:                 shipping_method=str(selected_rate.get("service") or "")[:100],
+1207:                 shippo_rate_id=str(selected_rate.get("object_id") or "").strip(),
+1208:                 notes="Shippo rate selected at checkout. Label not purchased.",
+1209:             )
+1210:     except Exception:
+1211:         # Log technical details server-side; don't lose the customer's cart.
+1212:         import logging
+1213:         logging.getLogger(__name__).exception(
+1214:             "Checkout order creation failed."
+1215:         )
+1216:         return render_checkout(
+1217:             items,
+1218:             subtotal,
+1219:             rates=cached_rates,
+1220:             error=(
+1221:                 "We couldn't save your order. Your cart is preserved. "
+1222:                 "Please try again or contact us."
+1223:             ),
+1224:         )
+1225: 
+1226:     request.session["cart"] = {}
+1227:     request.session.pop(SESSION_RATES, None)
+1228:     request.session.pop(SESSION_SIGNATURE, None)
+1229:     request.session.pop(SESSION_TIME, None)
+1230:     request.session.modified = True
+1231: 
+1232:     messages.success(
+1233:         request,
+1234:         "Your order was submitted successfully. Shipping labels are not "
+1235:         "purchased automatically.",
+1236:     )
+1237:     return redirect("order_success", order_id=order.pk)
+1238: 
+1239: 
+1240: def order_success(request, order_id):
+
+========== CUSTOMER TRACKING ==========
+1240: def order_success(request, order_id):
+1241:     from django.shortcuts import render, get_object_or_404
+1242:     from .models import Order
+1243: 
+1244:     order = get_object_or_404(Order, pk=order_id)
+1245:     return render(request, "order_success.html", {"order": order})
+1246: 
+1247: # THE_LABEL_GROUP_CUSTOMER_TRACKING_VIEW
+1248: def track_order(request):
+1249:     from urllib.parse import quote
+1250:     from django.shortcuts import render
+1251:     from .models import Order, Shipment
+1252: 
+1253:     order = None
+1254:     shipment = None
+1255:     tracking_url = ""
+1256:     error_message = ""
+1257:     email_value = ""
+1258:     order_number = ""
+1259: 
+1260:     if request.method == "POST":
+1261:         order_number = request.POST.get("order_number", "").strip().lstrip("#").strip()
+1262:         email_value = request.POST.get("email", "").strip()
+1263: 
+1264:         if not order_number or not email_value:
+1265:             error_message = "Enter both your order number and checkout email."
+1266:         elif not order_number.isdigit():
+1267:             error_message = "Please enter a valid numeric order number."
+1268:         else:
+1269:             order = Order.objects.filter(
+1270:                 pk=int(order_number),
+1271:                 customer_email__iexact=email_value
+1272:             ).first()
+1273: 
+1274:             if order is None:
+1275:                 error_message = (
+1276:                     "We couldn't find an order matching those details. "
+1277:                     "Check your order number and the email used at checkout."
+1278:                 )
+1279:             else:
+1280:                 try:
+1281:                     shipment = order.shipment
+1282:                 except Shipment.DoesNotExist:
+1283:                     shipment = None
+1284: 
+1285:                 if shipment and shipment.tracking_number:
+1286:                     tracking_number = quote(shipment.tracking_number.strip(), safe="")
+1287:                     carrier = (shipment.carrier or "").lower()
+1288: 
+1289:                     if "ups" in carrier:
+1290:                         tracking_url = (
+1291:                             "https://www.ups.com/track?tracknum=" + tracking_number
+1292:                         )
+1293:                     elif "fedex" in carrier:
+1294:                         tracking_url = (
+1295:                             "https://www.fedex.com/fedextrack/?trknbr=" + tracking_number
+1296:                         )
+1297:                     elif "dhl" in carrier:
+1298:                         tracking_url = (
+1299:                             "https://www.dhl.com/global-en/home/tracking.html?tracking-id="
+1300:                             + tracking_number
+1301:                         )
+1302: 
+1303:     status_steps = [
+1304:         {"value": "pending", "label": "Order received"},
+1305:         {"value": "confirmed", "label": "Order confirmed"},
+1306:         {"value": "processing", "label": "Being prepared"},
+1307:         {"value": "packed", "label": "Packed"},
+1308:         {"value": "shipped", "label": "Shipped"},
+1309:         {"value": "completed", "label": "Completed"},
+1310:     ]
+1311: 
+1312:     current_step = -1
+1313:     is_cancelled = False
+1314:     if order:
+1315:         status_value = (order.status or "").lower()
+1316:         is_cancelled = status_value == "cancelled"
+1317:         for index, step in enumerate(status_steps):
+1318:             if step["value"] == status_value:
+1319:                 current_step = index
+1320: 
+1321:         # If a shipment has progressed further than the order status,
+1322:         # show the recorded shipment progress without claiming live carrier data.
+1323:         if shipment:
+1324:             shipment_status = (shipment.status or "").lower()
+1325:             shipment_rank = {
+1326:                 "pending": 0,
+1327:                 "processing": 2,
+1328:                 "packed": 3,
+1329:                 "shipped": 4,
+1330:                 "in_transit": 4,
+1331:                 "out_for_delivery": 4,
+1332:                 "delivered": 5,
+1333:             }
+1334:             current_step = max(
+1335:                 current_step,
+1336:                 shipment_rank.get(shipment_status, -1)
+1337:             )
+1338: 
+1339:     context = {
+1340:         "order": order,
+1341:         "shipment": shipment,
+1342:         "tracking_url": tracking_url,
+1343:         "error_message": error_message,
+1344:         "email_value": email_value,
+1345:         "order_number": order_number,
+1346:         "status_steps": status_steps,
+1347:         "current_step": current_step,
+1348:         "is_cancelled": is_cancelled,
+1349:     }
+1350:     return render(request, "track_order.html", context)
+1351: 
+1352: 
+1353: 
+1354: 
+
+========== ORDER AND SHIPMENT MODELS ==========
+350:         return f"Order #{self.id} - {self.customer_name}"
+351: 
+352: 
+353: class OrderItem(models.Model):
+354: 
+355:     order = models.ForeignKey(
+356:         Order,
+357:         on_delete=models.CASCADE,
+358:         related_name="items"
+359:     )
+360: 
+361:     product = models.ForeignKey(
+362:         Product,
+363:         on_delete=models.PROTECT,
+364:         related_name="order_items"
+365:     )
+366: 
+367:     product_name = models.CharField(
+368:         max_length=200
+369:     )
+370: 
+371:     quantity = models.PositiveIntegerField(
+372:         default=1
+373:     )
+374: 
+375:     unit_price = models.DecimalField(
+376:         max_digits=12,
+377:         decimal_places=2,
+378:         blank=True,
+379:         null=True
+380:     )
+381: 
+382:     total_price = models.DecimalField(
+383:         max_digits=12,
+384:         decimal_places=2,
+385:         blank=True,
+386:         null=True
+387:     )
+388: 
+389:     currency = models.CharField(
+390:         max_length=3,
+391:         default="USD"
+392:     )
+393: 
+394:     def __str__(self):
+395:         return f"{self.product_name} x {self.quantity}"
+396: 
+397: 
+398: class Shipment(models.Model):
+399: 
+400:     STATUS_CHOICES = [
+401:         ("pending", "Pending"),
+402:         ("processing", "Preparing Shipment"),
+403:         ("packed", "Packed"),
+404:         ("shipped", "Shipped"),
+405:         ("in_transit", "In Transit"),
+406:         ("out_for_delivery", "Out for Delivery"),
+407:         ("delivered", "Delivered"),
+408:         ("delayed", "Delayed"),
+409:         ("returned", "Returned"),
+410:         ("cancelled", "Cancelled"),
+411:     ]
+412: 
+413:     order = models.OneToOneField(
+414:         Order,
+415:         on_delete=models.CASCADE,
+416:         related_name="shipment"
+417:     )
+418: 
+419:     carrier = models.CharField(
+420:         max_length=100,
+421:         blank=True
+422:     )
+423: 
+424:     shipping_method = models.CharField(
+425:         max_length=100,
+426:         blank=True
+427:     )
+428: 
+429:     tracking_number = models.CharField(
+430:         max_length=200,
+431:         blank=True
+432:     )
+433: 
+434:     status = models.CharField(
+435:         max_length=30,
+436:         choices=STATUS_CHOICES,
+437:         default="pending"
+438:     )
+439: 
+440:     estimated_delivery = models.DateField(
+441:         null=True,
+442:         blank=True
+443:     )
+444: 
+445:     shipped_at = models.DateTimeField(
+446:         null=True,
+447:         blank=True
+448:     )
+449: 
+450:     delivered_at = models.DateTimeField(
+451:         null=True,
+452:         blank=True
+453:     )
+454: 
+455:     notes = models.TextField(
+456:         blank=True
+457:     )
+458:     shippo_rate_id = models.CharField(max_length=200, blank=True)
+459:     shippo_transaction_id = models.CharField(max_length=200, blank=True)
+460:     label_url = models.URLField(max_length=1000, blank=True)
+461:     tracking_url = models.URLField(max_length=1000, blank=True)
+462: 
+463:     created_at = models.DateTimeField(
+464:         auto_now_add=True
+465:     )
+466: 
+467:     updated_at = models.DateTimeField(
+468:         auto_now=True
+469:     )
+470: 
+471:     def __str__(self):
+472:         return f"Shipment for Order #{self.order.id}"
+473: 
+474: 
+475: class StaffProfile(models.Model):
+
+========== STAFF SHIPPING AND LABEL PURCHASE ==========
+1400:             if changed:
+1401:                 order.save()
+1402:                 profile = get_staff_profile(request.user)
+1403:                 log_staff_activity(
+1404:                     request, profile, "update",
+1405:                     f"Order #{order.pk}: " + "; ".join(changed),
+1406:                     f"Order #{order.pk}",
+1407:                 )
+1408:                 messages.success(request, f"Order #{order.pk} has been updated.")
+1409:             else:
+1410:                 messages.info(request, "No changes were needed.")
+1411: 
+1412:             return redirect("staff_order_detail", pk=order.pk)
+1413: 
+1414:     return render(request, "staff/orders/detail.html", {
+1415:         "order": order,
+1416:         "status_choices": status_choices,
+1417:         "items": order.items.select_related("product").all(),
+1418:         "item_count": order.items.count(),
+1419:     })
+1420: 
+1421: 
+1422: def staff_shipping_dashboard(request):
+1423:     import os
+1424:     import requests
+1425:     from django.conf import settings
+1426:     from django.contrib import messages
+1427:     from django.shortcuts import render, redirect
+1428:     from django.utils import timezone
+1429:     from products.models import Shipment
+1430: 
+1431:     if not request.user.is_authenticated or not (
+1432:         request.user.is_superuser or request.user.is_staff
+1433:     ):
+1434:         return redirect("staff_login")
+1435: 
+1436:     if request.method == "POST":
+1437:         shipment_id = request.POST.get("shipment_id", "").strip()
+1438:         action = request.POST.get("action", "update").strip()
+1439: 
+1440:         shipment = Shipment.objects.select_related("order").filter(
+1441:             pk=shipment_id
+1442:         ).first()
+1443: 
+1444:         if not shipment:
+1445:             messages.error(request, "Shipment not found.")
+1446:             return redirect("staff_shipping_dashboard")
+1447: 
+1448:         if action == "purchase_label":
+1449:             order_status = str(getattr(shipment.order, "status", "") or "").strip().lower()
+1450:             shipment_status = str(getattr(shipment, "status", "") or "").strip().lower()
+1451:             if order_status == "cancelled" or shipment_status == "cancelled":
+1452:                 messages.error(request, "A shipping label cannot be purchased for a cancelled order.")
+1453:                 return redirect("staff_shipping_dashboard")
+1454:             rate_id = request.POST.get("shippo_rate_id", "").strip()
+1455:             if not rate_id:
+1456:                 messages.error(
+1457:                     request,
+1458:                     "Enter the valid Shippo rate ID for this order before purchasing the label."
+1459:                 )
+1460:                 return redirect("staff_shipping_dashboard")
+1461: 
+1462:             token = (
+1463:                 os.environ.get("SHIPPO_API_TOKEN")
+1464:                 or getattr(settings, "SHIPPO_API_TOKEN", "")
+1465:                 or os.environ.get("SHIPPO_TOKEN", "")
+1466:             )
+1467:             if not token:
+1468:                 messages.error(
+1469:                     request,
+1470:                     "Shippo API token was not found in the server environment. Check your existing server configuration."
+1471:                 )
+1472:                 return redirect("staff_shipping_dashboard")
+1473: 
+1474:             if shipment.shippo_transaction_id and shipment.label_url:
+1475:                 messages.error(
+1476:                     request,
+1477:                     "A label is already recorded for this shipment. Check the existing label before attempting another purchase."
+1478:                 )
+1479:                 return redirect("staff_shipping_dashboard")
+1480: 
+1481:             headers = {
+1482:                 "Authorization": "ShippoToken " + token,
+1483:                 "Content-Type": "application/json",
+1484:                 "SHIPPO-API-VERSION": "2018-02-08",
+1485:             }
+1486:             payload = {
+1487:                 "rate": rate_id,
+1488:                 "label_file_type": "PDF",
+1489:                 "async": False,
+1490:                 "metadata": "The Label Group Order #" + str(shipment.order_id),
+1491:             }
+1492: 
+1493:             try:
+1494:                 response = requests.post(
+1495:                     "https://api.goshippo.com/transactions/",
+1496:                     headers=headers,
+1497:                     json=payload,
+1498:                     timeout=45,
+1499:                 )
+1500:                 try:
+1501:                     result = response.json()
+1502:                 except ValueError:
+1503:                     result = {}
+1504: 
+1505:                 if response.status_code not in (200, 201):
+1506:                     detail = result.get("messages") or result.get("detail") or result.get("message")
+1507:                     if isinstance(detail, (dict, list)):
+1508:                         detail = str(detail)
+1509:                     messages.error(
+1510:                         request,
+1511:                         "Shippo did not purchase the label (HTTP "
+1512:                         + str(response.status_code)
+1513:                         + "). "
+1514:                         + str(detail or "Check the rate ID and Shippo dashboard.")
+1515:                     )
+1516:                     return redirect("staff_shipping_dashboard")
+1517: 
+1518:                 transaction_status = str(result.get("status", "")).upper()
+1519:                 label_url = result.get("label_url", "")
+1520:                 transaction_id = result.get("object_id", "")
+1521:                 tracking_number = result.get("tracking_number", "")
+1522:                 tracking_url = result.get("tracking_url_provider", "")
+1523:                 rate_data = result.get("rate") or {}
+1524:                 carrier = rate_data.get("provider", "") if isinstance(rate_data, dict) else ""
+1525: 
+1526:                 if transaction_status != "SUCCESS" or not label_url:
+1527:                     messages.error(
+1528:                         request,
+1529:                         "Shippo did not return a successful transaction with a label URL. No label is marked as purchased. Check the transaction in Shippo before retrying."
+1530:                     )
+1531:                     if transaction_id:
+1532:                         shipment.shippo_transaction_id = transaction_id
+1533:                         shipment.shippo_rate_id = rate_id
+1534:                         shipment.save(update_fields=[
+1535:                             "shippo_transaction_id",
+1536:                             "shippo_rate_id",
+1537:                             "updated_at",
+1538:                         ])
+1539:                     return redirect("staff_shipping_dashboard")
+1540: 
+1541:                 shipment.shippo_rate_id = rate_id
+1542:                 shipment.shippo_transaction_id = transaction_id
+1543:                 shipment.label_url = label_url
+1544:                 shipment.tracking_url = tracking_url or ""
+1545:                 shipment.tracking_number = tracking_number or shipment.tracking_number
+1546:                 shipment.carrier = carrier or shipment.carrier or "Shippo carrier"
+1547:                 shipment.shipping_method = (
+1548:                     rate_data.get("servicelevel", {}).get("name", shipment.shipping_method)
+1549:                     if isinstance(rate_data, dict) and isinstance(rate_data.get("servicelevel"), dict)
+1550:                     else shipment.shipping_method
+1551:                 )
+1552:                 shipment.status = "shipped"
+1553:                 if shipment.shipped_at is None:
+1554:                     shipment.shipped_at = timezone.now()
+1555:                 shipment.save()
+1556: 
+1557:                 messages.success(
+1558:                     request,
+1559:                     "Shippo label purchased successfully for Order #"
+1560:                     + str(shipment.order_id)
+1561:                     + ". Open the label link to print it."
+1562:                 )
+1563: 
+1564:             except requests.RequestException as exc:
+1565:                 messages.error(
+1566:                     request,
+1567:                     "Could not reach Shippo. Check the server connection and Shippo dashboard before retrying. "
+1568:                     + str(exc)
+1569:                 )
+1570: 
+1571:             return redirect("staff_shipping_dashboard")
+1572: 
+1573:         if action == "update":
+1574:             status = request.POST.get("status", "").strip()
+1575:             allowed = {choice[0] for choice in Shipment.STATUS_CHOICES}
+1576: 
+1577:             if status not in allowed:
+1578:                 messages.error(request, "Invalid shipment status.")
+1579:                 return redirect("staff_shipping_dashboard")
+1580: 
+1581:             shipment.status = status
+1582:             shipment.tracking_number = request.POST.get(
+1583:                 "tracking_number", shipment.tracking_number
+1584:             ).strip()[:200]
+1585:             shipment.carrier = request.POST.get(
+1586:                 "carrier", shipment.carrier
+1587:             ).strip()[:100]
+1588:             shipment.shipping_method = request.POST.get(
+1589:                 "shipping_method", shipment.shipping_method
+1590:             ).strip()[:100]
+1591:             shipment.notes = request.POST.get("notes", shipment.notes)
+1592: 
+1593:             if status == "shipped" and shipment.shipped_at is None:
+1594:                 shipment.shipped_at = timezone.now()
+1595:             if status == "delivered" and shipment.delivered_at is None:
+1596:                 shipment.delivered_at = timezone.now()
+1597: 
+1598:             shipment.save()
+1599:             messages.success(request, "Shipment details updated.")
+1600:             return redirect("staff_shipping_dashboard")
+1601: 
+1602:         messages.error(request, "Unknown shipping action.")
+1603:         return redirect("staff_shipping_dashboard")
+1604: 
+1605:     shipments = list(Shipment.objects.select_related("order").order_by("-updated_at"))
+
+========== STAFF URL ROUTES ==========
+1: from django.urls import path
+2: from . import views
+3: 
+4: urlpatterns = [
+5:     path("shipping/", views.staff_shipping_dashboard, name="staff_shipping_dashboard"),
+6:     path("", views.staff_dashboard, name="staff_dashboard"),
+7:     path("login/", views.staff_login, name="staff_login"),
+8:     path("logout/", views.staff_logout, name="staff_logout"),
+9:     path("register/", views.staff_register, name="staff_register"),
+10:     path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+11:     path("profile/", views.staff_profile, name="staff_profile"),
+12:     
+13:     # Products
+14:     path("products/", views.staff_products, name="staff_products"),
+15:     path("products/add/", views.staff_product_add, name="staff_product_add"),
+16:     path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+17:     path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+18:     
+19:     # Customers
+20:     path("customers/", views.staff_customers, name="staff_customers"),
+21:     
+22:     # Orders
+23:     path("orders/", views.staff_orders, name="staff_orders"),
+24:     path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+25:     
+26:     # Quotes
+27:     path("quotes/", views.staff_quotes, name="staff_quotes"),
+28:     path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+29:     
+30:     # Calendar Orders
+31:     path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+32:     path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+33:     
+34:     # Boss / Staff Management paths
+35:     path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+36:     path("staff-management/", views.boss_staff_management),
+37:     
+38:     path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+39:     path("staff-management/create/", views.owner_create_staff),
+40:     
+41:     path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+42:     path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+43:     path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+44:     path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+45:     path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+46:     path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+47:     path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+48: ]
+
+========== STAFF ACCESS CONTROL DEFINITIONS ==========
+1: from django.contrib import messages
+2: from django.contrib.auth import authenticate, login, logout
+3: from django.contrib.auth.decorators import login_required
+4: from django.contrib.auth.models import User
+5: from django.db import transaction
+6: from django.shortcuts import get_object_or_404, redirect, render
+7: from django.utils import timezone
+8: 
+9: from products.models import (
+10:     Product,
+11:     Order,
+12:     QuoteRequest,
+13:     CollectionCalendarStickerOrder,
+14: )
+15: 
+16: from .forms import (
+17:     ProductForm,
+18:     StaffRegistrationForm,
+19:     OwnerStaffForm,
+20: )
+21: 
+22: from .models import StaffProfile, StaffActivityLog
+23: 
+24: 
+25: def get_staff_profile(user):
+26:     try:
+27:         return StaffProfile.objects.get(user=user)
+28:     except StaffProfile.DoesNotExist:
+29:         return None
+30: 
+31: 
+32: def get_client_ip(request):
+33:     forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+34:     if forwarded_for:
+35:         return forwarded_for.split(",")[0].strip()
+36:     return request.META.get("REMOTE_ADDR")
+37: 
+38: 
+39: def log_staff_activity(request, staff_profile, action, description, object_name=""):
+40:     if not staff_profile:
+41:         return
+42: 
+43:     StaffActivityLog.objects.create(
+44:         staff=staff_profile,
+45:         action=action,
+46:         description=description,
+47:         ip_address=get_client_ip(request),
+48:     )
+49: 
+50: 
+51: def staff_required(view_func):
+52:     @login_required(login_url="staff_login")
+53:     def wrapper(request, *args, **kwargs):
+54:         if not request.user.is_active:
+55:             messages.error(
+56:                 request,
+57:                 "Your staff account has been deactivated or removed. Please contact the Boss.",
+58:             )
+59:             logout(request)
+60:             return redirect("staff_login")
+61: 
+62:         if request.user.is_superuser:
+63:             return view_func(request, *args, **kwargs)
+64: 
+65:         profile = get_staff_profile(request.user)
+66: 
+67:         if not profile:
+68:             messages.error(request, "You do not have a staff profile.")
+69:             logout(request)
+70:             return redirect("staff_login")
+71: 
+72:         if not profile.approved or profile.status != "approved":
+73:             messages.error(
+74:                 request,
+75:                 "Your staff account has not been approved yet.",
+76:             )
+77:             logout(request)
+78:             return redirect("staff_login")
+79: 
+80:         return view_func(request, *args, **kwargs)
+81: 
+82:     return wrapper
+83: 
+84: 
+85: def boss_required(view_func):
+86:     @login_required(login_url="staff_login")
+87:     def wrapper(request, *args, **kwargs):
+88:         if not request.user.is_active:
+89:             messages.error(request, "Your account is inactive.")
+90:             logout(request)
+91:             return redirect("staff_login")
+92: 
+93:         if request.user.is_superuser:
+94:             return view_func(request, *args, **kwargs)
+95: 
+96:         profile = get_staff_profile(request.user)
+97: 
+98:         if not profile:
+99:             messages.error(request, "Staff profile not found.")
+100:             return redirect("staff_dashboard")
+101: 
+102:         if not profile.approved or profile.status != "approved":
+103:             messages.error(request, "Your account is not approved.")
+104:             return redirect("staff_dashboard")
+105: 
+106:         if profile.role != "manager":
+107:             messages.error(
+108:                 request,
+109:                 "Boss access is required for this section.",
+110:             )
+111:             return redirect("staff_dashboard")
+112: 
+113:         return view_func(request, *args, **kwargs)
+114: 
+115:     return wrapper
+116: 
+117: 
+118: @staff_required
+119: def staff_dashboard(request):
+120:     profile = get_staff_profile(request.user)
+121: 
+122:     products_count = Product.objects.count()
+123:     available_products_count = Product.objects.filter(
+124:         is_available=True
+125:     ).count()
+126: 
+127:     orders_count = Order.objects.count()
+128:     quotes_count = QuoteRequest.objects.count()
+129: 
+130:     new_quotes_count = QuoteRequest.objects.filter(
+131:         status="new"
+132:     ).count()
+133: 
+134:     reviewing_quotes_count = QuoteRequest.objects.filter(
+135:         status="reviewing"
+136:     ).count()
+137: 
+138:     quoted_count = QuoteRequest.objects.filter(
+139:         status="quoted"
+140:     ).count()
+141: 
+142:     approved_quotes_count = QuoteRequest.objects.filter(
+143:         status="approved"
+144:     ).count()
+145: 
+146:     in_production_count = QuoteRequest.objects.filter(
+147:         status="in_production"
+148:     ).count()
+149: 
+150:     completed_quotes_count = QuoteRequest.objects.filter(
+151:         status="completed"
+152:     ).count()
+153: 
+154:     if profile:
+155:         profile.last_activity = timezone.now()
+156:         profile.save(update_fields=["last_activity"])
+157: 
+158:     recent_quotes = QuoteRequest.objects.order_by("-created_at")[:8]
+159:     recent_activity = StaffActivityLog.objects.select_related(
+160:         "staff", "staff__user"
+161:     ).order_by("-id")[:8]
+162: 
+163:     approved_staff_count = StaffProfile.objects.filter(
+164:         approved=True, status="approved"
+165:     ).count()
+166:     pending_staff_count = StaffProfile.objects.filter(
+167:         approved=False, status="pending"
+168:     ).count()
+169: 
+170:     context = {
+171:         "total_products": products_count,
+172:         "available_products": available_products_count,
+173:         "total_orders": orders_count,
+174:         "total_quotes": quotes_count,
+175:         "new_quotes": new_quotes_count,
+176:         "reviewing_quotes": reviewing_quotes_count,
+177:         "quoted_quotes": quoted_count,
+178:         "approved_quotes": approved_quotes_count,
+179:         "production_quotes": in_production_count,
+180:         "completed_quotes": completed_quotes_count,
+
+========== DJANGO SETTINGS - FIRST 180 LINES ==========
+1: from pathlib import Path
+2: 
+3: 
+4: from dotenv import load_dotenv
+5: BASE_DIR = Path(__file__).resolve().parent.parent
+6: load_dotenv(BASE_DIR / '.env')
+7: 
+8: 
+9: SECRET_KEY = 'django-insecure-^kz!$&aquc9r8eyj%%p2ajai%q8#92+*i#xj3$m@0*#k*sz=rh'
+10: 
+11: 
+12: DEBUG = True
+13: 
+14: 
+15: ALLOWED_HOSTS = [
+16:     "localhost",
+17:     "127.0.0.1",
+18:     "germicidal-brigida-obtuse.ngrok-free.dev",
+19: ]
+20: 
+21: 
+22: CSRF_TRUSTED_ORIGINS = [
+23:     "https://germicidal-brigida-obtuse.ngrok-free.dev",
+24: ]
+25: 
+26: 
+27: INSTALLED_APPS = [
+28:     'django.contrib.admin',
+29:     'django.contrib.auth',
+30:     'django.contrib.contenttypes',
+31:     'django.contrib.sessions',
+32:     'django.contrib.messages',
+33:     'django.contrib.staticfiles',
+34:     'products',
+35:     'staff',
+36: ]
+37: 
+38: 
+39: MIDDLEWARE = [
+40: 
+41:     'staff.dashboard_repair.DashboardCountsMiddleware',
+42:     'django.middleware.security.SecurityMiddleware',
+43:     'django.contrib.sessions.middleware.SessionMiddleware',
+44:     'django.middleware.common.CommonMiddleware',
+45:     'django.middleware.csrf.CsrfViewMiddleware',
+46:     'django.contrib.auth.middleware.AuthenticationMiddleware',
+47:     'django.contrib.messages.middleware.MessageMiddleware',
+48:     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+49: ]
+50: 
+51: 
+52: ROOT_URLCONF = 'swiftcart.urls'
+53: 
+54: 
+55: TEMPLATES = [
+56:     {
+57:         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+58:         'DIRS': [BASE_DIR / 'templates'],
+59:         'APP_DIRS': True,
+60:         'OPTIONS': {
+61:             'context_processors': [
+62:                 
+63:                 'products.context_processors.site_settings',
+64:                 'django.template.context_processors.request',
+65:                 'django.contrib.auth.context_processors.auth',
+66:                 'django.contrib.messages.context_processors.messages',
+67:             ],
+68:         },
+69:     },
+70: ]
+71: 
+72: 
+73: WSGI_APPLICATION = 'swiftcart.wsgi.application'
+74: 
+75: 
+76: DATABASES = {
+77:     'default': {
+78:         'ENGINE': 'django.db.backends.sqlite3',
+79:         'NAME': BASE_DIR / 'db.sqlite3',
+80:     }
+81: }
+82: 
+83: 
+84: AUTH_PASSWORD_VALIDATORS = [
+85:     {
+86:         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+87:     },
+88:     {
+89:         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+90:     },
+91:     {
+92:         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+93:     },
+94:     {
+95:         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+96:     },
+97: ]
+98: 
+99: 
+100: LANGUAGE_CODE = 'en-us'
+101: 
+102: TIME_ZONE = 'Africa/Nairobi'
+103: 
+104: USE_I18N = True
+105: 
+106: USE_TZ = True
+107: 
+108: 
+109: STATIC_URL = 'static/'
+110: 
+111: 
+112: MEDIA_URL = '/media/'
+113: 
+114: MEDIA_ROOT = BASE_DIR / 'media'
+115: 
+116: 
+117: EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+118: 
+119: 
+120: DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+121: 
+122: 
+123: 
+124: 
+
+========== ENVIRONMENT LOADING SEARCH (NAMES ONLY) ==========
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\swiftcart\asgi.py:14: os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'swiftcart.settings')
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\swiftcart\settings.py:4: from dotenv import load_dotenv
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\swiftcart\settings.py:6: load_dotenv(BASE_DIR / '.env')
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\swiftcart\wsgi.py:14: os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'swiftcart.settings')
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:19: return os.environ.get(name, default).strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:722: token = os.environ.get("SHIPPO_API_TOKEN", "").strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:52: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:86: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1463: os.environ.get("SHIPPO_API_TOKEN")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1464: or getattr(settings, "SHIPPO_API_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1465: or os.environ.get("SHIPPO_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:88: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:141: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:52: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:86: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:487: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:52: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:86: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1457: os.environ.get("SHIPPO_API_TOKEN")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1458: or getattr(settings, "SHIPPO_API_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1459: or os.environ.get("SHIPPO_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:50: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:83: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:473: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:83: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:134: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:88: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:141: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:5: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:67: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:117: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:635: @login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:3: from django.contrib.auth.decorators import login_required
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:50: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:83: @login_required(login_url="staff_login")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:473: @login_required

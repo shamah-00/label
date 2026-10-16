@@ -26,7 +26,7 @@ class ProductForm(forms.ModelForm):
             "finish",
             "shape",
             "printing_method",
-            "adhesive",
+            "adhesive", "packaging_type", "shipping_weight_lb", "shipping_length_in", "shipping_width_in", "shipping_height_in",
             "is_custom",
             "is_available",
             "is_featured",
@@ -51,13 +51,24 @@ class ProductForm(forms.ModelForm):
             "is_custom": "Custom Product",
             "is_available": "Available on Website",
             "is_featured": "Featured Product",
-        }
+        
+            "packaging_type": "Package Type",
+            "shipping_weight_lb": "Packed Weight (lb)",
+            "shipping_length_in": "Packed Length (in)",
+            "shipping_width_in": "Packed Width (in)",
+            "shipping_height_in": "Packed Height (in)",
+}
 
         widgets = {
             "name": forms.TextInput(
                 attrs={
                     "placeholder": "Enter product name"
-                }
+                
+            "shipping_weight_lb": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
+            "shipping_length_in": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
+            "shipping_width_in": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
+            "shipping_height_in": forms.NumberInput(attrs={"step": "0.01", "min": "0.01"}),
+}
             ),
 
             "slug": forms.TextInput(
@@ -104,6 +115,21 @@ class ProductForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+
+        if cleaned_data.get("is_available"):
+            for field in (
+                "shipping_weight_lb",
+                "shipping_length_in",
+                "shipping_width_in",
+                "shipping_height_in",
+            ):
+                value = cleaned_data.get(field)
+                if value is None or value <= 0:
+                    self.add_error(
+                        field,
+                        "Shipping measurements are required for available products. "
+                        "Enter the actual packed measurement."
+                    )
 
         price = cleaned_data.get("price")
         discount_price = cleaned_data.get("discount_price")

@@ -1,0 +1,55 @@
+{% extends "staff/ops_base.html" %}
+{% block title %}Order #{{ order.pk }}{% endblock %}
+{% block content %}
+<div class="intro">
+<a href="/staff/orders/">← Back to orders</a>
+<h1 style="margin-top:12px">Order #{{ order.pk }}</h1>
+<div class="muted">Created {{ order.created_at|date:"d M Y, H:i" }} · Last updated {{ order.updated_at|date:"d M Y, H:i" }}</div>
+</div>
+<div class="cards">
+<div class="card"><div class="metric">{{ order.currency|default:"USD" }} {{ order.total|floatformat:2 }}</div><div class="metric-label">Order total</div></div>
+<div class="card"><div class="metric">{{ order.get_status_display|default:order.status }}</div><div class="metric-label">Current status</div></div>
+<div class="card"><div class="metric">{{ item_count }}</div><div class="metric-label">Line items</div></div>
+</div>
+<div class="grid2">
+<section class="panel">
+<h2>Customer and delivery</h2>
+<div class="field"><label>Customer</label><div class="detail-value">{{ order.customer_name }}</div></div>
+<div class="field"><label>Email</label><a href="mailto:{{ order.customer_email }}">{{ order.customer_email }}</a></div>
+<div class="field"><label>Phone</label>{{ order.customer_phone }}</div>
+<div class="field"><label>Shipping address</label>{{ order.shipping_address|linebreaksbr }}</div>
+<div class="field"><label>City / State / Postal code</label>{{ order.shipping_city }}{% if order.shipping_state %}, {{ order.shipping_state }}{% endif %} {{ order.shipping_postal_code }}</div>
+<div class="field"><label>Country</label>{{ order.shipping_country }}</div>
+</section>
+<section class="panel">
+<h2>Update order</h2>
+<form method="post">
+{% csrf_token %}
+<div class="field"><label for="status">Order status</label>
+<select id="status" name="status" required style="width:100%">
+{% for key,label in status_choices %}
+<option value="{{ key }}"{% if order.status == key %} selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select></div>
+<div class="field"><label for="notes">Internal order notes</label>
+<textarea id="notes" name="notes" rows="7" placeholder="Production, packing, shipping or customer follow-up notes">{{ order.notes }}</textarea></div>
+<button type="submit">Save order changes</button>
+</form>
+<div class="notice">Choose the correct status deliberately. Saving this form will not automatically mark the order completed.</div>
+</section>
+</div>
+<section class="panel" style="margin-top:16px">
+<h2>Items ordered</h2>
+<div class="table-wrap"><table style="min-width:500px">
+<thead><tr><th>Product</th><th>Quantity</th><th>Unit price</th><th>Line total</th></tr></thead>
+<tbody>
+{% for item in order.items.all %}
+<tr><td><strong>{{ item.product_name }}</strong></td><td>{{ item.quantity }}</td><td>{{ order.currency|default:"USD" }} {{ item.unit_price|default_if_none:"0.00"|floatformat:2 }}</td><td>{{ order.currency|default:"USD" }} {{ item.total_price|default_if_none:"0.00"|floatformat:2 }}</td></tr>
+{% empty %}<tr><td colspan="4" class="empty">No line items are attached to this order.</td></tr>{% endfor %}
+</tbody></table></div>
+<div class="actions">
+<a class="btn light" href="mailto:{{ order.customer_email }}">Email customer</a>
+<a class="btn secondary" href="/staff/orders/">Return to orders</a>
+</div>
+</section>
+{% endblock %}

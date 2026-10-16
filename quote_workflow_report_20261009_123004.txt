@@ -1,0 +1,3038 @@
+﻿THE LABEL GROUP - QUOTE WORKFLOW REPORT
+Generated: 10/09/2026 12:30:05
+Project: C:\Users\Tumaini\Desktop\ecommerce\ecommerce
+Backup: C:\Users\Tumaini\Desktop\ecommerce\ecommerce\backup_quote_workflow_20261009_123004
+
+
+========================================
+FILE: products\urls.py
+========================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+    path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+    path('cart/clear/', views.clear_cart, name='clear_cart'),
+    path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+    path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+
+    path('', views.home, name='home'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('cart/', views.cart, name='cart'),
+    path('quote/', views.quote_cart, name='quote_cart'),
+    path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+    path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+    path('custom-orders/', views.custom_order, name='custom_order'),
+    path('shipping/', views.shipping, name='shipping'),
+    path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+]
+
+
+
+
+========================================
+FILE: products\views.py
+========================================
+from .models import QuoteRequest
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Product
+
+def home(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(is_available=True).order_by("-id")
+
+    industry_filter = request.GET.get("industry", "").strip().lower()
+
+    if industry_filter == "waste":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "motor":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "construction":
+        products = products.filter(
+            Q(id__gte=41, id__lte=60)
+        )
+    elif industry_filter == "pool":
+        products = products.filter(
+            Q(id__gte=61, id__lte=80)
+        )
+    elif industry_filter == "government":
+        products = products.filter(
+            Q(id__gte=81, id__lte=100)
+        )
+    elif industry_filter == "other":
+        products = products.filter(id__gte=101)
+
+    return render(
+        request,
+        "products/home.html",
+        {
+            "products": products,
+            "industry_filter": industry_filter,
+        },
+    )
+
+
+def product_list(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(
+        is_available=True
+    ).order_by("id")
+
+    industry = request.GET.get("industry", "").strip().lower()
+    search = request.GET.get("search", "").strip()
+
+    category_ranges = {
+        "motor": (1, 20),
+        "waste": (21, 40),
+        "construction": (41, 60),
+        "pool": (61, 80),
+        "government": (81, 100),
+    }
+
+    if industry in category_ranges:
+        first_id, last_id = category_ranges[industry]
+        products = products.filter(
+            id__gte=first_id,
+            id__lte=last_id
+        )
+    elif industry == "other":
+        products = products.exclude(
+            id__gte=1,
+            id__lte=100
+        )
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(category__icontains=search) |
+            Q(product_type__icontains=search) |
+            Q(product_code__icontains=search)
+        )
+
+    return render(
+        request,
+        "products/product_list.html",
+        {
+            "products": products,
+            "selected_industry": industry,
+            "search_query": search,
+            "product_count": products.count(),
+        },
+    )
+
+
+def industry_products(request, industry_name):
+    industry_name = (industry_name or "").strip().lower()
+
+    allowed = {
+        "motor": "motor",
+        "waste": "waste",
+        "construction": "construction",
+        "pool": "pool",
+        "government": "government",
+        "other": "other",
+    }
+
+    industry = allowed.get(industry_name)
+
+    if not industry:
+        return redirect("product_list")
+
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+
+    url = reverse("product_list") + "?industry=" + industry
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        from urllib.parse import quote
+        url += "&search=" + quote(search)
+
+    return HttpResponseRedirect(url)
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, "products/product_detail.html", {'product': product})
+
+def cart(request):
+    return render(request, "products/cart.html", {})
+
+
+def add_to_quote(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+
+    product = get_object_or_404(Product, id=product_id)
+
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product.id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(quantity, 1)
+
+    quote_cart[product_key] = quote_cart.get(product_key, 0) + quantity
+
+    request.session["quote_cart"] = quote_cart
+    request.session.modified = True
+
+    return redirect("quote_cart")
+
+def remove_from_quote(request, product_id):
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product_id)
+
+    if product_key in quote_cart:
+        del quote_cart[product_key]
+        request.session["quote_cart"] = quote_cart
+        request.session.modified = True
+
+    return redirect("quote_cart")
+def quote_cart(request):
+    from .models import Product
+    from django.shortcuts import render
+
+    cart = request.session.get("quote_cart", {})
+    products_by_id = {}
+    valid_cart = {}
+
+    for product_id, raw_quantity in cart.items():
+        try:
+            product_id = int(product_id)
+            quantity = max(1, int(raw_quantity))
+        except (TypeError, ValueError):
+            continue
+        valid_cart[str(product_id)] = quantity
+
+    products = Product.objects.filter(pk__in=valid_cart.keys())
+    for product in products:
+        products_by_id[str(product.pk)] = product
+
+    quote_items = []
+    for product_id, quantity in valid_cart.items():
+        product = products_by_id.get(product_id)
+        if product is None:
+            continue
+        product.quote_quantity = quantity
+        quote_items.append({
+            "product": product,
+            "quantity": quantity,
+        })
+
+    request.session["quote_cart"] = {
+        str(item["product"].pk): item["quantity"]
+        for item in quote_items
+    }
+
+    return render(request, "products/quote_cart.html", {
+        "quote_items": quote_items,
+        "quote_products": [item["product"] for item in quote_items],
+        "products": [item["product"] for item in quote_items],
+        "quote_count": sum(item["quantity"] for item in quote_items),
+        "quote_cart_empty": not bool(quote_items),
+    })
+
+
+def shipping(request):
+    return render(request, "products/shipping.html", {})
+
+def add_to_cart(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import Product
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = request.session.get("cart", {})
+    key = str(product_id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(1, quantity)
+    cart[key] = int(cart.get(key, 0)) + quantity
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def cart(request):
+    from django.shortcuts import render
+    from .models import Product
+
+    session_cart = request.session.get("cart", {})
+    products = []
+
+    for product_id, quantity in session_cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            quantity = max(1, int(quantity))
+            products.append({
+                "product": product,
+                "quantity": quantity,
+                "subtotal": product.price * quantity,
+            })
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    total = sum(item["subtotal"] for item in products)
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "cart_items": products,
+            "cart": products,
+            "total": total,
+            "cart_total": total,
+        },
+    )
+
+
+def update_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        if quantity > 0:
+            cart[str(product_id)] = quantity
+        else:
+            cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def remove_from_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+    cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def clear_cart(request):
+    from django.shortcuts import redirect
+
+    request.session["cart"] = {}
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+
+def custom_order(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/custom_order.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/custom_order.html", {})
+
+
+
+
+
+
+
+
+
+# =========================================================
+# SHIPPING QUOTE DESK
+# =========================================================
+
+def shipping_quote(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/shipping_quote.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/shipping_quote.html", {})
+
+def custom_orders(request):
+    if request.method == 'POST':
+        from .models import CustomOrder
+        full_name = request.POST.get('full_name')
+        company_name = request.POST.get('company_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('street_address', '') + ', ' + request.POST.get('city', '')
+        requirements = request.POST.get('requirements')
+        artwork = request.FILES.get('artwork')
+
+        CustomOrder.objects.create(
+            full_name=full_name,
+            company_name=company_name,
+            email=email,
+            phone=phone,
+            address=address,
+            requirements=requirements,
+            artwork=artwork
+        )
+        return render(request, 'products/custom_order_success.html', {'full_name': full_name})
+
+    return render(request, 'products/custom_orders.html')
+
+
+
+
+
+
+
+
+
+
+
+# THE LABEL GROUP: invoice payment page foundation.
+# Connect a real payment provider before accepting payments.
+def invoice_payment(request):
+    from django.shortcuts import render
+
+    invoice_number = ""
+    amount = ""
+    message = ""
+
+    if request.method == "POST":
+        invoice_number = request.POST.get("invoice_number", "").strip()
+        amount = request.POST.get("amount", "").strip()
+
+        if not invoice_number:
+            message = "Please enter your invoice number."
+        else:
+            try:
+                value = float(amount)
+                if value <= 0:
+                    raise ValueError
+                amount = f"{value:.2f}"
+                message = (
+                    "Your invoice details are ready. Online payment processing "
+                    "must be connected by the site administrator before payment "
+                    "can be completed. Please contact THE LABEL GROUP to arrange payment."
+                )
+            except (TypeError, ValueError):
+                message = "Please enter a valid invoice amount in USD."
+
+    return render(
+        request,
+        "products/invoice_payment.html",
+        {
+            "invoice_number": invoice_number,
+            "amount": amount,
+            "message": message,
+        },
+    )
+
+========================================
+FILE: products\models.py
+========================================
+from django.db import models
+from django.contrib.auth.models import User
+
+
+class Product(models.Model):
+
+    CATEGORY_CHOICES = [
+        ("decals", "Decals"),
+        ("stickers", "Stickers"),
+        ("reflective", "Reflective Products"),
+        ("custom", "Custom Products"),
+        ("other", "Other"),
+    ]
+
+    INDUSTRY_CHOICES = [
+        ("truck_motor_car", "Truck / Motor / Car Decals"),
+        ("government", "Government Contractor Decals"),
+        ("pool", "Pool Decals"),
+        ("construction", "Construction Decals"),
+        ("waste", "Waste Company Decals"),
+    ]
+
+    MATERIAL_CHOICES = [
+        ("vinyl", "Vinyl"),
+        ("paper", "Paper"),
+        ("mylar", "Mylar"),
+        ("polystyrene", "Polystyrene"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    SHAPE_CHOICES = [
+        ("rectangle", "Rectangle"),
+        ("square", "Square"),
+        ("circle", "Circle"),
+        ("oval", "Oval"),
+        ("custom", "Custom / Die-cut"),
+    ]
+
+    FINISH_CHOICES = [
+        ("gloss", "Gloss"),
+        ("matte", "Matte"),
+        ("satin", "Satin"),
+        ("clear", "Clear"),
+        ("other", "Other / Specify in Notes"),
+    ]
+
+    PRINTING_METHOD_CHOICES = [
+        ("full_color", "Full Color"),
+        ("black_white", "Black & White"),
+        ("single_sided", "Single-Sided"),
+        ("double_sided", "Double-Sided"),
+        ("digital", "Digital Printing"),
+        ("screen", "Screen Printing"),
+    ]
+
+    ADHESIVE_CHOICES = [
+        ("permanent", "Permanent"),
+        ("removable", "Removable"),
+        ("indoor", "Indoor"),
+        ("outdoor", "Outdoor"),
+        ("not_applicable", "Not Applicable"),
+    ]
+
+    PRODUCT_NAME_CHOICES = [
+        ("bag_tag", "Bag & Tag Sticker"),
+        ("container_decal", "Container Identification Decal"),
+        ("dumpster_decal", "Dumpster Identification Decal"),
+        ("baler_decal", "Baler Decal"),
+        ("compactor_decal", "Compactor Decal"),
+        ("rolloff_decal", "Rolloff Decal"),
+        ("recycling_label", "Recycling Label"),
+        ("truck_decal", "Truck Decal"),
+        ("fleet_decal", "Fleet Decal"),
+        ("yard_waste_label", "Yard Waste Label"),
+        ("safety_decal", "Safety & Compliance Decal"),
+        ("reflective_label", "Reflective Label"),
+        ("facility_sign", "Facility Sign"),
+        ("food_waste_label", "Food Waste Label"),
+        ("medical_waste_label", "Medical Waste Label"),
+        ("portable_toilet_decal", "Portable Toilet Decal"),
+        ("custom_label", "Custom Label"),
+        ("other", "Other / New Product"),
+    ]
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    product_type = models.CharField(
+        max_length=100,
+        choices=PRODUCT_NAME_CHOICES,
+        default="other"
+    )
+
+    slug = models.SlugField(
+        unique=True
+    )
+
+    description = models.TextField(
+        blank=True
+    )
+
+    category = models.CharField(
+        max_length=100,
+        choices=CATEGORY_CHOICES,
+        default="other"
+    )
+
+    industry = models.CharField(
+        max_length=100,
+        choices=INDUSTRY_CHOICES,
+        default="waste"
+    )
+
+    brand = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    discount_price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    image = models.ImageField(
+        upload_to="products/",
+        blank=True,
+        null=True
+    )
+
+    stock = models.PositiveIntegerField(
+        default=0
+    )
+
+    material = models.CharField(
+        max_length=100,
+        choices=MATERIAL_CHOICES,
+        blank=True
+    )
+
+    finish = models.CharField(
+        max_length=100,
+        choices=FINISH_CHOICES,
+        blank=True
+    )
+
+    shape = models.CharField(
+        max_length=100,
+        choices=SHAPE_CHOICES,
+        blank=True
+    )
+
+    printing_method = models.CharField(
+        max_length=100,
+        choices=PRINTING_METHOD_CHOICES,
+        blank=True
+    )
+
+    adhesive = models.CharField(
+        max_length=100,
+        choices=ADHESIVE_CHOICES,
+        blank=True
+    )
+
+    is_custom = models.BooleanField(
+        default=False
+    )
+
+    is_available = models.BooleanField(
+        default=True
+    )
+
+    is_featured = models.BooleanField(
+        default=False
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return self.name
+
+
+class Order(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("confirmed", "Confirmed"),
+        ("processing", "Processing"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    shipping_address = models.TextField()
+
+    shipping_city = models.CharField(
+        max_length=100
+    )
+
+    shipping_state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    shipping_country = models.CharField(
+        max_length=100
+    )
+
+    subtotal = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    shipping_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    total = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Order #{self.id} - {self.customer_name}"
+
+
+class OrderItem(models.Model):
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="order_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    unit_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    total_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True
+    )
+
+    currency = models.CharField(
+        max_length=3,
+        default="USD"
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class Shipment(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Preparing Shipment"),
+        ("packed", "Packed"),
+        ("shipped", "Shipped"),
+        ("in_transit", "In Transit"),
+        ("out_for_delivery", "Out for Delivery"),
+        ("delivered", "Delivered"),
+        ("delayed", "Delayed"),
+        ("returned", "Returned"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="shipment"
+    )
+
+    carrier = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    shipping_method = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    tracking_number = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    estimated_delivery = models.DateField(
+        null=True,
+        blank=True
+    )
+
+    shipped_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    delivered_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Shipment for Order #{self.order.id}"
+
+
+class StaffProfile(models.Model):
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Approval"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    ]
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="staff_profile"
+    )
+
+    full_name = models.CharField(
+        max_length=200
+    )
+
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.full_name} - {self.get_status_display()}"
+
+
+class QuoteRequest(models.Model):
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("reviewing", "Being Reviewed"),
+        ("quoted", "Quote Sent"),
+        ("approved", "Approved"),
+        ("in_production", "In Production"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    customer_name = models.CharField(
+        max_length=200
+    )
+
+    company_name = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    customer_email = models.EmailField()
+
+    customer_phone = models.CharField(
+        max_length=50
+    )
+
+    street_address = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    address_continued = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    state = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    postal_code = models.CharField(
+        max_length=30,
+        blank=True
+    )
+
+    country = models.CharField(
+        max_length=100,
+        blank=True
+    )
+
+    requirements = models.TextField(
+        blank=True
+    )
+
+    uploaded_file = models.FileField(
+        upload_to="quote_requests/",
+        blank=True,
+        null=True
+    )
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"Quote #{self.id} - {self.customer_name}"
+
+
+class QuoteRequestItem(models.Model):
+
+    quote_request = models.ForeignKey(
+        QuoteRequest,
+        on_delete=models.CASCADE,
+        related_name="items"
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.PROTECT,
+        related_name="quote_request_items"
+    )
+
+    product_name = models.CharField(
+        max_length=200
+    )
+
+    product_code = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField(
+        default=1
+    )
+
+    def __str__(self):
+        return f"{self.product_name} x {self.quantity}"
+
+
+class CollectionCalendarStickerOrder(models.Model):
+
+    YEAR_CHOICES = [
+        (year, str(year))
+        for year in range(2027, 2101)
+    ]
+
+    DAY_CHOICES = [
+        ("Monday", "Monday"),
+        ("Tuesday", "Tuesday"),
+        ("Wednesday", "Wednesday"),
+        ("Thursday", "Thursday"),
+        ("Friday", "Friday"),
+    ]
+
+    FREQUENCY_CHOICES = [
+        ("Once per week", "Once per week"),
+        ("Every other week", "Every other week"),
+        ("Once per month", "Once per month"),
+        ("Other", "Other"),
+    ]
+
+    COLOR_CHOICES = [
+        ("Green", "Green"),
+        ("Red", "Red"),
+        ("Blue", "Blue"),
+        ("Yellow", "Yellow"),
+        ("Orange", "Orange"),
+    ]
+
+    STATUS_CHOICES = [
+        ("new", "New"),
+        ("in_progress", "In Progress"),
+        ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    calendar_year = models.PositiveIntegerField(
+        choices=YEAR_CHOICES
+    )
+
+    trash_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    trash_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_trash_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    recycling_collection_day = models.CharField(
+        max_length=20,
+        choices=DAY_CHOICES
+    )
+
+    recycling_collection_frequency = models.CharField(
+        max_length=50,
+        choices=FREQUENCY_CHOICES
+    )
+
+    other_recycling_frequency = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    new_years_day = models.BooleanField(
+        default=False
+    )
+
+    memorial_day = models.BooleanField(
+        default=False
+    )
+
+    independence_day = models.BooleanField(
+        default=False
+    )
+
+    labor_day = models.BooleanField(
+        default=False
+    )
+
+    thanksgiving_day = models.BooleanField(
+        default=False
+    )
+
+    christmas_day = models.BooleanField(
+        default=False
+    )
+
+    other_holiday_1 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_2 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    other_holiday_3 = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    top_bar_color = models.CharField(
+        max_length=20,
+        choices=COLOR_CHOICES
+    )
+
+    include_company_logo = models.BooleanField(
+        default=False
+    )
+
+    other_collection_information = models.TextField(
+        blank=True
+    )
+
+    quantity = models.PositiveIntegerField()
+
+    name = models.CharField(
+        max_length=200
+    )
+
+    title = models.CharField(
+        max_length=200,
+        blank=True
+    )
+
+    company = models.CharField(
+        max_length=200
+    )
+
+    street_address = models.CharField(
+        max_length=255
+    )
+
+    address_contd = models.CharField(
+        max_length=255,
+        blank=True
+    )
+
+    city = models.CharField(
+        max_length=100
+    )
+
+    state = models.CharField(
+        max_length=100
+    )
+
+    zip_code = models.CharField(
+        max_length=30
+    )
+
+    phone = models.CharField(
+        max_length=50,
+        blank=True
+    )
+
+    email = models.EmailField()
+
+    status = models.CharField(
+        max_length=30,
+        choices=STATUS_CHOICES,
+        default="new"
+    )
+
+    staff_notes = models.TextField(
+        blank=True
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True
+    )
+
+    def __str__(self):
+        return f"{self.company} - {self.calendar_year} - {self.quantity} stickers"
+class SiteSettings(models.Model):
+    company_name = models.CharField(max_length=200, default="THE LABEL GROUP")
+    tagline = models.CharField(max_length=255, default="INDUSTRIAL PRINTS & DECALS")
+    phone = models.CharField(max_length=100, blank=True, default="")
+    email = models.EmailField(blank=True, default="")
+    address = models.TextField(blank=True, default="")
+    whatsapp = models.CharField(max_length=100, blank=True, default="")
+    facebook = models.URLField(blank=True, default="")
+    instagram = models.URLField(blank=True, default="")
+    tiktok = models.URLField(blank=True, default="")
+    linkedin = models.URLField(blank=True, default="")
+    youtube = models.URLField(blank=True, default="")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.company_name
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.first()
+        if not obj:
+            obj = cls.objects.create(
+                company_name="THE LABEL GROUP",
+                tagline="INDUSTRIAL PRINTS & DECALS"
+            )
+        return obj
+
+
+========================================
+FILE: products\forms.py
+========================================
+from django import forms
+from .models import (
+    Product,
+    QuoteRequest,
+    CollectionCalendarStickerOrder,
+)
+
+
+class ProductForm(forms.ModelForm):
+
+    class Meta:
+        model = Product
+
+        fields = [
+            "name",
+            "slug",
+            "description",
+            "category",
+            "industry",
+            "brand",
+            "price",
+            "discount_price",
+            "image",
+            "stock",
+            "material",
+            "finish",
+            "shape",
+            "printing_method",
+            "adhesive",
+            "is_custom",
+            "is_available",
+            "is_featured",
+        "product_code"]
+
+        labels = {
+            "name": "Product Name",
+            "slug": "Product URL Name",
+            "description": "Product Description",
+            "category": "Category",
+            "industry": "Customer / Industry",
+            "brand": "Brand",
+            "price": "Price (USD)",
+            "discount_price": "Discount Price (USD)",
+            "image": "Product Image",
+            "stock": "Stock",
+            "material": "Material",
+            "finish": "Finish",
+            "shape": "Shape",
+            "printing_method": "Printing Method",
+            "adhesive": "Adhesive / Application",
+            "is_custom": "Custom Product",
+            "is_available": "Available on Website",
+            "is_featured": "Featured Product",
+        }
+
+        widgets = {
+            "name": forms.TextInput(
+                attrs={
+                    "placeholder": "Enter product name"
+                }
+            ),
+
+            "slug": forms.TextInput(
+                attrs={
+                    "placeholder": "product-url-name"
+                }
+            ),
+
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "placeholder": "Describe the product..."
+                }
+            ),
+
+            "brand": forms.TextInput(
+                attrs={
+                    "placeholder": "Brand name (optional)"
+                }
+            ),
+
+            "price": forms.NumberInput(
+                attrs={
+                    "step": "0.01",
+                    "min": "0",
+                    "placeholder": "0.00"
+                }
+            ),
+
+            "discount_price": forms.NumberInput(
+                attrs={
+                    "step": "0.01",
+                    "min": "0",
+                    "placeholder": "0.00"
+                }
+            ),
+
+            "stock": forms.NumberInput(
+                attrs={
+                    "min": "0"
+                }
+            ),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        price = cleaned_data.get("price")
+        discount_price = cleaned_data.get("discount_price")
+
+        if (
+            price is not None
+            and discount_price is not None
+            and discount_price > price
+        ):
+            self.add_error(
+                "discount_price",
+                "Discount price cannot be higher than the regular price."
+            )
+
+        return cleaned_data
+
+
+class QuoteRequestForm(forms.ModelForm):
+
+    class Meta:
+        model = QuoteRequest
+
+        fields = [
+            "customer_name",
+            "company_name",
+            "customer_email",
+            "customer_phone",
+            "street_address",
+            "address_continued",
+            "city",
+            "state",
+            "postal_code",
+            "country",
+            "requirements",
+            "uploaded_file",
+        ]
+
+        labels = {
+            "customer_name": "Full Name",
+            "company_name": "Company Name",
+            "customer_email": "Email Address",
+            "customer_phone": "Phone Number",
+            "street_address": "Street Address",
+            "address_continued": "Address Continued",
+            "city": "City",
+            "state": "State",
+            "postal_code": "Postal Code",
+            "country": "Country",
+            "requirements": "Requirements / Special Instructions",
+            "uploaded_file": "Reference File",
+        }
+
+        widgets = {
+            "customer_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Your full name"
+                }
+            ),
+
+            "company_name": forms.TextInput(
+                attrs={
+                    "placeholder": "Company name"
+                }
+            ),
+
+            "customer_email": forms.EmailInput(
+                attrs={
+                    "placeholder": "you@example.com"
+                }
+            ),
+
+            "customer_phone": forms.TextInput(
+                attrs={
+                    "placeholder": "Phone number"
+                }
+            ),
+
+            "street_address": forms.TextInput(
+                attrs={
+                    "placeholder": "Street address"
+                }
+            ),
+
+            "address_continued": forms.TextInput(
+                attrs={
+                    "placeholder": "Apartment, suite, building, etc. (optional)"
+                }
+            ),
+
+            "city": forms.TextInput(
+                attrs={
+                    "placeholder": "City"
+                }
+            ),
+
+            "state": forms.TextInput(
+                attrs={
+                    "placeholder": "State / County / Region"
+                }
+            ),
+
+            "postal_code": forms.TextInput(
+                attrs={
+                    "placeholder": "Postal code"
+                }
+            ),
+
+            "country": forms.TextInput(
+                attrs={
+                    "placeholder": "Country"
+                }
+            ),
+
+            "requirements": forms.Textarea(
+                attrs={
+                    "rows": 6,
+                    "placeholder": (
+                        "Tell us about the stickers or decals you need, "
+                        "quantities, sizes, materials, finishes, artwork, "
+                        "or any other requirements."
+                    )
+                }
+            ),
+
+            "uploaded_file": forms.ClearableFileInput(
+                attrs={
+                    "accept": ".jpg,.jpeg,.png,.pdf,.ai,.eps,.svg,.zip"
+                }
+            ),
+        }
+
+
+class CollectionCalendarStickerOrderForm(forms.ModelForm):
+
+    class Meta:
+        model = CollectionCalendarStickerOrder
+
+        fields = [
+            "calendar_year",
+            "trash_collection_day",
+            "trash_collection_frequency",
+            "other_trash_frequency",
+            "recycling_collection_day",
+            "recycling_collection_frequency",
+            "other_recycling_frequency",
+            "new_years_day",
+            "memorial_day",
+            "independence_day",
+            "labor_day",
+            "thanksgiving_day",
+            "christmas_day",
+            "other_holiday_1",
+            "other_holiday_2",
+            "other_holiday_3",
+            "top_bar_color",
+            "include_company_logo",
+            "other_collection_information",
+            "quantity",
+            "name",
+            "title",
+            "company",
+            "street_address",
+            "address_contd",
+            "city",
+            "state",
+            "zip_code",
+            "phone",
+            "email",
+        ]
+
+        labels = {
+            "calendar_year": "Calendar Year",
+            "trash_collection_day": "Trash Collection Day",
+            "trash_collection_frequency": "Trash Collection Frequency",
+            "other_trash_frequency": "Specify Other Trash Frequency",
+            "recycling_collection_day": "Recycling Collection Day",
+            "recycling_collection_frequency": "Recycling Collection Frequency",
+            "other_recycling_frequency": "Specify Other Recycling Frequency",
+            "new_years_day": "New Year's Day",
+            "memorial_day": "Memorial Day",
+            "independence_day": "Independence Day (July 4)",
+            "labor_day": "Labor Day",
+            "thanksgiving_day": "Thanksgiving Day",
+            "christmas_day": "Christmas Day",
+            "other_holiday_1": "Other Holiday 1",
+            "other_holiday_2": "Other Holiday 2",
+            "other_holiday_3": "Other Holiday 3",
+            "top_bar_color": "Color of Top Bar",
+            "include_company_logo": "Include Company Logo?",
+            "other_collection_information": "Other Collection Information",
+            "quantity": "Quantity",
+            "name": "Name",
+            "title": "Title",
+            "company": "Company",
+            "street_address": "Street Address",
+            "address_contd": "Address Continued",
+            "city": "City",
+            "state": "State",
+            "zip_code": "Zip",
+            "phone": "Phone",
+            "email": "E-mail",
+        }
+
+        widgets = {
+            "calendar_year": forms.Select(),
+
+            "other_trash_frequency": forms.TextInput(
+                attrs={
+                    "placeholder": "Please specify"
+                }
+            ),
+
+            "other_recycling_frequency": forms.TextInput(
+                attrs={
+                    "placeholder": "Please specify"
+                }
+            ),
+
+            "other_holiday_1": forms.TextInput(
+                attrs={
+                    "placeholder": "Other holiday"
+                }
+            ),
+
+            "other_holiday_2": forms.TextInput(
+                attrs={
+                    "placeholder": "Other holiday"
+                }
+            ),
+
+            "other_holiday_3": forms.TextInput(
+                attrs={
+                    "placeholder": "Other holiday"
+                }
+            ),
+
+            "other_collection_information": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "placeholder": "Enter any other collection information"
+                }
+            ),
+
+            "quantity": forms.NumberInput(
+                attrs={
+                    "min": "1000",
+                    "step": "1",
+                    "placeholder": "Minimum 1000"
+                }
+            ),
+
+            "name": forms.TextInput(
+                attrs={
+                    "placeholder": "Your name"
+                }
+            ),
+
+            "title": forms.TextInput(
+                attrs={
+                    "placeholder": "Your title"
+                }
+            ),
+
+            "company": forms.TextInput(
+                attrs={
+                    "placeholder": "Company name"
+                }
+            ),
+
+            "street_address": forms.TextInput(
+                attrs={
+                    "placeholder": "Street address"
+                }
+            ),
+
+            "address_contd": forms.TextInput(
+                attrs={
+                    "placeholder": "Apartment, suite, building, etc."
+                }
+            ),
+
+            "city": forms.TextInput(
+                attrs={
+                    "placeholder": "City"
+                }
+            ),
+
+            "state": forms.TextInput(
+                attrs={
+                    "placeholder": "State"
+                }
+            ),
+
+            "zip_code": forms.TextInput(
+                attrs={
+                    "placeholder": "Zip code"
+                }
+            ),
+
+            "phone": forms.TextInput(
+                attrs={
+                    "placeholder": "Phone number"
+                }
+            ),
+
+            "email": forms.EmailInput(
+                attrs={
+                    "placeholder": "you@example.com"
+                }
+            ),
+        }
+
+    def clean_quantity(self):
+        quantity = self.cleaned_data.get("quantity")
+
+        if quantity is None:
+            return quantity
+
+        if quantity < 1000:
+            raise forms.ValidationError(
+                "The minimum quantity is 1000 stickers."
+            )
+
+        return quantity
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        trash_frequency = cleaned_data.get(
+            "trash_collection_frequency"
+        )
+        other_trash = cleaned_data.get(
+            "other_trash_frequency"
+        )
+
+        if trash_frequency == "other" and not other_trash:
+            self.add_error(
+                "other_trash_frequency",
+                "Please specify the other trash collection frequency."
+            )
+
+        recycling_frequency = cleaned_data.get(
+            "recycling_collection_frequency"
+        )
+        other_recycling = cleaned_data.get(
+            "other_recycling_frequency"
+        )
+
+        if recycling_frequency == "other" and not other_recycling:
+            self.add_error(
+                "other_recycling_frequency",
+                "Please specify the other recycling collection frequency."
+            )
+
+        return cleaned_data
+
+========================================
+FILE: staff\urls.py
+========================================
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.staff_dashboard, name="staff_dashboard"),
+    path("login/", views.staff_login, name="staff_login"),
+    path("logout/", views.staff_logout, name="staff_logout"),
+    path("register/", views.staff_register, name="staff_register"),
+    path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+    path("profile/", views.staff_profile, name="staff_profile"),
+    
+    # Products
+    path("products/", views.staff_products, name="staff_products"),
+    path("products/", views.staff_products, name="staff_product_list"),
+    path("products/add/", views.staff_product_add, name="staff_product_add"),
+    path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+    path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+    
+    # Customers
+    path("customers/", views.staff_customers, name="staff_customers"),
+    path("customers/", views.staff_customers, name="staff_customer_list"),
+    
+    # Orders
+    path("orders/", views.staff_orders, name="staff_orders"),
+    path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+    
+    # Quotes
+    path("quotes/", views.staff_quotes, name="staff_quotes"),
+    path("quotes/", views.staff_quotes, name="staff_quote_list"),
+    path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+    
+    # Calendar Orders
+    path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+    path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+    
+    # Boss / Staff Management paths
+    path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+    path("staff-management/", views.boss_staff_management),
+    
+    path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+    path("staff-management/create/", views.owner_create_staff),
+    
+    path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+    path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+    path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+    path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+    path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+    path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+    path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+]
+
+========================================
+FILE: staff\views.py
+========================================
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+from products.models import (
+    Product,
+    Order,
+    QuoteRequest,
+    CollectionCalendarStickerOrder,
+)
+
+from .forms import (
+    ProductForm,
+    StaffRegistrationForm,
+    OwnerStaffForm,
+)
+
+from .models import StaffProfile, StaffActivityLog
+
+
+def get_staff_profile(user):
+    try:
+        return StaffProfile.objects.get(user=user)
+    except StaffProfile.DoesNotExist:
+        return None
+
+
+def get_client_ip(request):
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def log_staff_activity(request, staff_profile, action, description, object_name=""):
+    if not staff_profile:
+        return
+
+    StaffActivityLog.objects.create(
+        staff=staff_profile,
+        action=action,
+        description=description,
+        ip_address=get_client_ip(request),
+    )
+
+
+def staff_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+def boss_required(view_func):
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(request, "Your account is inactive.")
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "Staff profile not found.")
+            return redirect("staff_dashboard")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(request, "Your account is not approved.")
+            return redirect("staff_dashboard")
+
+        if profile.role != "manager":
+            messages.error(
+                request,
+                "Boss access is required for this section.",
+            )
+            return redirect("staff_dashboard")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
+
+
+@staff_required
+def staff_dashboard(request):
+    profile = get_staff_profile(request.user)
+
+    products_count = Product.objects.count()
+    available_products_count = Product.objects.filter(
+        is_available=True
+    ).count()
+
+    orders_count = Order.objects.count()
+    quotes_count = QuoteRequest.objects.count()
+
+    new_quotes_count = QuoteRequest.objects.filter(
+        status="new"
+    ).count()
+
+    reviewing_quotes_count = QuoteRequest.objects.filter(
+        status="reviewing"
+    ).count()
+
+    quoted_count = QuoteRequest.objects.filter(
+        status="quoted"
+    ).count()
+
+    approved_quotes_count = QuoteRequest.objects.filter(
+        status="approved"
+    ).count()
+
+    in_production_count = QuoteRequest.objects.filter(
+        status="in_production"
+    ).count()
+
+    completed_quotes_count = QuoteRequest.objects.filter(
+        status="completed"
+    ).count()
+
+    if profile:
+        profile.last_activity = timezone.now()
+        profile.save(update_fields=["last_activity"])
+
+    context = {
+        "profile": profile,
+        "products_count": products_count,
+        "available_products_count": available_products_count,
+        "orders_count": orders_count,
+        "quotes_count": quotes_count,
+        "new_quotes_count": new_quotes_count,
+        "reviewing_quotes_count": reviewing_quotes_count,
+        "quoted_count": quoted_count,
+        "approved_quotes_count": approved_quotes_count,
+        "in_production_count": in_production_count,
+        "completed_quotes_count": completed_quotes_count,
+    }
+
+    return render(
+        request,
+        "staff/dashboard.html",
+        context,
+    )
+
+
+@staff_required
+def staff_products(request):
+    products = Product.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/products.html",
+        {
+            "products": products,
+        },
+    )
+
+
+@staff_required
+def staff_product_add(request):
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "create",
+                f"Created product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product created successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm()
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "title": "Add Product",
+        },
+    )
+
+
+@staff_required
+def staff_product_edit(request, pk):
+    product = get_object_or_404(
+        Product,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        form = ProductForm(
+            request.POST,
+            request.FILES,
+            instance=product,
+        )
+
+        if form.is_valid():
+            product = form.save()
+
+            profile = get_staff_profile(request.user)
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Updated product: {product.name}",
+                product.name,
+            )
+
+            messages.success(
+                request,
+                "Product updated successfully.",
+            )
+
+            return redirect("staff_products")
+    else:
+        form = ProductForm(instance=product)
+
+    return render(
+        request,
+        "staff/product_form.html",
+        {
+            "form": form,
+            "product": product,
+            "title": "Edit Product",
+        },
+    )
+
+
+@staff_required
+def staff_customers(request):
+    customers = (
+        Order.objects
+        .values(
+            "customer_name",
+            "customer_email",
+            "customer_phone",
+        )
+        .distinct()
+        .order_by("customer_name")
+    )
+
+    return render(
+        request,
+        "staff/customers.html",
+        {
+            "customers": customers,
+        },
+    )
+
+
+@staff_required
+def staff_orders(request):
+    orders = Order.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/orders.html",
+        {
+            "orders": orders,
+        },
+    )
+
+
+@staff_required
+def staff_order_detail(request, pk):
+    order = get_object_or_404(
+        Order,
+        pk=pk,
+    )
+
+    return render(
+        request,
+        "staff/order_detail.html",
+        {
+            "order": order,
+        },
+    )
+
+
+@staff_required
+def staff_quotes(request):
+    quotes = QuoteRequest.objects.all().order_by("-created_at")
+
+    return render(
+        request,
+        "staff/quotes.html",
+        {
+            "quotes": quotes,
+        },
+    )
+
+
+@staff_required
+def staff_quote_detail(request, pk):
+    quote = get_object_or_404(
+        QuoteRequest,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        status = request.POST.get("status")
+        staff_notes = request.POST.get("staff_notes", "")
+
+        if status:
+            quote.status = status
+
+        if hasattr(quote, "staff_notes"):
+            quote.staff_notes = staff_notes
+
+        quote.save()
+
+        profile = get_staff_profile(request.user)
+
+        log_staff_activity(
+            request,
+            profile,
+            "update",
+            f"Updated quote #{quote.pk}",
+            f"Quote #{quote.pk}",
+        )
+
+        messages.success(
+            request,
+            "Quote updated successfully.",
+        )
+
+        return redirect(
+            "staff_quote_detail",
+            pk=quote.pk,
+        )
+
+    return render(
+        request,
+        "staff/quote_detail.html",
+        {
+            "quote": quote,
+            "status_choices": getattr(
+                QuoteRequest,
+                "STATUS_CHOICES",
+                [],
+            ),
+        },
+    )
+
+
+def staff_login(request):
+    if request.user.is_authenticated:
+        if request.user.is_superuser:
+            return redirect("staff_dashboard")
+
+        profile = get_staff_profile(request.user)
+
+        if profile and profile.approved and profile.status == "approved":
+            if request.user.is_active:
+                return redirect("staff_dashboard")
+
+            logout(request)
+
+            messages.error(
+                request,
+                "This staff account has been deactivated or removed. Please contact the Boss.",
+            )
+
+    if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password,
+        )
+
+        if user is not None:
+            if not user.is_active:
+                messages.error(
+                    request,
+                    "This staff account has been deactivated or removed. Please contact the Boss.",
+                )
+                return redirect("staff_login")
+
+            if user.is_superuser:
+                login(request, user)
+
+                log_staff_activity(
+                    request,
+                    None,
+                    "login",
+                    "Boss logged into the staff system.",
+                    "Staff Login",
+                )
+
+                return redirect("staff_dashboard")
+
+            profile = get_staff_profile(user)
+
+            if not profile:
+                messages.error(
+                    request,
+                    "No staff profile was found for this account.",
+                )
+                return redirect("staff_login")
+
+            if not profile.approved or profile.status != "approved":
+                messages.error(
+                    request,
+                    "Your staff account is awaiting Boss approval.",
+                )
+                return redirect("staff_login")
+
+            login(request, user)
+
+            profile.last_activity = timezone.now()
+            profile.save(update_fields=["last_activity"])
+
+            log_staff_activity(
+                request,
+                profile,
+                "login",
+                "Staff member logged into the staff system.",
+                "Staff Login",
+            )
+
+            return redirect("staff_dashboard")
+
+        messages.error(
+            request,
+            "Invalid username or password.",
+        )
+
+    return render(
+        request,
+        "staff/login.html",
+    )
+
+
+@login_required
+def staff_logout(request):
+    profile = get_staff_profile(request.user)
+
+    if profile:
+        log_staff_activity(
+            request,
+            profile,
+            "logout",
+            "Staff member logged out.",
+            "Staff Logout",
+        )
+
+    logout(request)
+
+    messages.success(
+        request,
+        "You have been logged out successfully.",
+    )
+
+    return redirect("staff_login")
+
+
+@staff_required
+def staff_profile(request):
+    profile = get_staff_profile(request.user)
+
+    return render(
+        request,
+        "staff/profile.html",
+        {
+            "profile": profile,
+        },
+    )
+
+
+def staff_register(request):
+    if request.user.is_authenticated:
+        return redirect("staff_dashboard")
+
+    if request.method == "POST":
+        form = StaffRegistrationForm(request.POST)
+
+        if form.is_valid():
+            user = form.save(commit=False)
+
+            password = form.cleaned_data.get("password1")
+
+            if password:
+                user.set_password(password)
+
+            user.is_active = True
+            user.is_staff = False
+            user.save()
+
+            profile = StaffProfile.objects.create(
+                user=user,
+                approved=False,
+                status="pending",
+            )
+
+            messages.success(
+                request,
+                "Your staff account has been created and is waiting for Boss approval.",
+            )
+
+            return redirect(
+                "staff_registration_success"
+            )
+    else:
+        form = StaffRegistrationForm()
+
+    return render(
+        request,
+        "staff/register.html",
+        {
+            "form": form,
+        },
+    )
+
+
+def staff_registration_success(request):
+    return render(
+        request,
+        "staff/registration_success.html",
+    )
+
+
+@boss_required
+def boss_staff_management(request):
+    staff_members = (
+        StaffProfile.objects
+        .select_related("user")
+        .order_by("-joined_at")
+    )
+
+    pending_staff = staff_members.filter(
+        status="pending",
+        approved=False,
+    )
+
+    approved_staff = staff_members.filter(
+        status="approved",
+        approved=True,
+    )
+
+    deactivated_staff = approved_staff.filter(
+        user__is_active=False,
+    )
+
+    active_staff = approved_staff.filter(
+        user__is_active=True,
+    )
+
+    removed_staff = staff_members.filter(
+        status="rejected",
+    )
+
+    return render(
+        request,
+        "staff/boss/staff.html",
+        {
+            "staff_members": staff_members,
+            "pending_staff": pending_staff,
+            "approved_staff": approved_staff,
+            "active_staff": active_staff,
+            "deactivated_staff": deactivated_staff,
+            "removed_staff": removed_staff,
+            "rejected_staff": removed_staff,
+        },
+    )
+
+
+@boss_required
+def owner_create_staff(request):
+    if request.method == "POST":
+        form = OwnerStaffForm(request.POST)
+
+        if form.is_valid():
+            with transaction.atomic():
+                user = form.save(commit=False)
+
+                password = form.cleaned_data.get("password1")
+
+                if password:
+                    user.set_password(password)
+
+                user.is_active = True
+                user.is_staff = True
+                user.save()
+
+                profile = StaffProfile.objects.create(
+                    user=user,
+                    approved=True,
+                    status="approved",
+                    approved_at=timezone.now(),
+                )
+
+            log_staff_activity(
+                request,
+                get_staff_profile(request.user),
+                "create",
+                f"Boss created staff account: {user.username}",
+                user.username,
+            )
+
+            messages.success(
+                request,
+                f"Staff account for {user.username} created successfully.",
+            )
+
+            return redirect("boss_staff_management")
+    else:
+        form = OwnerStaffForm()
+
+    return render(
+        request,
+        "staff/boss/create_staff.html",
+        {
+            "form": form,
+        },
+    )
+
+
+@boss_required
+@transaction.atomic
+def approve_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.approved = True
+    profile.status = "approved"
+    profile.approved_at = timezone.now()
+    profile.rejection_reason = ""
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "approve",
+        f"Approved staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been approved.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reject_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be rejected.",
+        )
+        return redirect("boss_staff_management")
+
+    reason = request.POST.get(
+        "rejection_reason",
+        "Rejected by Boss",
+    ).strip()
+
+    profile.approved = False
+    profile.status = "rejected"
+    profile.rejection_reason = reason
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reject",
+        f"Rejected staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been rejected.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def deactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "Only approved staff members can be deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    if not profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already deactivated.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = False
+    profile.user.save(
+        update_fields=["is_active"]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "deactivate",
+        f"Deactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been deactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def reactivate_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account does not need reactivation.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be changed here.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.status != "approved" or not profile.approved:
+        messages.warning(
+            request,
+            "This account is not an approved staff account. Approve it again instead.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_active:
+        messages.warning(
+            request,
+            f"{profile.user.username} is already active.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.user.is_active = True
+    profile.user.is_staff = True
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "reactivate",
+        f"Reactivated staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been reactivated.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+@transaction.atomic
+def remove_staff(request, pk):
+    if request.method != "POST":
+        return redirect("boss_staff_management")
+
+    profile = get_object_or_404(
+        StaffProfile,
+        pk=pk,
+    )
+
+    if profile.user == request.user:
+        messages.warning(
+            request,
+            "The Boss account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    if profile.user.is_superuser:
+        messages.warning(
+            request,
+            "A superuser account cannot be removed.",
+        )
+        return redirect("boss_staff_management")
+
+    profile.status = "rejected"
+    profile.approved = False
+    profile.rejection_reason = "Removed by Boss"
+
+    profile.user.is_active = False
+    profile.user.is_staff = False
+    profile.user.save(
+        update_fields=[
+            "is_active",
+            "is_staff",
+        ]
+    )
+
+    profile.save()
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "remove",
+        f"Removed staff member: {profile.user.username}",
+        profile.user.username,
+    )
+
+    messages.success(
+        request,
+        f"{profile.user.username} has been removed from the staff system.",
+    )
+
+    return redirect("boss_staff_management")
+
+
+@boss_required
+def staff_activity_log(request):
+    activities = (
+        StaffActivityLog.objects
+        .select_related(
+            "staff",
+            "staff__user",
+        )
+        .order_by("-created_at")
+    )
+
+    search = request.GET.get(
+        "search",
+        "",
+    ).strip()
+
+    action = request.GET.get(
+        "action",
+        "",
+    ).strip()
+
+    if search:
+        activities = activities.filter(
+            description__icontains=search
+        )
+
+    if action:
+        activities = activities.filter(
+            action=action
+        )
+
+    log_staff_activity(
+        request,
+        get_staff_profile(request.user),
+        "page_view",
+        "Boss viewed the staff activity log.",
+        "Activity Log",
+    )
+
+    return render(
+        request,
+        "staff/boss/activity.html",
+        {
+            "activities": activities,
+            "search_query": search,
+            "selected_action": action,
+            "action_choices": StaffActivityLog.ACTION_CHOICES,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_orders(request):
+    orders = (
+        CollectionCalendarStickerOrder.objects
+        .all()
+        .order_by("-created_at")
+    )
+
+    return render(
+        request,
+        "staff/calendar_orders.html",
+        {
+            "orders": orders,
+        },
+    )
+
+
+@staff_required
+def staff_calendar_order_detail(request, pk):
+    order = get_object_or_404(
+        CollectionCalendarStickerOrder,
+        pk=pk,
+    )
+
+    if request.method == "POST":
+        status = request.POST.get("status")
+        staff_notes = request.POST.get(
+            "staff_notes",
+            "",
+        )
+
+        if status:
+            order.status = status
+
+        if hasattr(order, "staff_notes"):
+            order.staff_notes = staff_notes
+
+        order.save()
+
+        profile = get_staff_profile(request.user)
+
+        log_staff_activity(
+            request,
+            profile,
+            "update",
+            f"Updated calendar sticker order #{order.pk}",
+            f"Calendar Sticker Order #{order.pk}",
+        )
+
+        messages.success(
+            request,
+            "Calendar sticker order updated successfully.",
+        )
+
+        return redirect(
+            "staff_calendar_order_detail",
+            pk=order.pk,
+        )
+
+    return render(
+        request,
+        "staff/calendar_order_detail.html",
+        {
+            "order": order,
+            "status_choices": getattr(
+                CollectionCalendarStickerOrder,
+                "STATUS_CHOICES",
+                [],
+            ),
+        },
+    )
+
+def boss_site_settings(request):
+    from products.models import SiteSettings
+
+    boss_required(request)
+    settings_obj = SiteSettings.get_settings()
+
+    if request.method == "POST":
+        settings_obj.company_name = request.POST.get("company_name", "").strip() or "THE LABEL GROUP"
+        settings_obj.tagline = request.POST.get("tagline", "").strip() or "INDUSTRIAL PRINTS & DECALS"
+        settings_obj.phone = request.POST.get("phone", "").strip()
+        settings_obj.email = request.POST.get("email", "").strip()
+        settings_obj.address = request.POST.get("address", "").strip()
+        settings_obj.whatsapp = request.POST.get("whatsapp", "").strip()
+        settings_obj.facebook = request.POST.get("facebook", "").strip()
+        settings_obj.instagram = request.POST.get("instagram", "").strip()
+        settings_obj.tiktok = request.POST.get("tiktok", "").strip()
+        settings_obj.linkedin = request.POST.get("linkedin", "").strip()
+        settings_obj.youtube = request.POST.get("youtube", "").strip()
+        settings_obj.save()
+        messages.success(request, "Website settings updated successfully.")
+        return redirect("boss_site_settings")
+
+    return render(request, "staff/site_settings.html", {"site_settings": settings_obj})
+
+
+
+@staff_required
+def staff_product_image_delete(request, pk):
+    profile = get_staff_profile(request.user)
+
+    product = get_object_or_404(
+        Product,
+        pk=pk
+    )
+
+    if request.method == "POST":
+        product_name = product.name
+
+        if product.image:
+            product.image.delete(save=False)
+            product.image = None
+            product.save()
+
+            log_staff_activity(
+                request,
+                profile,
+                "update",
+                f"Deleted product image: {product_name}",
+                f"Staff member deleted the current image for product '{product_name}'.",
+            )
+
+            messages.success(
+                request,
+                f"The current image for '{product_name}' was deleted successfully."
+            )
+        else:
+            messages.info(
+                request,
+                f"'{product_name}' does not currently have an image."
+            )
+
+    return redirect(
+        "staff_product_edit",
+        pk=product.pk
+    )
+
+========================================
+QUOTE-RELATED TEMPLATES
+========================================
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\base.html.before_quote_link_fix_20261008_105222.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html.before_quote_button_fix_20261008_105503.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html.before_quote_link_fix_20261008_105222.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html.before_quote_button_fix_20261008_105503.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\order_success.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\product_detail.html.before_quote_button_fix_20261008_105503.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html.before_quote_link_fix_20261008_105222.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html.before_quote_button_fix_20261008_105503.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html.before_quote_cart_fix.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html.before_quote_button_fix_20261008_105503.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html.before_quote_cart_fix.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\shipping.html.before_quote_system_20261008_105222.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quotes.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quote_detail.html
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quotes\detail.html.before_professional_quote_management.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quotes\detail.html.before_quote_management_final.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quotes\list.html.before_professional_quote_management.backup
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\quotes\list.html.before_quote_management_final.backup

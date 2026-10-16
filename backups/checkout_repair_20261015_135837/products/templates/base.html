@@ -1,0 +1,225 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1f3a">
+    <title>{% block title %}The Label Group | Industrial Prints &amp; Decals{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Professional industrial prints, durable decals, and custom business signage from The Label Group.{% endblock %}">
+    <link rel="icon" href="{% static 'logo 2 (1).png' %}">
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --page: #f4f6f9;
+            --white: #ffffff;
+            --text: #172033;
+            --muted: #667085;
+            --border: #e1e6ed;
+            --radius: 12px;
+            --shadow: 0 5px 22px rgba(11, 31, 58, .08);
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--page);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.55;
+        }
+
+        a { color: var(--orange-dark); }
+        a:hover { color: var(--navy); }
+
+        .site-topline {
+            padding: 8px 16px;
+            text-align: center;
+            color: #fff;
+            background: var(--navy-dark);
+            font-size: 13px;
+        }
+
+        .site-header {
+            color: #fff;
+            background: var(--navy);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, .12);
+        }
+
+        .site-header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 14px 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .site-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: .2px;
+        }
+
+        .site-brand img {
+            width: auto;
+            max-width: 64px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .site-nav {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 17px;
+        }
+
+        .site-nav a {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .site-nav a:hover { color: #ffb574; }
+
+        main.site-main {
+            flex: 1;
+            width: 100%;
+            min-width: 0;
+            padding: 24px 20px 40px;
+        }
+
+        .site-container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .site-footer {
+            padding: 20px;
+            color: #dce5f1;
+            background: var(--navy-dark);
+            text-align: center;
+            font-size: 13px;
+        }
+
+        .site-footer a { color: #ffb574; }
+
+        .messages {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto 18px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .messages li {
+            margin-bottom: 8px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            background: #e8f3ff;
+            border: 1px solid #c7def6;
+        }
+
+        .messages li.success {
+            color: #155724;
+            background: #e8f7ed;
+            border-color: #b9e5c7;
+        }
+
+        .messages li.error {
+            color: #842029;
+            background: #fbe9eb;
+            border-color: #f2c6cb;
+        }
+
+        .messages li.warning {
+            color: #664d03;
+            background: #fff4d6;
+            border-color: #ffe69c;
+        }
+
+        button, input, select, textarea { font: inherit; }
+        img { max-width: 100%; }
+
+        @media (max-width: 700px) {
+            .site-header-inner { padding: 12px 15px; }
+            .site-brand { font-size: 17px; }
+            .site-nav { gap: 12px; }
+            .site-nav a { font-size: 13px; }
+            main.site-main { padding: 18px 12px 28px; }
+        }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="site-topline">
+        Free quote consultation &bull; Durable custom printing &bull; Built for business
+    </div>
+
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="site-brand" href="/">
+                <img src="{% static 'logo 2 (1).png' %}"
+                     alt="The Label Group logo"
+                     onerror="this.style.display='none'">
+                <span>THE LABEL GROUP</span>
+            </a>
+
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="/">Shop Prints</a>
+                <a href="/custom-orders/">Custom Orders</a>
+                <a href="/#why-the-label-group">Why The Label Group</a>
+                <a href="/#shipping">Shipping</a>
+                {% if user.is_authenticated %}
+                    {% if user.is_staff or user.is_superuser %}
+                        <a href="/staff/">Staff Dashboard</a>
+                    {% endif %}
+                    <a href="/staff/logout/">Log Out</a>
+                {% else %}
+                    <a href="/staff/login/">Staff Login</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="site-main">
+        {% if messages %}
+            <ul class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <li class="{{ message.tags }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        &copy; {% now "Y" %} The Label Group &middot; Industrial Prints &amp; Decals
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

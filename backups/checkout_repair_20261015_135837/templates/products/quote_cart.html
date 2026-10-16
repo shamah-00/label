@@ -1,0 +1,136 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quote Cart | THE LABEL GROUP</title>
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f4f7fb;
+            --border: #dce3ec;
+            --muted: #64748b;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--navy);
+        }
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 20px max(5%, calc((100% - 1120px) / 2));
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .brand { font-weight: 800; letter-spacing: 1px; }
+        header a { color: white; text-decoration: none; font-size: 14px; }
+        main { max-width: 1050px; margin: 36px auto; padding: 0 20px; }
+        .intro { margin-bottom: 24px; }
+        h1 { margin: 0 0 10px; font-size: clamp(27px, 4vw, 38px); }
+        p { line-height: 1.6; }
+        .muted { color: var(--muted); }
+        .panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 8px 28px rgba(11,31,58,.05);
+        }
+        .item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            padding: 18px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .item:last-child { border-bottom: 0; }
+        .item-name { font-weight: 700; }
+        .quantity { color: var(--muted); font-size: 14px; margin-top: 7px; }
+        .remove {
+            color: #b42318;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        .button {
+            display: inline-block;
+            padding: 13px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            border: 0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .primary { background: var(--orange); color: white; }
+        .primary:hover { background: var(--orange-dark); }
+        .secondary { background: #e9eef5; color: var(--navy); }
+        .empty { text-align: center; padding: 38px 12px; }
+        footer { text-align: center; color: var(--muted); padding: 24px; font-size: 13px; }
+        @media (max-width: 600px) {
+            main { margin-top: 24px; }
+            .panel { padding: 17px; }
+            .item { align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="brand">THE LABEL GROUP</div>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        &nbsp;&nbsp;
+        
+    </nav>
+</header>
+<main>
+    <div class="intro">
+        <h1>Your quote cart</h1>
+        <p class="muted">Review the products and quantities you want priced. You can submit your delivery details and requirements on the next step.</p>
+    </div>
+    <section class="panel">
+        {% if quote_items %}
+            {% for item in quote_items %}
+                <div class="item">
+                    <div>
+                        <div class="item-name">{{ item.product }}</div>
+                        <div class="quantity">Requested quantity: {{ item.quantity }}</div>
+                    </div>
+                    <a class="remove" href="{% url 'remove_from_quote' item.product.id %}">Remove</a>
+                </div>
+            {% endfor %}
+            <div class="actions">
+                <a class="button primary" href="{% url 'custom_order' %}">Continue to quote request</a>
+                <a class="button secondary" href="{% url 'product_list' %}">Add more products</a>
+            </div>
+        {% else %}
+            <div class="empty">
+                <h2>Your quote cart is empty</h2>
+                <p class="muted">Browse our products and add the items you would like us to quote.</p>
+                <a class="button primary" href="{% url 'product_list' %}">Browse products</a>
+            </div>
+        {% endif %}
+    </section>
+</main>
+<footer>Â© {% now "Y" %} THE LABEL GROUP Â· Industrial Prints &amp; Decals</footer>
+</body>
+</html>
+

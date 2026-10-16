@@ -1,0 +1,374 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Shop durable industrial labels, commercial decals, safety graphics and custom printing from The Label Group.">
+    <title>Shop Products | The Label Group</title>
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f5f7fa;
+            --border: #e2e7ee;
+            --muted: #687588;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: var(--light);
+            color: var(--navy);
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+        }
+        a { color: inherit; text-decoration: none; }
+        .announcement {
+            padding: 9px 16px;
+            background: var(--navy-dark);
+            color: white;
+            text-align: center;
+            font-size: 12px;
+            letter-spacing: .4px;
+        }
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+        .nav {
+            width: min(1200px, 92%);
+            min-height: 78px;
+            margin: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+        }
+        .brand {
+            color: var(--navy);
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: -.6px;
+        }
+        .brand span { color: var(--orange); }
+        .nav-links {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 18px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .nav-links a:hover { color: var(--orange-dark); }
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 43px;
+            padding: 11px 15px;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .25px;
+            cursor: pointer;
+            transition: .2s ease;
+        }
+        .button-orange { color: white; background: var(--orange); }
+        .button-orange:hover { background: var(--orange-dark); }
+        .button-outline {
+            color: var(--navy);
+            background: white;
+            border-color: var(--border);
+        }
+        .button-outline:hover {
+            border-color: var(--orange);
+            color: var(--orange-dark);
+        }
+        .container { width: min(1200px, 92%); margin: auto; }
+        .hero {
+            padding: 58px 0 50px;
+            color: white;
+            background:
+                radial-gradient(circle at 85% 15%, rgba(244,123,32,.23), transparent 30%),
+                linear-gradient(120deg, var(--navy-dark), var(--navy));
+        }
+        .eyebrow {
+            color: var(--orange);
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 10px 0 12px;
+            font-size: clamp(32px, 5vw, 52px);
+            line-height: 1.1;
+            letter-spacing: -1.4px;
+        }
+        .hero p { max-width: 680px; margin: 0; color: #dce5ef; }
+        .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+        .hero .button-outline {
+            color: white;
+            background: transparent;
+            border-color: #64748b;
+        }
+        .catalogue { padding: 34px 0 68px; }
+        .toolbar {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(180px, 260px) auto;
+            gap: 12px;
+            margin-bottom: 24px;
+            padding: 18px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .field {
+            width: 100%;
+            min-height: 45px;
+            padding: 11px 13px;
+            color: var(--navy);
+            background: white;
+            border: 1px solid #d5dce6;
+            border-radius: 5px;
+            font: inherit;
+            font-size: 14px;
+        }
+        .section-heading {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 26px 0 18px;
+        }
+        .section-heading h2 { margin: 0; font-size: 25px; letter-spacing: -.5px; }
+        .muted { color: var(--muted); font-size: 13px; }
+        .industry-links { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 25px; }
+        .industry-chip {
+            padding: 8px 13px;
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            background: white;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .industry-chip:hover, .industry-chip.active {
+            color: white;
+            background: var(--navy);
+            border-color: var(--navy);
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+        }
+        .product-card {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            overflow: hidden;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(11,31,58,.09);
+        }
+        .product-image {
+            display: flex;
+            height: 225px;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #eef2f6;
+        }
+        .product-image img { width: 100%; height: 100%; object-fit: contain; padding: 12px; }
+        .image-placeholder { color: #8793a3; font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+        .product-info { display: flex; flex: 1; flex-direction: column; padding: 19px; }
+        .product-code {
+            color: var(--orange-dark);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+        .product-info h3 { margin: 7px 0 8px; font-size: 18px; line-height: 1.35; }
+        .description {
+            display: -webkit-box;
+            overflow: hidden;
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 13px;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 3;
+        }
+        .price { margin: auto 0 15px; font-size: 19px; font-weight: 900; }
+        .price small { color: var(--muted); font-size: 11px; font-weight: 500; }
+        .card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .card-actions .button { flex: 1; }
+        .empty-state {
+            padding: 50px 20px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .empty-state h3 { margin-top: 0; }
+        .footer { padding: 35px 0; color: #dce5ef; background: var(--navy-dark); }
+        .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 20px; }
+        .footer strong { color: white; }
+        .footer p { margin: 5px 0; font-size: 13px; }
+        @media (max-width: 850px) {
+            .nav { padding: 15px 0; align-items: flex-start; }
+            .nav-links { justify-content: flex-end; gap: 12px; }
+            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .toolbar { grid-template-columns: 1fr 1fr; }
+            .toolbar .button { grid-column: 1 / -1; }
+        }
+        @media (max-width: 560px) {
+            .nav { flex-direction: column; gap: 12px; }
+            .nav-links { justify-content: flex-start; }
+            .hero { padding: 43px 0; }
+            .product-grid { grid-template-columns: 1fr; }
+            .toolbar { grid-template-columns: 1fr; padding: 12px; }
+            .toolbar .button { grid-column: auto; }
+            .product-image { height: 240px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement">Free quote consultation &bull; Durable custom printing &bull; Built for business</div>
+
+    <header class="header">
+        <nav class="nav">
+            <a class="brand" href="{% url 'home' %}">THE LABEL <span>GROUP</span></a>
+            <div class="nav-links">
+                <a href="{% url 'home' %}">HOME</a>
+                <a href="{% url 'product_list' %}">SHOP PRINTS</a>
+                <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+                <a href="{% url 'shipping' %}">SHIPPING</a>
+                <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+                <a href="/staff/login/">STAFF LOGIN</a>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="eyebrow">Industrial Printing &amp; Identification</div>
+            <h1>Shop Products</h1>
+            <p>Explore commercial decals, equipment identification labels, safety graphics and durable custom printing for demanding business applications.</p>
+            <div class="hero-actions">
+                <a class="button button-orange" href="#catalogue">BROWSE CATALOGUE &darr;</a>
+                <a class="button button-outline" href="{% url 'custom_order' %}">REQUEST A CUSTOM ORDER</a>
+            </div>
+        </div>
+    </section>
+
+    <main class="catalogue container" id="catalogue">
+        <form class="toolbar" method="get" action="{% url 'product_list' %}">
+            <input class="field" type="search" name="search" value="{{ search|default:request.GET.search }}" placeholder="Search product name, code or description..." aria-label="Search products">
+            <select class="field" name="industry" aria-label="Filter by industry">
+                <option value="">All industries</option>
+                <option value="waste" {% if industry_filter == "waste" %}selected{% endif %}>Waste Companies</option>
+                <option value="government" {% if industry_filter == "government" %}selected{% endif %}>Government Contractors</option>
+                <option value="construction" {% if industry_filter == "construction" %}selected{% endif %}>Construction</option>
+                <option value="motor" {% if industry_filter == "motor" %}selected{% endif %}>Motor &amp; Car Companies</option>
+                <option value="pool" {% if industry_filter == "pool" %}selected{% endif %}>Pool Companies</option>
+                <option value="other" {% if industry_filter == "other" %}selected{% endif %}>Other Products</option>
+            </select>
+            <button class="button button-orange" type="submit">SEARCH PRODUCTS</button>
+        </form>
+
+        <div class="section-heading">
+            <div>
+                <div class="eyebrow">The Label Group Catalogue</div>
+                <h2>Products for your business</h2>
+            </div>
+            <div class="muted">{% if products %}Products matching your selection{% else %}No matching products{% endif %}</div>
+        </div>
+
+        <div class="industry-links">
+            <a class="industry-chip" href="{% url 'product_list' %}">All Products</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'waste' %}">Waste Companies</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'government' %}">Government Contractors</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'construction' %}">Construction</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'motor' %}">Motor &amp; Car</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'pool' %}">Pool Companies</a>
+            <a class="industry-chip" href="{% url 'industry_products' 'other' %}">Other Products</a>
+        </div>
+
+        {% if products %}
+            <div class="product-grid">
+                {% for product in products %}
+                    <article class="product-card">
+                        <a href="{% url 'product_detail' product.id %}" class="product-image">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                            {% else %}
+                                <span class="image-placeholder">THE LABEL GROUP</span>
+                            {% endif %}
+                        </a>
+                        <div class="product-info">
+                            <div class="product-code">{% if product.product_code %}{{ product.product_code }}{% else %}Industrial Printing{% endif %}</div>
+                            <h3><a href="{% url 'product_detail' product.id %}">{{ product.name }}</a></h3>
+                            {% if product.description %}
+                                <p class="description">{{ product.description|striptags }}</p>
+                            {% else %}
+                                <p class="description">Durable printing solutions for commercial and industrial applications.</p>
+                            {% endif %}
+                            <div class="price">
+                                {% if product.discount_price %}
+                                    ${{ product.discount_price|floatformat:2 }}
+                                    <small><s>${{ product.price|floatformat:2 }}</s> USD</small>
+                                {% elif product.price %}
+                                    ${{ product.price|floatformat:2 }} <small>USD</small>
+                                {% else %}
+                                    <small>Request a quote</small>
+                                {% endif %}
+                            </div>
+                            <div class="card-actions">
+                                <a class="button button-outline" href="{% url 'product_detail' product.id %}">VIEW DETAILS</a>
+                                <a class="button button-orange" href="{% url 'add_to_quote' product.id %}">ADD TO QUOTE</a>
+                            </div>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <section class="empty-state">
+                <h3>No products found</h3>
+                <p class="muted">Try another search term or view the full catalogue.</p>
+                <a class="button button-orange" href="{% url 'product_list' %}">VIEW ALL PRODUCTS</a>
+                <a class="button button-outline" href="{% url 'custom_order' %}">REQUEST A CUSTOM ORDER</a>
+            </section>
+        {% endif %}
+    </main>
+
+    <footer class="footer">
+        <div class="container footer-inner">
+            <div>
+                <strong>THE LABEL GROUP</strong>
+                <p>Industrial Prints &amp; Decals</p>
+                <p>Durable printing. Professional identification.</p>
+            </div>
+            <div>
+                <strong>Contact</strong>
+                <p>Phone: +1 413-731-6700</p>
+                <p>Email: labelgroup@comcast.net</p>
+                <p>580 St. James Avenue, Springfield, MA 01109, USA</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

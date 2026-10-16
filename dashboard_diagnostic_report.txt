@@ -1,0 +1,68 @@
+========== REAL DATABASE COUNTS ==========
+Products: 100
+Orders: 4
+Quote requests: 1
+Available products: 100
+
+========== QUOTE STATUS COUNTS ==========
+quoted: 1
+
+========== STAFF COUNTS ==========
+Staff profiles: 5
+Approved staff: 2
+Pending staff: 0
+Activity records: 181
+
+========== UNDERLYING DASHBOARD VIEW ==========
+URL name: staff_dashboard
+Function: staff.views.wrapper
+
+--- Actual dashboard function source ---
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+
+========== DASHBOARD TEMPLATE VARIABLES ==========
+Template exists: True
+Template size: 16003 characters
+total_products: used
+available_products: used
+total_quotes: used
+new_quotes: used
+reviewing_quotes: used
+quoted_quotes: used
+approved_quotes: used
+production_quotes: used
+completed_quotes: used
+total_orders: used
+approved_staff: used
+pending_staff: used
+recent_quotes: used
+recent_activity: used

@@ -1,0 +1,841 @@
+{% block title %}Checkout | THE LABEL GROUP{% endblock %}
+
+
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 50px 20px;">
+
+
+<div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 42px; margin-bottom: 10px;">
+        Checkout
+    </h1>
+
+    <p style="color: #666; font-size: 17px;">
+        Complete your details to place your order with THE LABEL GROUP.
+    </p>
+</div>
+
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div style="
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 30px;
+        align-items: start;
+    ">
+
+
+        <!-- CUSTOMER INFORMATION -->
+
+        <div style="
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 30px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Customer Information
+            </h2>
+
+            <div style="margin-top: 25px;">
+
+                <label for="customer_name">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="customer_name"
+                    name="customer_name"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="customer_email"
+                    name="customer_email"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="customer_phone"
+                    name="customer_phone"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <h2 style="margin-top: 35px;">
+                Shipping Information
+            </h2>
+
+
+            <div style="margin-top: 25px;">
+
+                <label for="shipping_address">
+                    Street Address
+                </label>
+
+                <textarea
+                    id="shipping_address"
+                    name="shipping_address"
+                    rows="3"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_city">
+                    City
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_city"
+                    name="shipping_city"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    " list="us-city-suggestions" />
+<datalist id="us-city-suggestions"></datalist>
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_state">
+                    State / Province
+                </label>
+
+                <select id="shipping_state" name="shipping_state" required autocomplete="address-level1" style="width:100%;box-sizing:border-box;padding:12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#0b1f3a;"><option value="">Choose a state</option><option value="AL">Alabama</option><option value="AK">Alaska</option><option value="AZ">Arizona</option><option value="AR">Arkansas</option><option value="CA">California</option><option value="CO">Colorado</option><option value="CT">Connecticut</option><option value="DE">Delaware</option><option value="DC">District of Columbia</option><option value="FL">Florida</option><option value="GA">Georgia</option><option value="HI">Hawaii</option><option value="ID">Idaho</option><option value="IL">Illinois</option><option value="IN">Indiana</option><option value="IA">Iowa</option><option value="KS">Kansas</option><option value="KY">Kentucky</option><option value="LA">Louisiana</option><option value="ME">Maine</option><option value="MD">Maryland</option><option value="MA">Massachusetts</option><option value="MI">Michigan</option><option value="MN">Minnesota</option><option value="MS">Mississippi</option><option value="MO">Missouri</option><option value="MT">Montana</option><option value="NE">Nebraska</option><option value="NV">Nevada</option><option value="NH">New Hampshire</option><option value="NJ">New Jersey</option><option value="NM">New Mexico</option><option value="NY">New York</option><option value="NC">North Carolina</option><option value="ND">North Dakota</option><option value="OH">Ohio</option><option value="OK">Oklahoma</option><option value="OR">Oregon</option><option value="PA">Pennsylvania</option><option value="RI">Rhode Island</option><option value="SC">South Carolina</option><option value="SD">South Dakota</option><option value="TN">Tennessee</option><option value="TX">Texas</option><option value="UT">Utah</option><option value="VT">Vermont</option><option value="VA">Virginia</option><option value="WA">Washington</option><option value="WV">West Virginia</option><option value="WI">Wisconsin</option><option value="WY">Wyoming</option></select>
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_postal_code">
+                    Postal Code
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_postal_code"
+                    name="shipping_postal_code"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    " pattern="[0-9]{5}(-[0-9]{4})?" title="Enter a US ZIP code, such as 01109." />
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_country">
+                    Country
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_country"
+                    name="shipping_country"
+                    required
+                    placeholder="United States"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                 value="United States" readonly>
+
+            </div>
+
+
+            <div>
+
+                <label for="notes">
+                    Order Notes
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    placeholder="Anything we should know about your order?"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <div style="
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Your Order
+            </h2>
+
+
+            {% for item in checkout_items %}
+
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 15px;
+                    padding: 15px 0;
+                    border-bottom: 1px solid #ddd;
+                ">
+
+                    <div>
+
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+
+                        <div style="
+                            color: #666;
+                            font-size: 14px;
+                            margin-top: 5px;
+                        ">
+                            Qty: {{ item.quantity }}
+                        </div>
+
+                    </div>
+
+                    <strong>
+                        ${{ item.item_total|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+            {% endfor %}
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+            ">
+
+                <span>
+                    Subtotal
+                </span>
+
+                <strong>
+                    ${{ subtotal|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 12px;
+            ">
+
+                <span>
+                    Shipping
+                </span>
+
+                <strong id="checkout-shipping-amount" aria-live="polite">Select a service below</strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                border-top: 1px solid #ddd;
+                padding-top: 18px;
+                margin-top: 20px;
+                font-size: 21px;
+            ">
+
+                <strong>
+                    Total
+                </strong>
+
+                <strong id="checkout-final-total" data-subtotal="{{ subtotal|floatformat:2 }}">${{ total|floatformat:2 }}</strong>
+
+            </div>
+
+
+            
+
+
+            <a
+                href="{% url 'cart' %}"
+                style="
+                    display: block;
+                    text-align: center;
+                    margin-top: 15px;
+                    color: #174a7c;
+                    text-decoration: none;
+                    font-weight: 600;
+                "
+            >
+                ← Back to Cart
+            </a>
+
+        </div>
+
+    </div>
+
+
+    
+<section class="shippo-shipping-options" aria-labelledby="shippo-title">
+    <div class="shippo-heading">
+        <span class="shippo-kicker">THE LABEL GROUP</span>
+        <h3 id="shippo-title">🚚 Choose Your Shipping</h3>
+        <p>Reliable US domestic delivery for your custom prints and decals.</p>
+        <span class="shippo-domestic-badge">🇺🇸 UNITED STATES SHIPPING ONLY</span>
+    </div>
+
+    <div class="shippo-origin">
+        <span class="shippo-origin-icon">📦</span>
+        <div>
+            <strong>Ships from Springfield, Massachusetts</strong>
+            <p>The Label Group LLC · Springfield, MA 01109</p>
+        </div>
+    </div>
+
+    {% if shipping_rate_error %}
+        <div class="shippo-error" role="alert">
+            <strong>We couldn't calculate your shipping.</strong>
+            <p>{{ shipping_rate_error }}</p>
+            <p>Check your US delivery address and try again.</p>
+        </div>
+    {% endif %}
+
+    {% if shipping_rates %}
+        <fieldset class="shippo-rate-list">
+            <legend>Available delivery services</legend>
+            {% for rate in shipping_rates %}
+                <label class="shippo-rate">
+                    <input type="radio"
+                           name="shipping_rate_id"
+                           value="{{ rate.object_id }}"
+                           data-amount="{{ rate.amount }}"
+                           data-currency="{{ rate.currency|default:'USD' }}"
+                           required>
+                    <span class="shippo-rate-info">
+                        <strong>{{ rate.provider }} — {{ rate.service }}</strong>
+                        {% if rate.estimated_days %}
+                            <small>Estimated delivery: {{ rate.estimated_days }} day(s)</small>
+                        {% else %}
+                            <small>Delivery estimate provided by the carrier, if available</small>
+                        {% endif %}
+                    </span>
+                    <span class="shippo-rate-price">
+                        ${{ rate.amount|floatformat:2 }} {{ rate.currency }}
+                    </span>
+                </label>
+            {% endfor %}
+        </fieldset>
+        <p id="shippo-selection-help" class="shippo-help">
+            Select a service to update your shipping charge and final total.
+        </p>
+    {% else %}
+        <div class="shippo-instructions">
+            <strong>How shipping works</strong>
+            <p>1. Enter your US delivery address above.</p>
+            <p>2. Select <strong>Calculate shipping rates</strong>.</p>
+            <p>3. Choose a carrier and service to see your final total.</p>
+        </div>
+    {% endif %}
+
+    <button type="submit" name="action" value="get_rates"
+            class="shippo-calculate">
+        Calculate shipping rates
+    </button>
+</section>
+
+
+
+{% if shipping_rates %}
+
+<div class="checkout-place-order">
+    <div class="shippo-final-note">
+        <span>🔒</span>
+        <span>Review your delivery service and total before placing your order.</span>
+    </div>
+    <button type="submit" name="action" value="place_order"
+            id="checkout-place-order-button"
+            class="shippo-place-order">
+        Place Order →
+    </button>
+</div>
+
+{% else %}
+<p style="margin-top:16px; color:#555;">
+  Calculate shipping and select an available service before placing your order.
+</p>
+{% endif %}
+
+
+<style id="shippo-checkout-colors">
+.shippo-shipping-options {
+    margin: 26px 0;
+    overflow: hidden;
+    border: 1px solid #dce4ef;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 26px rgba(11,31,58,.08);
+    color: #172b46;
+}
+.shippo-heading {
+    padding: 25px 22px;
+    background: linear-gradient(125deg,#06152a 0%,#0b1f3a 65%,#17416a 100%);
+    color: #fff;
+}
+.shippo-kicker {
+    display: inline-block;
+    margin-bottom: 10px;
+    color: #ffb36d;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+}
+.shippo-heading h3 {
+    margin: 0 0 8px;
+    color: #fff;
+    font-size: 23px;
+}
+.shippo-heading p {
+    margin: 0 0 15px;
+    color: #e1eaf5;
+    line-height: 1.6;
+}
+.shippo-domestic-badge {
+    display: inline-block;
+    padding: 7px 11px;
+    border-radius: 7px;
+    background: #f47b20;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+.shippo-origin {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px;
+    padding: 15px;
+    border: 1px solid #dce8f5;
+    border-radius: 11px;
+    background: #f2f7fd;
+}
+.shippo-origin-icon { font-size: 27px; }
+.shippo-origin strong { color: #0b1f3a; }
+.shippo-origin p { margin: 5px 0 0; color: #53657a; font-size: 13px; }
+.shippo-rate-list { margin: 20px 18px; padding: 0; border: 0; }
+.shippo-rate-list legend { margin-bottom: 10px; font-weight: 800; color: #0b1f3a; }
+.shippo-rate {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #d9e1eb;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.shippo-rate:hover {
+    border-color: #f47b20;
+    box-shadow: 0 3px 12px rgba(244,123,32,.09);
+}
+.shippo-rate:has(input:checked) {
+    border: 2px solid #f47b20;
+    background: #fff6ed;
+    box-shadow: 0 0 0 3px rgba(244,123,32,.1);
+}
+.shippo-rate input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    accent-color: #f47b20;
+}
+.shippo-rate-info {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 5px;
+}
+.shippo-rate-info strong { color: #0b1f3a; }
+.shippo-rate-info small { color: #637083; }
+.shippo-rate-price {
+    color: #0b1f3a;
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+.shippo-instructions {
+    margin: 18px;
+    padding: 17px;
+    border-radius: 11px;
+    background: #fff6ed;
+    color: #344054;
+    line-height: 1.6;
+}
+.shippo-instructions > strong { color: #a94705; }
+.shippo-instructions p { margin: 8px 0 0; }
+.shippo-help { margin: 12px 18px; color: #526174; line-height: 1.55; }
+.shippo-error {
+    margin: 18px;
+    padding: 15px;
+    overflow-wrap: anywhere;
+    border: 1px solid #fda29b;
+    border-left: 5px solid #b42318;
+    border-radius: 10px;
+    background: #fff1f0;
+    color: #7a271a;
+}
+.shippo-error p { margin: 8px 0 0; }
+.shippo-calculate, .shippo-place-order {
+    display: block;
+    width: calc(100% - 36px);
+    margin: 15px 18px 20px;
+    padding: 15px 18px;
+    border: 0;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform .15s, background .15s;
+}
+.shippo-calculate {
+    background: #0b1f3a;
+    color: #fff;
+}
+.shippo-calculate:hover { background: #17416a; transform: translateY(-1px); }
+.shippo-final-note {
+    display: flex;
+    gap: 9px;
+    align-items: flex-start;
+    margin: 15px 0 8px;
+    color: #526174;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.shippo-place-order {
+    width: 100%;
+    margin: 0;
+    background: linear-gradient(110deg,#f47b20,#ff963f);
+    color: #fff;
+    box-shadow: 0 5px 15px rgba(244,123,32,.22);
+}
+.shippo-place-order:hover {
+    background: #d9620d;
+    transform: translateY(-1px);
+}
+.checkout-place-order {
+    margin-top: 22px;
+    padding: 17px;
+    border: 1px solid #f4d0b2;
+    border-radius: 13px;
+    background: #fffaf5;
+}
+#checkout-shipping-amount, #checkout-final-total {
+    font-variant-numeric: tabular-nums;
+}
+@media(max-width:520px) {
+    .shippo-heading { padding: 20px 16px; }
+    .shippo-heading h3 { font-size: 20px; }
+    .shippo-origin { margin: 12px; }
+    .shippo-rate-list { margin: 16px 12px; }
+    .shippo-rate { flex-wrap: wrap; align-items: flex-start; }
+    .shippo-rate-price { margin-left: 30px; }
+    .shippo-help { margin-left: 12px; margin-right: 12px; }
+    .shippo-calculate { width: calc(100% - 24px); margin: 12px; }
+}
+</style>
+
+<script id="shippo-us-checkout">
+(function () {
+    function initCheckout() {
+        // Restrict the visible delivery country control to the United States.
+        const countryControls = document.querySelectorAll('#shipping_country');
+
+        countryControls.forEach(function (control) {
+            if (control.tagName === "SELECT") {
+                const options = Array.from(control.options);
+                const usOption = options.find(function (option) {
+                    const value = (option.value || "").trim().toLowerCase();
+                    const label = (option.textContent || "").trim().toLowerCase();
+                    return ["us", "usa", "united states",
+                        "united states of america"].includes(value) ||
+                        ["us", "usa", "united states",
+                        "united states of america"].includes(label);
+                });
+
+                const value = usOption ? usOption.value : "US";
+                control.replaceChildren(new Option("United States", value, true, true));
+                control.value = value;
+                control.required = true;
+            } else {
+                control.value = "United States";
+                control.readOnly = true;
+                control.required = true;
+            }
+        });
+
+        // Update shipping and total when the customer chooses a returned rate.
+        const totalElement = document.getElementById("checkout-final-total");
+        const shippingElement = document.getElementById("checkout-shipping-amount");
+        const radios = document.querySelectorAll('input[name="shipping_rate_id"]');
+
+        if (!totalElement || !shippingElement) return;
+
+        const subtotal = Number.parseFloat(totalElement.dataset.subtotal || "0");
+        const money = function (value) {
+            return "$" + value.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        };
+
+        function updateTotal() {
+            const selected = document.querySelector(
+                'input[name="shipping_rate_id"]:checked'
+            );
+
+            if (!selected) {
+                shippingElement.textContent = "Select a service below";
+                totalElement.textContent = money(subtotal);
+                return;
+            }
+
+            const shipping = Number.parseFloat(selected.dataset.amount || "");
+            const currency = (selected.dataset.currency || "USD").toUpperCase();
+
+            if (!Number.isFinite(shipping) || shipping < 0 || currency !== "USD") {
+                shippingElement.textContent = "Please select a valid USD rate";
+                totalElement.textContent = money(subtotal);
+                return;
+            }
+
+            shippingElement.textContent = money(shipping) + " USD";
+            totalElement.textContent = money(subtotal + shipping);
+
+            const help = document.getElementById("shippo-selection-help");
+            if (help) {
+                const label = selected.closest("label");
+                const service = label ? label.querySelector(".shippo-rate-info strong") : null;
+                help.textContent = service
+                    ? "Selected: " + service.textContent.trim() +
+                      ". Your displayed total includes shipping."
+                    : "Your displayed total includes shipping.";
+            }
+        }
+
+        radios.forEach(function (radio) {
+            radio.addEventListener("change", updateTotal);
+        });
+        updateTotal();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCheckout);
+    } else {
+        initCheckout();
+    }
+})();
+</script>
+
+
+
+<script id="us-state-city-suggestions">
+(function () {
+    const citiesByState = {
+        AL: ["Birmingham", "Montgomery", "Mobile", "Huntsville", "Tuscaloosa"],
+        AK: ["Anchorage", "Fairbanks", "Juneau"],
+        AZ: ["Phoenix", "Tucson", "Mesa", "Scottsdale", "Tempe"],
+        AR: ["Little Rock", "Fayetteville", "Fort Smith"],
+        CA: ["Los Angeles", "San Diego", "San Jose", "San Francisco", "Sacramento", "Fresno"],
+        CO: ["Denver", "Colorado Springs", "Aurora", "Fort Collins"],
+        CT: ["Bridgeport", "New Haven", "Hartford", "Stamford"],
+        DE: ["Wilmington", "Dover", "Newark"],
+        DC: ["Washington"],
+        FL: ["Jacksonville", "Miami", "Orlando", "Tampa", "Tallahassee", "Fort Lauderdale"],
+        GA: ["Atlanta", "Augusta", "Savannah", "Columbus"],
+        HI: ["Honolulu", "Hilo", "Kailua"],
+        ID: ["Boise", "Meridian", "Nampa", "Idaho Falls"],
+        IL: ["Chicago", "Aurora", "Naperville", "Springfield"],
+        IN: ["Indianapolis", "Fort Wayne", "Evansville", "South Bend"],
+        IA: ["Des Moines", "Cedar Rapids", "Davenport"],
+        KS: ["Wichita", "Overland Park", "Topeka"],
+        KY: ["Louisville", "Lexington", "Bowling Green"],
+        LA: ["New Orleans", "Baton Rouge", "Shreveport"],
+        ME: ["Portland", "Lewiston", "Bangor"],
+        MD: ["Baltimore", "Annapolis", "Frederick"],
+        MA: ["Springfield", "Boston", "Worcester", "Cambridge", "Lowell"],
+        MI: ["Detroit", "Grand Rapids", "Ann Arbor", "Lansing"],
+        MN: ["Minneapolis", "Saint Paul", "Rochester", "Duluth"],
+        MS: ["Jackson", "Gulfport", "Southaven"],
+        MO: ["Kansas City", "St. Louis", "Springfield", "Columbia"],
+        MT: ["Billings", "Missoula", "Bozeman", "Helena"],
+        NE: ["Omaha", "Lincoln", "Bellevue"],
+        NV: ["Las Vegas", "Reno", "Henderson"],
+        NH: ["Manchester", "Nashua", "Concord"],
+        NJ: ["Newark", "Jersey City", "Trenton", "Paterson"],
+        NM: ["Albuquerque", "Santa Fe", "Las Cruces"],
+        NY: ["New York", "Buffalo", "Rochester", "Albany", "Syracuse"],
+        NC: ["Charlotte", "Raleigh", "Durham", "Greensboro", "Asheville"],
+        ND: ["Fargo", "Bismarck", "Grand Forks"],
+        OH: ["Columbus", "Cleveland", "Cincinnati", "Toledo", "Dayton"],
+        OK: ["Oklahoma City", "Tulsa", "Norman"],
+        OR: ["Portland", "Salem", "Eugene", "Bend"],
+        PA: ["Philadelphia", "Pittsburgh", "Harrisburg", "Allentown"],
+        RI: ["Providence", "Warwick", "Cranston"],
+        SC: ["Charleston", "Columbia", "Greenville", "Myrtle Beach"],
+        SD: ["Sioux Falls", "Rapid City", "Pierre"],
+        TN: ["Nashville", "Memphis", "Knoxville", "Chattanooga"],
+        TX: ["Houston", "Dallas", "Austin", "San Antonio", "Fort Worth", "El Paso"],
+        UT: ["Salt Lake City", "Provo", "Ogden"],
+        VT: ["Burlington", "Montpelier", "Rutland"],
+        VA: ["Virginia Beach", "Richmond", "Norfolk", "Alexandria"],
+        WA: ["Seattle", "Spokane", "Tacoma", "Olympia", "Vancouver"],
+        WV: ["Charleston", "Huntington", "Morgantown"],
+        WI: ["Milwaukee", "Madison", "Green Bay"],
+        WY: ["Cheyenne", "Casper", "Laramie"]
+    };
+
+    function init() {
+        const state = document.getElementById("shipping_state");
+        const city = document.getElementById("shipping_city");
+        const list = document.getElementById("us-city-suggestions");
+        if (!state || !city || !list) return;
+
+        function updateCities() {
+            const previous = city.value;
+            list.replaceChildren();
+            (citiesByState[state.value] || []).forEach(function (name) {
+                list.appendChild(new Option(name, name));
+            });
+            city.setAttribute("placeholder", state.value
+                ? "Choose a suggestion or type your city"
+                : "Select a state first, then enter your city");
+            if (previous) city.value = previous;
+        }
+
+        state.addEventListener("change", updateCities);
+        updateCities();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+</form>
+
+
+</div>
+

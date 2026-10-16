@@ -1,4 +1,4 @@
-﻿from django.utils.text import slugify
+from django.utils.text import slugify
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -175,6 +175,50 @@ class Product(models.Model):
         max_length=100,
         choices=ADHESIVE_CHOICES,
         blank=True
+    )
+
+    PACKAGE_TYPE_CHOICES = [
+        ("", "Not Set"),
+        ("box", "Box - Roll Labels"),
+        ("flat_mailer", "Flat Mailer - Decal Sheets"),
+        ("tube", "Tube - Large Vinyl Graphics"),
+    ]
+
+    # Shipping measurements are stored in pounds and inches.
+    # Leave values empty until the actual packed product is measured.
+    packaging_type = models.CharField(
+        max_length=20,
+        choices=PACKAGE_TYPE_CHOICES,
+        blank=True,
+        default="",
+    )
+
+    shipping_weight_lb = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    shipping_length_in = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    shipping_width_in = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
+
+    shipping_height_in = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
     )
 
     is_custom = models.BooleanField(
@@ -411,6 +455,10 @@ class Shipment(models.Model):
     notes = models.TextField(
         blank=True
     )
+    shippo_rate_id = models.CharField(max_length=200, blank=True)
+    shippo_transaction_id = models.CharField(max_length=200, blank=True)
+    label_url = models.URLField(max_length=1000, blank=True)
+    tracking_url = models.URLField(max_length=1000, blank=True)
 
     created_at = models.DateTimeField(
         auto_now_add=True
@@ -814,3 +862,64 @@ class SiteSettings(models.Model):
                 parts = line.split(':', 1)
                 specs.append({'key': parts[0].strip(), 'value': parts[1].strip()})
         return specs
+
+
+class ShippingRule(models.Model):
+    """Configurable shipping rate. Monetary amounts are stored in USD."""
+    name = models.CharField(max_length=120, unique=True)
+    country = models.CharField(max_length=100, blank=True, default="")
+    state = models.CharField(max_length=100, blank=True, default="")
+    postal_prefix = models.CharField(max_length=30, blank=True, default="")
+    flat_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    per_lb_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    handling_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    free_shipping_threshold = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    minimum_weight_lb = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )
+    maximum_weight_lb = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    priority = models.PositiveIntegerField(default=100)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["priority", "name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ShippingSystemSettings(models.Model):
+    """Global shipping defaults managed by authorized staff."""
+    enabled = models.BooleanField(default=True)
+    default_flat_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, default=15
+    )
+    default_per_lb_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, default=1
+    )
+    default_handling_fee = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0
+    )
+    default_free_shipping_threshold = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    default_weight_lb = models.DecimalField(
+        max_digits=10, decimal_places=2, default=1
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "The Label Group shipping settings"
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.first()
+        if obj is None:
+            obj = cls.objects.create()
+        return obj

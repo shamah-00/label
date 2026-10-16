@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Production &amp; Calendar Orders | THE LABEL GROUP</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#202b3c;font:15px/1.5 Arial}
+header{background:#0b1f3a;color:white;padding:22px max(18px,calc((100% - 1150px)/2))}
+main{max-width:1150px;margin:28px auto;padding:0 18px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.panel{background:white;padding:20px;border:1px solid #e0e6ef;border-radius:12px;margin-top:20px}
+.muted{color:#667085}a{color:#174f91;text-decoration:none}
+input{padding:11px;border:1px solid #ccd4e0;border-radius:7px;min-width:220px}
+button{padding:11px 16px;background:#f47b20;color:white;border:0;border-radius:7px;cursor:pointer}
+table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:12px;border-bottom:1px solid #edf0f5}
+th{background:#f8fafc;color:#667085;font-size:12px;text-transform:uppercase}.wrap{overflow-x:auto}
+</style></head><body><header><strong>THE LABEL GROUP</strong><div>Production control centre</div></header>
+<main><div class="top"><div><h1>Production &amp; Calendar Orders</h1>
+<div class="muted">Review shop orders and dedicated calendar sticker requests.</div></div>
+<a href="/staff/">&#8592; Staff Dashboard</a></div>
+<section class="panel"><form method="get"><input name="search" value="{{ search }}" placeholder="Search customer, email or status">
+<button>Search</button> <a href="?">Clear</a></form>
+<h2>Shop Orders</h2><p class="muted">Orders awaiting review or production.</p>
+<div class="wrap"><table><thead><tr><th>Order</th><th>Customer</th><th>Email</th><th>Status</th><th>Total</th><th>Date</th></tr></thead><tbody>
+{% for o in orders %}<tr><td><a href="/staff/orders/{{ o.pk }}/">#{{ o.pk }}</a></td><td>{{ o.customer_name|default:"-" }}</td>
+<td>{{ o.customer_email|default:"-" }}</td><td>{{ o.status|default:"-" }}</td>
+<td>{{ o.currency|default:"USD" }} {{ o.total|default:"0.00" }}</td><td>{{ o.created_at|date:"M j, Y, g:i a"|default:"-" }}</td></tr>
+{% empty %}<tr><td colspan="6">No shop orders found.</td></tr>{% endfor %}
+</tbody></table></div>
+<h2>Calendar Sticker Requests</h2><p class="muted">Dedicated calendar orders appear here when submitted.</p>
+<div class="wrap"><table><thead><tr><th>Reference</th><th>Customer</th><th>Company</th><th>Email</th><th>Status</th><th>Date</th></tr></thead><tbody>
+{% for o in calendar_orders %}<tr><td>#{{ o.pk }}</td><td>{{ o.name|default:"-" }}</td><td>{{ o.company|default:"-" }}</td>
+<td>{{ o.email|default:"-" }}</td><td>{{ o.status|default:"-" }}</td><td>{{ o.created_at|date:"M j, Y, g:i a"|default:"-" }}</td></tr>
+{% empty %}<tr><td colspan="6">No calendar sticker requests have been submitted.</td></tr>{% endfor %}
+</tbody></table></div></section></main></body></html>

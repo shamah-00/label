@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -795,7 +795,7 @@ footer {
             Dashboard
         </a>
 
-        <a href="{% url 'staff_product_list' %}">
+        <a href="{% url 'staff_products' %}">
             Products
         </a>
 
@@ -836,8 +836,8 @@ footer {
 
         </div>
 
-        <a href="{% url 'staff_product_list' %}" class="back-link">
-            â† Back to Products
+        <a href="{% url 'staff_products' %}" class="back-link">
+            ← Back to Products
         </a>
 
     </div>
@@ -1310,7 +1310,7 @@ footer {
                     <div class="form-actions">
 
                         <a
-                            href="{% url 'staff_product_list' %}"
+                            href="{% url 'staff_products' %}"
                             class="btn btn-cancel"
                         >
                             Cancel
@@ -1492,7 +1492,23 @@ footer {
 
         </div>
 
-    </form>
+    
+    <section class="tlg-shipping-fields">
+      <h3>Shipping Package Measurements</h3>
+      <p>Use the actual packed weight and outside dimensions. Do not estimate these values.</p>
+      {% for field in form %}
+        {% if field.name == "packaging_type" or field.name == "shipping_weight_lb" or field.name == "shipping_length_in" or field.name == "shipping_width_in" or field.name == "shipping_height_in" %}
+          <div class="form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+            {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </section>
+
+</form>
 
 </main>
 
@@ -1535,3 +1551,4 @@ footer {
 
 </body>
 </html>
+

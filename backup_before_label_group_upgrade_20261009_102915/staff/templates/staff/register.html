@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Staff Registration | The Label Group</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(135deg, #f5f9ff, #eef7f3);
+            color: #172033;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #0b4f9c, #f47b20);
+            color: white;
+            padding: 22px 30px;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .brand {
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
+        .home-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 650px;
+            margin: 45px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.10);
+        }
+
+        h1 {
+            margin: 0 0 10px;
+            color: #0b4f9c;
+            font-size: 30px;
+        }
+
+        .intro {
+            margin: 0 0 28px;
+            color: #667085;
+            line-height: 1.6;
+        }
+
+        .notice {
+            background: #fff7ed;
+            border-left: 5px solid #f47b20;
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            color: #7c3d08;
+            line-height: 1.5;
+        }
+
+        .password-notice {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-left: 5px solid #0b4f9c;
+            padding: 16px 18px;
+            border-radius: 9px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            color: #1e3a5f;
+        }
+
+        .password-notice strong {
+            display: block;
+            color: #0b4f9c;
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+
+        .password-notice ul {
+            margin: 8px 0 0;
+            padding-left: 20px;
+        }
+
+        .password-notice li {
+            margin-bottom: 5px;
+            line-height: 1.4;
+        }
+
+        .error-summary {
+            background: #fff1f2;
+            border: 1px solid #fecdd3;
+            color: #9f1239;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 22px;
+        }
+
+        .error-summary strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 700;
+            color: #25324a;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 9px;
+            font-size: 15px;
+            outline: none;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: #0b4f9c;
+            box-shadow: 0 0 0 3px rgba(11, 79, 156, 0.10);
+        }
+
+        .errors {
+            margin-top: 7px;
+            color: #b42318;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .errors ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .password-help {
+            margin-top: 7px;
+            color: #667085;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .submit-btn {
+            width: 100%;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            background: #f47b20;
+            color: white;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: 0.2s ease;
+            margin-top: 5px;
+        }
+
+        .submit-btn:hover {
+            background: #d96512;
+            transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .bottom-text {
+            text-align: center;
+            margin-top: 24px;
+            color: #667085;
+            line-height: 1.6;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #0b4f9c;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 18px;
+            }
+
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .container {
+                margin: 25px auto;
+            }
+
+            .card {
+                padding: 24px 20px;
+            }
+
+            h1 {
+                font-size: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div>
+            <div class="brand">THE LABEL GROUP</div>
+            <div class="brand-subtitle">Print Shop Staff Registration</div>
+        </div>
+
+        <a href="/" class="home-link">Back to Website</a>
+    </div>
+</header>
+
+<main class="container">
+
+    <div class="card">
+
+        <h1>Staff Registration</h1>
+
+        <p class="intro">
+            Apply to join The Label Group Print Shop staff team.
+            Your application will be reviewed by the Boss before access is granted.
+        </p>
+
+        <div class="notice">
+            <strong>Important:</strong>
+            Creating an account does not automatically give you staff access.
+            Your application must be approved by the Boss first.
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="error-summary">
+                <strong>Please correct the following:</strong>
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        {% if form.errors %}
+            <div class="error-summary">
+                <strong>Your registration could not be submitted.</strong>
+                Please check the highlighted fields below and try again.
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{% url 'staff_register' %}">
+
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_full_name">Full Name</label>
+
+                <input
+                    type="text"
+                    name="full_name"
+                    id="id_full_name"
+                    value="{{ form.full_name.value|default:'' }}"
+                    required
+                    placeholder="Enter your full name"
+                >
+
+                {% if form.full_name.errors %}
+                    <div class="errors">
+                        {{ form.full_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_phone">Phone Number</label>
+
+                <input
+                    type="text"
+                    name="phone"
+                    id="id_phone"
+                    value="{{ form.phone.value|default:'' }}"
+                    required
+                    placeholder="Enter your phone number"
+                >
+
+                {% if form.phone.errors %}
+                    <div class="errors">
+                        {{ form.phone.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_email">Email Address</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    id="id_email"
+                    value="{{ form.email.value|default:'' }}"
+                    required
+                    placeholder="Enter your email address"
+                >
+
+                {% if form.email.errors %}
+                    <div class="errors">
+                        {{ form.email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_username">Username</label>
+
+                <input
+                    type="text"
+                    name="username"
+                    id="id_username"
+                    value="{{ form.username.value|default:'' }}"
+                    required
+                    placeholder="Choose a username"
+                >
+
+                {% if form.username.errors %}
+                    <div class="errors">
+                        {{ form.username.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_role">Staff Role</label>
+
+                <select name="role" id="id_role" required>
+                    <option value="">Select your role</option>
+
+                    {% for value, label in form.role.field.choices %}
+                        {% if value %}
+                            <option
+                                value="{{ value }}"
+                                {% if form.role.value == value %}selected{% endif %}
+                            >
+                                {{ label }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+
+                {% if form.role.errors %}
+                    <div class="errors">
+                        {{ form.role.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_password">Create Strong Password</label>
+
+                <input
+                    type="password"
+                    name="password"
+                    id="id_password"
+                    required
+                    placeholder="Create a strong password"
+                    autocomplete="new-password"
+                >
+
+                <div class="password-help">
+                    Your password is used to protect your staff account.
+                    Do not share it with anyone.
+                </div>
+
+                <div class="password-notice">
+                    <strong>Password Requirements</strong>
+
+                    <ul>
+                        <li>At least 10 characters</li>
+                        <li>At least one uppercase letter</li>
+                        <li>At least one lowercase letter</li>
+                        <li>At least one number</li>
+                        <li>At least one special character such as ! @ # $ %</li>
+                        <li>Do not use your username in your password</li>
+                        <li>Do not use your name in your password</li>
+                    </ul>
+                </div>
+
+                {% if form.password.errors %}
+                    <div class="errors">
+                        {{ form.password.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="id_confirm_password">Confirm Password</label>
+
+                <input
+                    type="password"
+                    name="confirm_password"
+                    id="id_confirm_password"
+                    required
+                    placeholder="Confirm your password"
+                    autocomplete="new-password"
+                >
+
+                {% if form.confirm_password.errors %}
+                    <div class="errors">
+                        {{ form.confirm_password.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Submit Staff Registration
+            </button>
+
+        </form>
+
+        <div class="bottom-text">
+            Already have a staff account?
+            <a href="{% url 'staff_login' %}" class="back-link">
+                Staff Login
+            </a>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/" class="back-link">
+                Back to The Label Group website
+            </a>
+        </div>
+
+    </div>
+
+</main>
+
+</body>
+</html>

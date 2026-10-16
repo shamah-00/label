@@ -1,0 +1,1719 @@
+﻿
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0b1f3a">
+    <title>THE LABEL GROUP | Industrial Prints &amp; Decals</title>
+
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --light: #f5f7fa;
+            --border: #e3e7ec;
+            --text: #172033;
+            --muted: #687386;
+            --white: #fff;
+        }
+
+        * { box-sizing: border-box; }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 120px;
+        }
+
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            font-family: Arial, Helvetica, sans-serif;
+            background: var(--light);
+            color: var(--text);
+        }
+
+        a { text-decoration: none; color: inherit; }
+
+        .topbar {
+            background: var(--navy-dark);
+            color: #fff;
+            text-align: center;
+            padding: 9px 16px;
+            font-size: 12px;
+            letter-spacing: .4px;
+        }
+
+        .site-header {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-inner {
+            max-width: 1250px;
+            margin: auto;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .brand img {
+            display: block;
+            width: 220px;
+            max-width: 100%;
+            max-height: 58px;
+            object-fit: contain;
+        }
+
+        .main-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 5px;
+            flex: 1;
+            flex-wrap: wrap;
+        }
+
+        .main-nav a {
+            padding: 10px 11px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: .25px;
+            color: var(--navy);
+            border-radius: 5px;
+        }
+
+        .main-nav a:hover {
+            background: #f2f4f7;
+            color: var(--orange-dark);
+        }
+
+        .main-nav .quote-link {
+            background: var(--orange);
+            color: #fff;
+        }
+
+        .main-nav .quote-link:hover {
+            background: var(--orange-dark);
+            color: #fff;
+        }
+
+        .catalogue-hero {
+            background:
+                linear-gradient(110deg, rgba(6,21,42,.96), rgba(11,31,58,.88)),
+                url("{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}")
+                center/cover;
+            color: #fff;
+            padding: 58px 24px;
+        }
+
+        .hero-inner {
+            max-width: 1250px;
+            margin: auto;
+        }
+
+        .eyebrow {
+            color: #ffad6d;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1.7px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .catalogue-hero h1 {
+            margin: 0 0 14px;
+            max-width: 800px;
+            font-size: clamp(34px, 5vw, 58px);
+            line-height: 1.08;
+        }
+
+        .catalogue-hero p {
+            margin: 0;
+            max-width: 700px;
+            color: #dce4ef;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .catalogue-shell {
+            max-width: 1250px;
+            margin: auto;
+            padding: 32px 24px 60px;
+        }
+
+        .catalogue-toolbar {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 18px rgba(6,21,42,.05);
+        }
+
+        .catalogue-count strong {
+            color: var(--navy);
+            font-size: 18px;
+        }
+
+        .catalogue-count span {
+            display: inline-block;
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 8px;
+            width: min(430px, 100%);
+        }
+
+        .search-form input {
+            flex: 1;
+            min-width: 0;
+            border: 1px solid #ccd3dc;
+            border-radius: 6px;
+            padding: 12px 13px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-form input:focus {
+            border-color: var(--orange);
+        }
+
+        .search-form button {
+            border: 0;
+            background: var(--navy);
+            color: #fff;
+            border-radius: 6px;
+            padding: 0 18px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .search-form button:hover {
+            background: var(--orange-dark);
+        }
+
+        .category-panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 28px;
+            box-shadow: 0 4px 18px rgba(6,21,42,.04);
+        }
+
+        .category-title {
+            margin: 0 0 13px;
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .categories {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .category {
+            border: 1px solid #d7dde5;
+            background: #fff;
+            color: var(--navy);
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            transition: .18s ease;
+        }
+
+        .category:hover {
+            border-color: var(--orange);
+            color: var(--orange-dark);
+            transform: translateY(-1px);
+        }
+
+        .category.active {
+            background: var(--orange);
+            border-color: var(--orange);
+            color: #fff;
+        }
+
+        .results-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin: 0 0 15px;
+        }
+
+        .results-heading h2 {
+            margin: 0;
+            font-size: 22px;
+            color: var(--navy);
+        }
+
+        .results-heading span {
+            font-size: 12px;
+            color: var(--muted);
+            text-align: right;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            align-items: stretch;
+            gap: 18px;
+        }
+
+        .product-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            height: 100%;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(6,21,42,.10);
+        }
+
+        .product-image {
+            height: 340px;
+            flex-shrink: 0;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .product-image img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            object-position: center;
+        }
+
+        .image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 25px;
+            color: #7a8595;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .product-content {
+            padding: 17px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .product-category {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--orange-dark);
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 7px;
+        }
+
+        .product-name {
+            color: var(--navy);
+            font-size: 16px;
+            line-height: 1.4;
+            margin: 0 0 8px;
+            overflow-wrap: anywhere;
+        }
+
+        .product-code {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .product-price {
+            font-size: 17px;
+            font-weight: 800;
+            color: var(--navy);
+            margin-top: auto;
+            padding-top: 8px;
+        }
+
+        .old-price {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 400;
+            text-decoration: line-through;
+            margin-left: 5px;
+        }
+
+        .quote-note {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .product-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            min-height: 40px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: .3px;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--navy);
+            color: var(--navy);
+            background: #fff;
+        }
+
+        .btn-outline:hover {
+            background: var(--navy);
+            color: #fff;
+        }
+
+        .btn-orange {
+            background: var(--orange);
+            border: 1px solid var(--orange);
+            color: #fff;
+        }
+
+        .btn-orange:hover {
+            background: var(--orange-dark);
+            border-color: var(--orange-dark);
+        }
+
+        .empty-state {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            padding: 65px 25px;
+        }
+
+        .empty-state h2 {
+            margin: 0 0 8px;
+            color: var(--navy);
+        }
+
+        .empty-state p {
+            color: var(--muted);
+            margin-bottom: 22px;
+        }
+
+        .empty-state a {
+            display: inline-flex;
+            padding: 12px 20px;
+            background: var(--orange);
+            color: #fff;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .site-footer {
+            background: var(--navy-dark);
+            color: #fff;
+            padding: 35px 24px 20px;
+        }
+
+        .footer-inner {
+            max-width: 1250px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .footer-brand {
+            font-size: 18px;
+            font-weight: 900;
+        }
+
+        .footer-brand span {
+            display: block;
+            margin-top: 7px;
+            font-size: 10px;
+            color: #aeb9c9;
+            letter-spacing: 1.2px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .footer-links a:hover {
+            color: #ffad6d;
+        }
+
+        .copyright {
+            max-width: 1250px;
+            margin: 24px auto 0;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,.15);
+            color: #aeb9c9;
+            font-size: 11px;
+        }
+
+        @media (max-width: 1050px) {
+            .product-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .categories {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .header-inner {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .brand {
+                justify-content: center;
+            }
+
+            .main-nav {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .catalogue-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-form {
+                width: 100%;
+            }
+
+            .product-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 12px;
+            }
+
+            .categories {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .product-image {
+                height: 285px;
+            }
+
+            .catalogue-hero {
+                padding: 42px 20px;
+            }
+
+            .catalogue-shell {
+                padding: 24px 16px 45px;
+            }
+
+            .results-heading {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .results-heading span {
+                text-align: left;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-image {
+                height: 300px;
+            }
+
+            .categories {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .product-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .main-nav {
+                gap: 2px;
+            }
+
+            .main-nav a {
+                font-size: 10px;
+                padding: 8px;
+            }
+
+            .brand img {
+                width: 190px;
+            }
+
+            .footer-links {
+                gap: 12px;
+            }
+        }
+    
+/* The Label Group contact strip */
+.tlg-contact-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 10px 16px;
+    background: #f4f7fb;
+    color: #0b1f3a;
+    border-bottom: 1px solid #dce3ec;
+    font-size: 13px;
+    text-align: center;
+}
+.tlg-contact-strip a {
+    color: #0b1f3a;
+    font-weight: 600;
+    text-decoration: none;
+}
+.tlg-contact-strip a:hover {
+    color: #d9620d;
+    text-decoration: underline;
+}
+.tlg-contact-separator {
+    color: #f47b20;
+}
+@media (max-width: 480px) {
+    .tlg-contact-strip {
+        gap: 7px 10px;
+        font-size: 12px;
+    }
+}
+
+/* ===== THE LABEL GROUP: PROFESSIONAL HOMEPAGE POLISH ===== */
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-navy-dark: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-text: #172334;
+    --tlg-muted: #657286;
+    --tlg-border: #e3e8ef;
+    --tlg-surface: #f5f7fa;
+    --tlg-white: #ffffff;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 110px;
+}
+
+body {
+    margin: 0;
+    background: #ffffff;
+    color: var(--tlg-text);
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+img {
+    max-width: 100%;
+}
+
+a {
+    transition: color .18s ease, background-color .18s ease,
+                border-color .18s ease, box-shadow .18s ease;
+}
+
+/* Top message bar */
+.topbar {
+    background: var(--tlg-navy-dark);
+    color: #ffffff;
+    padding: 9px 20px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .035em;
+}
+
+/* Main header and brand */
+header.header,
+header {
+    background: #ffffff;
+}
+
+header.header {
+    position: relative;
+    z-index: 20;
+    border-bottom: 1px solid var(--tlg-border);
+}
+
+header .brand {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    text-decoration: none;
+}
+
+header .brand img {
+    display: block;
+    width: auto;
+    max-width: 250px;
+    max-height: 76px;
+    object-fit: contain;
+}
+
+/* Navigation */
+header nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+header nav a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    color: var(--tlg-navy);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .035em;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+header nav a:hover {
+    background: #f1f4f8;
+    color: var(--tlg-orange-dark);
+}
+
+header nav a.quote-link,
+header nav a.nav-cta {
+    background: var(--tlg-orange);
+    color: #ffffff;
+    border-radius: 5px;
+    padding-left: 17px;
+    padding-right: 17px;
+}
+
+header nav a.quote-link:hover,
+header nav a.nav-cta:hover {
+    background: var(--tlg-orange-dark);
+    color: #ffffff;
+}
+
+/* Page width and headings */
+main {
+    min-width: 0;
+}
+
+main > section,
+main > .section,
+main > div.section {
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4 {
+    color: var(--tlg-navy);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+h1 {
+    letter-spacing: -.035em;
+}
+
+h2 {
+    letter-spacing: -.025em;
+}
+
+p {
+    overflow-wrap: anywhere;
+}
+
+/* Catalogue title and introductory copy */
+#catalogue {
+    scroll-margin-top: 110px;
+}
+
+#catalogue h1,
+#catalogue h2,
+.catalogue h1,
+.catalogue h2,
+.catalogue-header h1,
+.catalogue-header h2,
+.catalogue-intro h1,
+.catalogue-intro h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
+    color: var(--tlg-navy);
+}
+
+#catalogue p,
+.catalogue-intro p {
+    color: var(--tlg-muted);
+    max-width: 760px;
+}
+
+/* Catalogue and industry filters */
+.catalogue-button {
+    margin: 28px auto 10px;
+    text-align: center;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+input[type="search"],
+input[type="text"],
+select {
+    min-height: 44px;
+    box-sizing: border-box;
+    border: 1px solid #d6dde7;
+    border-radius: 6px;
+    background: #ffffff;
+    color: var(--tlg-text);
+}
+
+input[type="search"]:focus,
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
+    outline: 3px solid rgba(244, 123, 32, .18);
+    border-color: var(--tlg-orange);
+}
+
+button,
+.btn,
+.product-btn,
+a.btn,
+a.quote-link {
+    cursor: pointer;
+}
+
+.btn,
+button[type="submit"],
+.product-btn,
+a.product-btn {
+    border-radius: 5px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.btn-orange,
+button[type="submit"] {
+    background: var(--tlg-orange);
+    color: #ffffff;
+    border: 1px solid var(--tlg-orange);
+}
+
+.btn-orange:hover,
+button[type="submit"]:hover {
+    background: var(--tlg-orange-dark);
+    border-color: var(--tlg-orange-dark);
+}
+
+/* Product catalogue grid */
+.product-grid,
+.products-grid,
+.catalogue-grid,
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 22px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Individual product cards */
+.product-card,
+.product-item,
+.product-grid > article,
+.products-grid > article,
+.catalogue-grid > article {
+    min-width: 0;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #ffffff;
+    border: 1px solid var(--tlg-border);
+    border-radius: 9px;
+    box-shadow: 0 3px 12px rgba(11, 31, 58, .045);
+    transition: transform .18s ease, box-shadow .18s ease,
+                border-color .18s ease;
+}
+
+.product-card:hover,
+.product-item:hover,
+.product-grid > article:hover,
+.products-grid > article:hover,
+.catalogue-grid > article:hover {
+    transform: translateY(-3px);
+    border-color: #cbd5e1;
+    box-shadow: 0 10px 25px rgba(11, 31, 58, .09);
+}
+
+/* Product image areas */
+.product-image,
+.product-card .product-image,
+.product-item .product-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 190px;
+    max-height: 245px;
+    padding: 16px;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #f7f8fa;
+    border-bottom: 1px solid #edf0f4;
+}
+
+.product-image img,
+.product-card img,
+.product-item img {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: 190px;
+    object-fit: contain;
+    object-position: center;
+}
+
+.product-card > a,
+.product-item > a {
+    text-decoration: none;
+}
+
+/* Product information */
+.product-body,
+.product-info,
+.product-details,
+.product-content {
+    min-width: 0;
+    padding: 16px;
+    box-sizing: border-box;
+}
+
+.product-code {
+    margin-bottom: 6px;
+    color: #7b8797;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.product-industry,
+.product-category,
+.product-type {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #59677a;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .035em;
+    text-transform: uppercase;
+}
+
+.product-card h3,
+.product-item h3,
+.product-body h3,
+.product-info h3,
+.product-details h3 {
+    margin: 0 0 10px;
+    color: var(--tlg-navy);
+    font-size: 15px;
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+.product-price,
+.price {
+    margin: 10px 0 14px;
+    color: var(--tlg-navy);
+    font-size: 17px;
+    font-weight: 800;
+}
+
+.product-btn,
+.product-card .btn,
+.product-card a,
+.product-item .btn {
+    overflow-wrap: anywhere;
+}
+
+.product-btn,
+a.product-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    background: var(--tlg-navy);
+    border: 1px solid var(--tlg-navy);
+    color: #ffffff;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: .035em;
+}
+
+.product-btn:hover,
+a.product-btn:hover {
+    background: var(--tlg-orange);
+    border-color: var(--tlg-orange);
+    color: #ffffff;
+}
+
+/* Quote actions inside cards */
+.product-card form,
+.product-item form {
+    margin-top: 8px;
+}
+
+.product-card form button,
+.product-item form button,
+.product-card .add-to-quote,
+.product-item .add-to-quote {
+    width: 100%;
+    min-height: 40px;
+    padding: 9px 12px;
+    border: 1px solid var(--tlg-orange);
+    border-radius: 5px;
+    background: #ffffff;
+    color: var(--tlg-orange-dark);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.product-card form button:hover,
+.product-item form button:hover,
+.product-card .add-to-quote:hover,
+.product-item .add-to-quote:hover {
+    background: var(--tlg-orange);
+    color: #ffffff;
+}
+
+/* Main catalogue breathing room */
+#catalogue,
+.catalogue,
+.catalogue-section {
+    padding-top: 34px;
+    padding-bottom: 44px;
+}
+
+#catalogue .section-header,
+.catalogue .section-header {
+    margin-bottom: 24px;
+}
+
+/* Call to action and footer */
+.cta,
+section.cta {
+    background: var(--tlg-navy);
+    color: #ffffff;
+}
+
+.cta h2,
+.cta h3,
+.cta p {
+    color: #ffffff;
+}
+
+footer {
+    background: var(--tlg-navy-dark);
+    color: #d5deea;
+}
+
+footer a {
+    color: #d5deea;
+    text-decoration: none;
+}
+
+footer a:hover {
+    color: #ffffff;
+}
+
+footer .copyright {
+    border-top-color: rgba(255,255,255,.12);
+}
+
+/* Prevent long product names and buttons from breaking the layout */
+.product-card *,
+.product-item * {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.product-card img,
+.product-item img {
+    max-width: 100%;
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+    .product-grid,
+    .products-grid,
+    .catalogue-grid,
+    .product-list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    header .brand img {
+        max-width: 220px;
+        max-height: 68px;
+    }
+
+    header nav {
+        gap: 2px;
+    }
+
+    header nav a {
+        padding: 10px;
+        font-size: 11px;
+    }
+}
+
+/* Small tablet and large phone */
+@media (max-width: 760px) {
+    .product-grid,
+    .products-grid,
+    .catalogue-grid,
+    .product-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    header .brand img {
+        max-width: 190px;
+        max-height: 62px;
+    }
+
+    header nav {
+        justify-content: flex-start;
+        gap: 4px;
+    }
+
+    header nav a {
+        padding: 10px;
+        font-size: 10px;
+    }
+
+    .product-image,
+    .product-card .product-image,
+    .product-item .product-image {
+        min-height: 150px;
+        padding: 10px;
+    }
+
+    .product-image img,
+    .product-card img,
+    .product-item img {
+        height: 145px;
+    }
+
+    .product-body,
+    .product-info,
+    .product-details,
+    .product-content {
+        padding: 12px;
+    }
+
+    .product-card h3,
+    .product-item h3,
+    .product-body h3,
+    .product-info h3 {
+        font-size: 13px;
+    }
+}
+
+/* Phone */
+@media (max-width: 480px) {
+    .topbar {
+        padding: 9px 12px;
+        font-size: 11px;
+    }
+
+    .product-grid,
+    .products-grid,
+    .catalogue-grid,
+    .product-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    header .brand img {
+        max-width: 165px;
+        max-height: 55px;
+    }
+
+    header nav a {
+        padding: 9px 8px;
+        font-size: 9px;
+    }
+
+    .product-image,
+    .product-card .product-image,
+    .product-item .product-image {
+        min-height: 125px;
+        padding: 8px;
+    }
+
+    .product-image img,
+    .product-card img,
+    .product-item img {
+        height: 120px;
+    }
+
+    .product-body,
+    .product-info,
+    .product-details,
+    .product-content {
+        padding: 10px;
+    }
+
+    .product-card h3,
+    .product-item h3,
+    .product-body h3,
+    .product-info h3 {
+        font-size: 12px;
+    }
+
+    .product-price,
+    .price {
+        font-size: 15px;
+    }
+
+    .product-btn,
+    a.product-btn,
+    .product-card form button,
+    .product-item form button {
+        min-height: 38px;
+        padding: 8px 6px;
+        font-size: 10px;
+    }
+}
+
+/* Accessibility: avoid forced animation for users who request less motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+    }
+}
+/* ===== END THE LABEL GROUP HOMEPAGE POLISH ===== */
+</style>
+
+<style>
+/* TLG-CONTACT-INDUSTRY-IMAGES-SPACING-FIX */
+.tlg-business-contact-strip {
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:8px 14px;
+  padding:10px 16px;
+  margin:0;
+  background:#0b1f3a;
+  color:#fff;
+  font-size:14px;
+  line-height:1.5;
+  position:relative;
+  z-index:20;
+}
+.tlg-business-contact-strip strong {
+  color:#f47b20;
+  letter-spacing:.04em;
+}
+.tlg-business-contact-strip a {
+  color:#fff !important;
+  font-weight:700;
+  text-decoration:none;
+  overflow-wrap:anywhere;
+}
+.tlg-business-contact-strip a:hover {
+  color:#f47b20 !important;
+  text-decoration:underline;
+}
+
+/* Make the five existing category images visible and consistently sized. */
+a:has(img[src*="truck"]),
+a:has(img[src*="waste"]),
+a:has(img[src*="construction"]),
+a:has(img[src*="pool"]),
+a:has(img[src*="government"]) {
+  display:block !important;
+  width:100%;
+  max-width:100%;
+  margin:10px 0 0;
+  overflow:hidden;
+}
+a:has(img[src*="truck"]) img,
+a:has(img[src*="waste"]) img,
+a:has(img[src*="construction"]) img,
+a:has(img[src*="pool"]) img,
+a:has(img[src*="government"]) img {
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:100% !important;
+  height:220px !important;
+  max-height:220px !important;
+  object-fit:cover !important;
+  object-position:center;
+}
+
+/* Reduce excessive vertical gaps while keeping sections readable. */
+section {
+  scroll-margin-top:120px;
+}
+section h2 {
+  margin-top:8px;
+  margin-bottom:12px;
+}
+section p {
+  margin-top:8px;
+  margin-bottom:14px;
+}
+@media (min-width:700px) {
+  section {
+    padding-top:32px;
+    padding-bottom:32px;
+  }
+}
+@media (max-width:699px) {
+  .tlg-business-contact-strip {
+    gap:6px 10px;
+    padding:10px 12px;
+    font-size:13px;
+  }
+  .tlg-business-contact-strip span {
+    display:none;
+  }
+  a:has(img[src*="truck"]) img,
+  a:has(img[src*="waste"]) img,
+  a:has(img[src*="construction"]) img,
+  a:has(img[src*="pool"]) img,
+  a:has(img[src*="government"]) img {
+    height:190px !important;
+    max-height:190px !important;
+  }
+}
+/* END TLG-CONTACT-INDUSTRY-IMAGES-SPACING-FIX */
+</style>
+
+<style>
+<style>
+<style>
+/* THE LABEL GROUP brand header */
+a.brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    text-decoration: none;
+    max-width: 100%;
+}
+a.brand img {
+    display: block !important;
+    width: auto;
+    max-width: 170px;
+    max-height: 72px;
+    height: auto;
+    object-fit: contain;
+}
+.tlg-company-name {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    color: #0b1f3a !important;
+    font-size: clamp(18px, 2vw, 27px) !important;
+    font-weight: 900 !important;
+    line-height: 1.2;
+    letter-spacing: .4px;
+    white-space: nowrap;
+}
+@media (max-width: 480px) {
+    a.brand {
+        gap: 8px !important;
+    }
+    a.brand img {
+        max-width: 105px;
+        max-height: 55px;
+    }
+    .tlg-company-name {
+        font-size: 16px !important;
+        white-space: normal;
+    }
+}
+</style>
+<style>
+/* THE LABEL GROUP hero name */
+.tlg-hero-brand {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    margin: 0 0 12px !important;
+    color: #f47b20 !important;
+    font-size: clamp(22px, 3vw, 36px) !important;
+    font-weight: 900 !important;
+    line-height: 1.15 !important;
+    letter-spacing: 1.2px !important;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation â€¢ Durable custom printing â€¢ Built for business
+</div>
+
+<header class="site-header">
+<div class="tlg-business-contact-strip">
+  <strong>CONTACT THE LABEL GROUP</strong>
+  <a href="tel:+14132766427">+1 (413) 276-6427</a>
+  <span aria-hidden="true">|</span>
+  <a href="mailto:labelgroup@comcast.net">labelgroup@comcast.net</a>
+</div>
+
+    <div class="header-inner">
+        <a href="{% url 'home' %}" class="brand" aria-label="The Label Group home">
+            <img src="{% static 'logo 2 (1).png' %}"
+                 alt="THE LABEL GROUP"
+                 decoding="async"><span class="tlg-company-name">THE LABEL GROUP</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Main navigation">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="{% url 'custom_order' %}" class="quote-link">REQUEST A QUOTE</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </nav>
+    </div>
+</header>
+<div class="tlg-contact-strip">
+    <span>Contact The Label Group</span>
+    <a href="tel:+14132766427" style="display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-weight:700;white-space:nowrap;">☎ +1 (413) 276-6427</a>
+<a href="mailto:labelgroup@comcast.net" style="display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-weight:700;">✉ labelgroup@comcast.net</a>
+    <span class="tlg-contact-separator" aria-hidden="true">|</span>
+    <a href="tel:+14137316700">413-731-6700</a>
+</div>
+
+<section class="catalogue-hero">
+    <div class="hero-inner">
+        <div class="eyebrow">Industrial Prints &amp; Decals</div>
+        <div class="tlg-hero-brand">THE LABEL GROUP</div>
+<h1>Shop The Label Group Catalogue</h1>
+        <p>
+            Explore durable identification, warning, compliance and
+            commercial printing products built for demanding working environments.
+        </p>
+    </div>
+</section>
+
+<main class="catalogue-shell" id="catalogue">
+
+    <div class="catalogue-toolbar">
+        <div class="catalogue-count">
+            <strong>{{ products|length }} products</strong><br>
+            <span>
+                {% if search_query %}
+                    Results for "{{ search_query }}"
+                {% elif selected_industry %}
+                    Showing selected category
+                {% else %}
+                    Browse the complete catalogue
+                {% endif %}
+            </span>
+        </div>
+
+        <form method="get" action="{% url 'product_list' %}" class="search-form">
+            {% if selected_industry %}
+                <input type="hidden" name="industry" value="{{ selected_industry }}">
+            {% endif %}
+
+            <input
+                type="search"
+                name="search"
+                value="{{ search_query|default:'' }}"
+                placeholder="Search products, codes or brands..."
+                aria-label="Search products"
+            >
+            <button type="submit">SEARCH</button>
+        </form>
+    </div>
+
+    <section class="category-panel" aria-label="Product industries">
+        <div class="category-title">Browse by industry</div>
+
+        <div class="categories">
+            <a class="category {% if selected_industry == 'motor' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=motor">TRUCK &amp; MOTOR</a>
+
+            <a class="category {% if selected_industry == 'waste' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=waste">WASTE COMPANIES</a>
+
+            <a class="category {% if selected_industry == 'construction' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=construction">CONSTRUCTION</a>
+
+            <a class="category {% if selected_industry == 'pool' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=pool">POOL COMPANIES</a>
+
+            <a class="category {% if selected_industry == 'government' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=government">GOVERNMENT CONTRACTORS</a>
+
+            <a class="category {% if selected_industry == 'other' %}active{% endif %}"
+               href="{% url 'product_list' %}?industry=other">OTHER PRODUCTS</a>
+        </div>
+    </section>
+
+    <div class="results-heading">
+        <h2>
+            {% if selected_industry %}
+                {{ selected_industry|title }} Products
+            {% else %}
+                All Products
+            {% endif %}
+        </h2>
+        <span>Professional industrial printing &amp; identification</span>
+    </div>
+
+    {% if products %}
+        <section class="product-grid" aria-label="Products">
+            {% for product in products %}
+                <article class="product-card">
+
+                    <a href="{% url 'product_detail' product.id %}"
+                       class="product-image"
+                       aria-label="View {{ product.name }}">
+
+                        {% if product.image %}
+                            <img src="{{ product.image.url }}"
+                                 alt="{{ product.name }}"
+                                 loading="lazy"
+                                 decoding="async">
+
+
+
+
+
+
+                        {% else %}
+                            <div class="image-placeholder">
+                                Product Image<br>Coming Soon
+                            </div>
+                        {% endif %}
+                    </a>
+
+                    <div class="product-content">
+                        <div class="product-category">
+                            {{ product.category|default:"Industrial Product" }}
+                        </div>
+
+                        <h3 class="product-name">{{ product.name }}</h3>
+
+                        {% if product.product_code %}
+                            <div class="product-code">
+                                Product Code: {{ product.product_code }}
+                            </div>
+                        {% endif %}
+
+                        <div class="product-price">
+                            {% if product.discount_price %}
+                                ${{ product.discount_price|floatformat:2 }}
+                                {% if product.price %}
+                                    <span class="old-price">
+                                        ${{ product.price|floatformat:2 }}
+                                    </span>
+                                {% endif %}
+                            {% elif product.price %}
+                                ${{ product.price|floatformat:2 }}
+                            {% else %}
+                                Request a Quote
+                            {% endif %}
+                        </div>
+
+                        {% if not product.price and not product.discount_price %}
+                            <div class="quote-note">
+                                Contact us for product pricing.
+                            </div>
+                        {% endif %}
+
+                        <div class="product-actions">
+                            <a href="{% url 'product_detail' product.id %}"
+                               class="btn btn-outline">
+                                VIEW PRODUCT
+                            </a>
+
+                            <form method="post" action="{% url 'add_to_cart' product.id %}" class="tlg-cart-form">{% csrf_token %}<input type="hidden" name="quantity" value="1"><button type="submit" class="btn btn-orange tlg-add-cart">ADD TO CART</button></form>
+                        </div>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+    {% else %}
+        <section class="empty-state">
+            <h2>No products found</h2>
+            <p>
+                We couldn't find products matching your search or selected category.
+            </p>
+            <a href="{% url 'product_list' %}">VIEW ALL PRODUCTS</a>
+        </section>
+    {% endif %}
+
+    <section style="margin-top:32px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:26px;">
+        <h2 style="color:var(--navy);margin:0 0 8px;">
+            Need a custom print or decal?
+        </h2>
+        <p style="color:var(--muted);line-height:1.7;margin:0 0 18px;">
+            Tell us what your business needs and request a quote from The Label Group.
+        </p>
+        <a href="{% url 'custom_order' %}"
+           class="btn btn-orange"
+           style="display:inline-flex;padding:12px 20px;">
+            REQUEST A QUOTE
+        </a>
+    </section>
+
+</main>
+
+<footer class="site-footer">
+    <div class="footer-inner">
+        <div class="footer-brand">
+            THE LABEL GROUP
+            <span>INDUSTRIAL PRINTS &amp; DECALS</span>
+        </div>
+
+        <nav class="footer-links" aria-label="Footer navigation">
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="{% url 'custom_order' %}">REQUEST A QUOTE</a>
+        </nav>
+    </div>
+
+    <div class="copyright">
+        &copy; {% now "Y" %} The Label Group Â· Industrial Prints &amp; Decals
+    </div>
+</footer>
+
+</body>
+</html>
+
+
+
+<style id="TLG-PROFESSIONAL-CART-FIX">
+.tlg-cart-form {
+    display: flex;
+    flex: 1 1 145px;
+    min-width: 0;
+    margin: 0;
+}
+.tlg-add-cart {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 14px;
+    border: 0;
+    border-radius: 7px;
+    background: #f47b20;
+    color: #fff;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .035em;
+    cursor: pointer;
+    transition: background .2s ease, transform .2s ease;
+}
+.tlg-add-cart:hover {
+    background: #d9620d;
+    transform: translateY(-1px);
+}
+.tlg-cart-form button:focus-visible {
+    outline: 3px solid #0b1f3a;
+    outline-offset: 3px;
+}
+</style>
+
+
+

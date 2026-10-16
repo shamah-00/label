@@ -1,0 +1,12 @@
+﻿<!DOCTYPE html>
+<html>
+<head><title>Collection Calendar Stickers</title></head>
+<body style="font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px;">
+    <h2>Order Calendar Stickers</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" style="padding: 10px 20px; background: #f47b20; color: white; border: none; font-weight: bold;">Submit Order</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout | THE LABEL GROUP{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 1200px; margin: 0 auto; padding: 50px 20px;">
+
+```
+<div style="text-align: center; margin-bottom: 40px;">
+    <h1 style="font-size: 42px; margin-bottom: 10px;">
+        Checkout
+    </h1>
+
+    <p style="color: #666; font-size: 17px;">
+        Complete your details to place your order with THE LABEL GROUP.
+    </p>
+</div>
+
+
+<form method="post">
+
+    {% csrf_token %}
+
+    <div style="
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 30px;
+        align-items: start;
+    ">
+
+
+        <!-- CUSTOMER INFORMATION -->
+
+        <div style="
+            background: #fff;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 30px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Customer Information
+            </h2>
+
+            <div style="margin-top: 25px;">
+
+                <label for="customer_name">
+                    Full Name
+                </label>
+
+                <input
+                    type="text"
+                    id="customer_name"
+                    name="customer_name"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_email">
+                    Email Address
+                </label>
+
+                <input
+                    type="email"
+                    id="customer_email"
+                    name="customer_email"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="customer_phone">
+                    Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="customer_phone"
+                    name="customer_phone"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <h2 style="margin-top: 35px;">
+                Shipping Information
+            </h2>
+
+
+            <div style="margin-top: 25px;">
+
+                <label for="shipping_address">
+                    Street Address
+                </label>
+
+                <textarea
+                    id="shipping_address"
+                    name="shipping_address"
+                    rows="3"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_city">
+                    City
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_city"
+                    name="shipping_city"
+                    required
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_state">
+                    State / Province
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_state"
+                    name="shipping_state"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_postal_code">
+                    Postal Code
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_postal_code"
+                    name="shipping_postal_code"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="shipping_country">
+                    Country
+                </label>
+
+                <input
+                    type="text"
+                    id="shipping_country"
+                    name="shipping_country"
+                    required
+                    placeholder="United States"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        margin-bottom: 18px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                    "
+                >
+
+            </div>
+
+
+            <div>
+
+                <label for="notes">
+                    Order Notes
+                </label>
+
+                <textarea
+                    id="notes"
+                    name="notes"
+                    rows="4"
+                    placeholder="Anything we should know about your order?"
+                    style="
+                        width: 100%;
+                        box-sizing: border-box;
+                        padding: 12px;
+                        margin-top: 7px;
+                        border: 1px solid #ccc;
+                        border-radius: 7px;
+                        resize: vertical;
+                    "
+                ></textarea>
+
+            </div>
+
+        </div>
+
+
+        <!-- ORDER SUMMARY -->
+
+        <div style="
+            background: #fafafa;
+            border: 1px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 25px;
+            position: sticky;
+            top: 20px;
+        ">
+
+            <h2 style="margin-top: 0;">
+                Your Order
+            </h2>
+
+
+            {% for item in checkout_items %}
+
+                <div style="
+                    display: flex;
+                    justify-content: space-between;
+                    gap: 15px;
+                    padding: 15px 0;
+                    border-bottom: 1px solid #ddd;
+                ">
+
+                    <div>
+
+                        <strong>
+                            {{ item.product.name }}
+                        </strong>
+
+                        <div style="
+                            color: #666;
+                            font-size: 14px;
+                            margin-top: 5px;
+                        ">
+                            Qty: {{ item.quantity }}
+                        </div>
+
+                    </div>
+
+                    <strong>
+                        ${{ item.item_total|floatformat:2 }}
+                    </strong>
+
+                </div>
+
+            {% endfor %}
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+            ">
+
+                <span>
+                    Subtotal
+                </span>
+
+                <strong>
+                    ${{ subtotal|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                margin-top: 12px;
+            ">
+
+                <span>
+                    Shipping
+                </span>
+
+                <strong>
+                    FREE
+                </strong>
+
+            </div>
+
+
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                border-top: 1px solid #ddd;
+                padding-top: 18px;
+                margin-top: 20px;
+                font-size: 21px;
+            ">
+
+                <strong>
+                    Total
+                </strong>
+
+                <strong>
+                    ${{ subtotal|floatformat:2 }}
+                </strong>
+
+            </div>
+
+
+            <button
+                type="submit"
+                style="
+                    width: 100%;
+                    border: none;
+                    padding: 16px;
+                    margin-top: 25px;
+                    border-radius: 8px;
+                    background: #f28c28;
+                    color: white;
+                    cursor: pointer;
+                    font-weight: 700;
+                    font-size: 17px;
+                "
+            >
+                Place Order
+            </button>
+
+
+            <a
+                href="{% url 'cart' %}"
+                style="
+                    display: block;
+                    text-align: center;
+                    margin-top: 15px;
+                    color: #174a7c;
+                    text-decoration: none;
+                    font-weight: 600;
+                "
+            >
+                ← Back to Cart
+            </a>
+
+        </div>
+
+    </div>
+
+</form>
+```
+
+</div>
+
+{% endblock %}

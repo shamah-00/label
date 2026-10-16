@@ -1,0 +1,523 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ product.name }} | THE LABEL GROUP</title>
+
+<style>
+:root{
+    --navy:#0b1f3a;
+    --navy-dark:#06152a;
+    --orange:#f47b20;
+    --orange-dark:#d9620d;
+    --light:#f6f8fb;
+    --border:#e3e8ef;
+    --text:#172033;
+    --muted:#64748b;
+}
+
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:var(--light);
+    color:var(--text);
+}
+
+a{text-decoration:none;color:inherit}
+
+.topbar{
+    background:var(--navy-dark);
+    color:white;
+    text-align:center;
+    padding:10px 15px;
+    font-size:13px;
+}
+
+header{
+    background:white;
+    border-bottom:1px solid var(--border);
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+
+.nav{
+    max-width:1200px;
+    margin:auto;
+    min-height:78px;
+    padding:12px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:25px;
+}
+
+.logo{
+    width:180px;
+    height:auto;
+    max-height:58px;
+    object-fit:contain;
+}
+
+.nav-links{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+}
+
+.nav-links a{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+}
+
+.nav-links a:hover{
+    color:var(--orange);
+}
+
+.container{
+    width:min(1200px,calc(100% - 32px));
+    margin:0 auto;
+}
+
+.breadcrumb{
+    padding:25px 0 15px;
+    color:var(--muted);
+    font-size:13px;
+}
+
+.product-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:45px;
+    background:white;
+    padding:35px;
+    border-radius:18px;
+    box-shadow:0 8px 30px rgba(11,31,58,.08);
+}
+
+.product-image-wrap{
+    min-height:480px;
+    background:#f8fafc;
+    border:1px solid var(--border);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:25px;
+}
+
+.product-image{
+    width:100%;
+    height:460px;
+    object-fit:contain;
+    display:block;
+}
+
+.category{
+    display:inline-block;
+    background:#fff1e7;
+    color:var(--orange-dark);
+    padding:7px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+h1{
+    font-size:38px;
+    line-height:1.1;
+    margin:15px 0 10px;
+    color:var(--navy);
+}
+
+.code{
+    color:var(--muted);
+    font-size:14px;
+    margin-bottom:22px;
+}
+
+.price-box{
+    background:var(--navy);
+    color:white;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:25px;
+}
+
+.price-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    opacity:.8;
+}
+
+.price{
+    font-size:32px;
+    font-weight:900;
+    margin-top:5px;
+}
+
+.availability{
+    margin-top:7px;
+    font-size:13px;
+}
+
+.section{
+    background:white;
+    margin-top:25px;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 6px 24px rgba(11,31,58,.06);
+}
+
+.section h2{
+    color:var(--navy);
+    margin:0 0 18px;
+    font-size:24px;
+}
+
+.description{
+    font-size:16px;
+    line-height:1.8;
+    color:#475569;
+    white-space:pre-line;
+}
+
+.spec-grid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    border:1px solid var(--border);
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.spec{
+    padding:18px;
+    border-bottom:1px solid var(--border);
+    background:white;
+}
+
+.spec:nth-child(odd){
+    border-right:1px solid var(--border);
+}
+
+.spec-label{
+    display:block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.8px;
+    color:var(--muted);
+    font-weight:800;
+    margin-bottom:6px;
+}
+
+.spec-value{
+    display:block;
+    color:var(--navy);
+    font-weight:700;
+    font-size:15px;
+}
+
+.actions{
+    display:flex;
+    gap:12px;
+    margin-top:25px;
+    flex-wrap:wrap;
+}
+
+.btn{
+    border:0;
+    border-radius:9px;
+    padding:15px 24px;
+    font-size:14px;
+    font-weight:800;
+    cursor:pointer;
+    text-align:center;
+}
+
+.btn-cart{
+    background:var(--orange);
+    color:white;
+}
+
+.btn-cart:hover{
+    background:var(--orange-dark);
+}
+
+.btn-quote{
+    background:var(--navy);
+    color:white;
+}
+
+.trust{
+    margin:30px 0;
+    background:var(--orange);
+    color:white;
+    border-radius:14px;
+    padding:22px;
+    text-align:center;
+    font-weight:800;
+}
+
+footer{
+    background:var(--navy-dark);
+    color:white;
+    text-align:center;
+    padding:35px 20px;
+    margin-top:50px;
+}
+
+footer strong{
+    color:var(--orange);
+}
+
+@media(max-width:800px){
+    .nav{
+        flex-direction:column;
+        padding:12px 15px;
+    }
+
+    .nav-links{
+        justify-content:center;
+        gap:12px;
+    }
+
+    .product-layout{
+        grid-template-columns:1fr;
+        padding:20px;
+        gap:25px;
+    }
+
+    .product-image-wrap{
+        min-height:300px;
+    }
+
+    .product-image{
+        height:300px;
+    }
+
+    h1{
+        font-size:29px;
+    }
+
+    .spec-grid{
+        grid-template-columns:1fr;
+    }
+
+    .spec:nth-child(odd){
+        border-right:0;
+    }
+
+    .section{
+        padding:22px;
+    }
+
+    .container{
+        width:min(100% - 20px,1200px);
+    }
+}
+
+@media(max-width:480px){
+    .logo{
+        width:155px;
+    }
+
+    .nav-links a{
+        font-size:11px;
+    }
+
+    .product-layout{
+        padding:14px;
+    }
+
+    .price{
+        font-size:27px;
+    }
+
+    .btn{
+        width:100%;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header>
+    <nav class="nav">
+        <a href="/">
+            <img class="logo" src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
+        </a>
+
+        <div class="nav-links">
+            <a href="/">HOME</a>
+            
+            <a href="/custom-orders/">CUSTOM ORDERS</a>
+            <a href="/shipping/">SHIPPING</a>
+            <a href="/quote-cart/">QUOTE CART</a>
+            <a href="/staff/login/">STAFF LOGIN</a>
+        </div>
+    </nav>
+</header>
+
+<main class="container">
+
+    <div class="breadcrumb">
+        Home / Shop Products / {{ product.name }}
+    </div>
+
+    <div class="product-layout">
+
+        <div class="product-image-wrap">
+            {% if product.image %}
+                <img
+                    class="product-image"
+                    src="{{ product.image.url|slice:':-4' }}.webp"
+                    alt="{{ product.name }}"
+                    loading="eager"
+                >
+            {% else %}
+                <div>No product image available</div>
+            {% endif %}
+        </div>
+
+        <div>
+
+            <span class="category">
+                {{ product.category|default:"Stickers" }}
+            </span>
+
+            <h1>{{ product.name }}</h1>
+
+            <div class="code">
+                Product Code: <strong>{{ product.product_code }}</strong>
+            </div>
+
+            <div class="price-box">
+                <div class="price-label">Starting Price</div>
+                <div class="price">
+                    From ${{ product.price|default:"0.80"|floatformat:2 }}
+                </div>
+
+                <div class="availability">
+                    {% if product.is_available %}
+                        Available
+                    {% else %}
+                        Available on request
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="actions">
+
+                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-cart">
+                        Add to Cart
+                    </button>
+                </form>
+
+                <a href="{% url 'quote_cart' %}" class="btn btn-quote">
+                    Request a Quote
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+    <section class="section">
+        <h2>Product Description</h2>
+
+        <div class="description">
+            {% if product.description %}
+                {{ product.description }}
+            {% else %}
+                Professional industrial sticker and decal produced by THE LABEL GROUP for commercial identification, safety, branding and equipment applications.
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Product Specifications</h2>
+
+        <div class="spec-grid">
+
+            <div class="spec">
+                <span class="spec-label">Category</span>
+                <span class="spec-value">{{ product.category|default:"Stickers" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Brand</span>
+                <span class="spec-value">{{ product.brand|default:"THE LABEL GROUP" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Material</span>
+                <span class="spec-value">{{ product.material|default:"Available on request" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Finish</span>
+                <span class="spec-value">{{ product.finish|default:"Available on request" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Shape</span>
+                <span class="spec-value">{{ product.shape|default:"Available on request" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Printing Method</span>
+                <span class="spec-value">{{ product.printing_method|default:"Available on request" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Adhesive</span>
+                <span class="spec-value">{{ product.adhesive|default:"Available on request" }}</span>
+            </div>
+
+            <div class="spec">
+                <span class="spec-label">Custom Product</span>
+                <span class="spec-value">
+                    {% if product.is_custom %}
+                        Custom Product
+                    {% else %}
+                        Standard Product
+                    {% endif %}
+                </span>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="trust">
+        Built for business • Durable identification • Professional custom printing
+    </div>
+
+</main>
+
+<footer>
+    <strong>THE LABEL GROUP</strong><br>
+    Industrial Prints & Decals
+</footer>
+
+</body>
+</html>
+
+
+
+

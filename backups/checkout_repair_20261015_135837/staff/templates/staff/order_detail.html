@@ -1,0 +1,41 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 30px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h2>Order #{{ order.id }}</h2>
+    <hr>
+    <h4>Customer Details</h4>
+    <p><strong>Name:</strong> {{ order.customer_name }}</p>
+    <p><strong>Email:</strong> {{ order.customer_email }}</p>
+    <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+    
+    <h4 style="margin-top: 20px;">Shipping & Order Info</h4>
+    <p><strong>Status:</strong> <span class="badge" style="background: {% if order.status == 'completed' %}#28a745{% else %}#ffc107{% endif %}; color: white; padding: 4px 8px; border-radius: 4px;">{{ order.status|title }}</span></p>
+    <p><strong>Total:</strong> USD {{ order.total_amount|default:"0.80" }}</p>
+    
+    <div style="margin-top: 30px;">
+        {% if order.status != 'completed' %}
+            <form method="POST" id="order-action-form">
+                {% csrf_token %}
+                <button type="submit" id="submit-btn" style="background: #28a745; color: white; padding: 12px 24px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">Mark as Completed</button>
+            </form>
+        {% else %}
+            <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 4px; font-weight: bold;">
+                ? Order Successfully Handled & Completed
+            </div>
+        {% endif %}
+    </div>
+
+    <p style="margin-top: 30px;"><a href="{% url 'staff_orders' %}" style="color: #007bff; text-decoration: none;">&larr; Back to Orders List</a></p>
+</div>
+
+<script>
+document.getElementById('order-action-form')?.addEventListener('submit', function(e) {
+    const btn = document.getElementById('submit-btn');
+    if (btn) {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.innerText = 'Processing...';
+    }
+});
+</script>
+{% endblock %}

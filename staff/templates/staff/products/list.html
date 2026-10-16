@@ -1,4 +1,4 @@
-﻿
+
 {% load static %}
 
 <!DOCTYPE html>
@@ -795,8 +795,8 @@ footer {
     <div class="nav-links">
         <a href="{% url 'home' %}">Website</a>
         <a href="{% url 'staff_dashboard' %}">Dashboard</a>
-        <a href="{% url 'staff_product_list' %}">Products</a>
-        <a href="{% url 'staff_quote_list' %}">Quotes</a>
+        <a href="{% url 'staff_products' %}">Products</a>
+        <a href="{% url 'staff_quotes' %}">Quotes</a>
         <a href="{% url 'staff_logout' %}">Logout</a>
     </div>
 
@@ -1011,7 +1011,7 @@ footer {
         <div class="industry-links">
 
             <a
-                href="{% url 'staff_product_list' %}"
+                href="{% url 'staff_products' %}"
                 class="industry-link {% if not selected_industry %}active{% endif %}"
             >
                 All Products

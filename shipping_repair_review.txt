@@ -1,0 +1,964 @@
+﻿THE LABEL GROUP - SHIPPING REPAIR REVIEW
+
+
+========== .\staff\views.py ==========
+1400:             if changed:
+1401:                 order.save()
+1402:                 profile = get_staff_profile(request.user)
+1403:                 log_staff_activity(
+1404:                     request, profile, "update",
+1405:                     f"Order #{order.pk}: " + "; ".join(changed),
+1406:                     f"Order #{order.pk}",
+1407:                 )
+1408:                 messages.success(request, f"Order #{order.pk} has been updated.")
+1409:             else:
+1410:                 messages.info(request, "No changes were needed.")
+1411: 
+1412:             return redirect("staff_order_detail", pk=order.pk)
+1413: 
+1414:     return render(request, "staff/orders/detail.html", {
+1415:         "order": order,
+1416:         "status_choices": status_choices,
+1417:         "items": order.items.select_related("product").all(),
+1418:         "item_count": order.items.count(),
+1419:     })
+1420: 
+1421: 
+1422: @staff_required
+1423: def staff_shipping_dashboard(request):
+1424:     import os
+1425:     import requests
+1426:     from django.conf import settings
+1427:     from django.contrib import messages
+1428:     from django.shortcuts import render, redirect
+1429:     from django.utils import timezone
+1430:     from products.models import Shipment
+1431: 
+1432:     if request.method == "POST":
+1433:         shipment_id = request.POST.get("shipment_id", "").strip()
+1434:         action = request.POST.get("action", "update").strip()
+1435: 
+1436:         shipment = Shipment.objects.select_related("order").filter(
+1437:             pk=shipment_id
+1438:         ).first()
+1439: 
+1440:         if not shipment:
+1441:             messages.error(request, "Shipment not found.")
+1442:             return redirect("staff_shipping_dashboard")
+1443: 
+1444:         if action == "purchase_label":
+1445:             order_status = str(getattr(shipment.order, "status", "") or "").strip().lower()
+1446:             shipment_status = str(getattr(shipment, "status", "") or "").strip().lower()
+1447:             if order_status == "cancelled" or shipment_status == "cancelled":
+1448:                 messages.error(request, "A shipping label cannot be purchased for a cancelled order.")
+1449:                 return redirect("staff_shipping_dashboard")
+1450:             rate_id = request.POST.get("shippo_rate_id", "").strip()
+1451:             if not rate_id:
+1452:                 messages.error(
+1453:                     request,
+1454:                     "Enter the valid Shippo rate ID for this order before purchasing the label."
+1455:                 )
+1456:                 return redirect("staff_shipping_dashboard")
+1457: 
+1458:             if not shipment.shippo_rate_id or rate_id != shipment.shippo_rate_id:
+1459:                 messages.error(
+1460:                     request,
+1461:                     "The submitted rate does not match the rate saved for this shipment. "
+1462:                     "Refresh or recalculate shipping and save a valid rate before buying a label."
+1463:                 )
+1464:                 return redirect("staff_shipping_dashboard")
+1465: 
+1466:             if shipment.shippo_transaction_id or shipment.label_url:
+1467:                 messages.error(
+1468:                     request,
+1469:                     "A Shippo transaction or label is already recorded for this shipment. "
+1470:                     "Check Shippo before attempting another purchase."
+1471:                 )
+1472:                 return redirect("staff_shipping_dashboard")
+1473: 
+1474:             token = (
+1475:                 os.environ.get("SHIPPO_API_TOKEN")
+1476:                 or getattr(settings, "SHIPPO_API_TOKEN", "")
+1477:                 or os.environ.get("SHIPPO_TOKEN", "")
+1478:             )
+1479:             if not token:
+1480:                 messages.error(
+1481:                     request,
+1482:                     "Shippo API token was not found in the server environment. Check your existing server configuration."
+1483:                 )
+1484:                 return redirect("staff_shipping_dashboard")
+1485: 
+1486:             if shipment.shippo_transaction_id and shipment.label_url:
+1487:                 messages.error(
+1488:                     request,
+1489:                     "A label is already recorded for this shipment. Check the existing label before attempting another purchase."
+1490:                 )
+1491:                 return redirect("staff_shipping_dashboard")
+1492: 
+1493:             headers = {
+1494:                 "Authorization": "ShippoToken " + token,
+1495:                 "Content-Type": "application/json",
+1496:                 "SHIPPO-API-VERSION": "2018-02-08",
+1497:             }
+1498:             payload = {
+1499:                 "rate": rate_id,
+1500:                 "label_file_type": "PDF",
+1501:                 "async": False,
+1502:                 "metadata": "The Label Group Order #" + str(shipment.order_id),
+1503:             }
+1504: 
+1505:             try:
+1506:                 response = requests.post(
+1507:                     "https://api.goshippo.com/transactions/",
+1508:                     headers=headers,
+1509:                     json=payload,
+1510:                     timeout=45,
+1511:                 )
+1512:                 try:
+1513:                     result = response.json()
+1514:                 except ValueError:
+1515:                     result = {}
+1516: 
+1517:                 if response.status_code not in (200, 201):
+1518:                     detail = result.get("messages") or result.get("detail") or result.get("message")
+1519:                     if isinstance(detail, (dict, list)):
+1520:                         detail = str(detail)
+1521:                     messages.error(
+1522:                         request,
+1523:                         "Shippo did not purchase the label (HTTP "
+1524:                         + str(response.status_code)
+1525:                         + "). "
+1526:                         + str(detail or "Check the rate ID and Shippo dashboard.")
+1527:                     )
+1528:                     return redirect("staff_shipping_dashboard")
+1529: 
+1530:                 transaction_status = str(result.get("status", "")).upper()
+1531:                 label_url = result.get("label_url", "")
+1532:                 transaction_id = result.get("object_id", "")
+1533:                 tracking_number = result.get("tracking_number", "")
+1534:                 tracking_url = result.get("tracking_url_provider", "")
+1535:                 rate_data = result.get("rate") or {}
+1536:                 carrier = rate_data.get("provider", "") if isinstance(rate_data, dict) else ""
+1537: 
+1538:                 if transaction_status != "SUCCESS" or not label_url:
+1539:                     messages.error(
+1540:                         request,
+1541:                         "Shippo did not return a successful transaction with a label URL. No label is marked as purchased. Check the transaction in Shippo before retrying."
+1542:                     )
+1543:                     if transaction_id:
+1544:                         shipment.shippo_transaction_id = transaction_id
+1545:                         shipment.shippo_rate_id = rate_id
+1546:                         shipment.save(update_fields=[
+1547:                             "shippo_transaction_id",
+1548:                             "shippo_rate_id",
+1549:                             "updated_at",
+1550:                         ])
+1551:                     return redirect("staff_shipping_dashboard")
+1552: 
+1553:                 shipment.shippo_rate_id = rate_id
+1554:                 shipment.shippo_transaction_id = transaction_id
+1555:                 shipment.label_url = label_url
+1556:                 shipment.tracking_url = tracking_url or ""
+1557:                 shipment.tracking_number = tracking_number or shipment.tracking_number
+1558:                 shipment.carrier = carrier or shipment.carrier or "Shippo carrier"
+1559:                 shipment.shipping_method = (
+1560:                     rate_data.get("servicelevel", {}).get("name", shipment.shipping_method)
+1561:                     if isinstance(rate_data, dict) and isinstance(rate_data.get("servicelevel"), dict)
+1562:                     else shipment.shipping_method
+1563:                 )
+1564:                 shipment.status = "shipped"
+1565:                 if shipment.shipped_at is None:
+1566:                     shipment.shipped_at = timezone.now()
+1567:                 shipment.save()
+1568: 
+1569:                 # Keep the order in sync when its model supports this status.
+1570:                 order = shipment.order
+1571:                 try:
+1572:                     status_field = order._meta.get_field("status")
+1573:                     allowed_order_statuses = {
+1574:                         value for value, label in status_field.choices
+1575:                     }
+1576:                     if (
+1577:                         "shipped" in allowed_order_statuses
+1578:                         and (order.status or "").lower() != "cancelled"
+1579:                     ):
+1580:                         order.status = "shipped"
+1581:                         order.save(update_fields=["status"])
+1582:                 except Exception:
+1583:                     # Do not undo a successfully saved shipment if the
+1584:                     # order model has no compatible status choices.
+1585:                     pass
+1586: 
+1587:                 messages.success(
+1588:                     request,
+1589:                     "Shippo label purchased successfully for Order #"
+1590:                     + str(shipment.order_id)
+1591:                     + ". Open the label link to print it."
+1592:                 )
+1593: 
+1594:             except requests.RequestException as exc:
+1595:                 messages.error(
+1596:                     request,
+1597:                     "Could not reach Shippo. Check the server connection and Shippo dashboard before retrying. "
+1598:                     + str(exc)
+1599:                 )
+1600: 
+1601:             return redirect("staff_shipping_dashboard")
+1602: 
+1603:         if action == "update":
+1604:             status = request.POST.get("status", "").strip()
+1605:             allowed = {choice[0] for choice in Shipment.STATUS_CHOICES}
+1606: 
+1607:             if status not in allowed:
+1608:                 messages.error(request, "Invalid shipment status.")
+1609:                 return redirect("staff_shipping_dashboard")
+1610: 
+1611:             shipment.status = status
+1612:             shipment.tracking_number = request.POST.get(
+1613:                 "tracking_number", shipment.tracking_number
+1614:             ).strip()[:200]
+1615:             shipment.carrier = request.POST.get(
+1616:                 "carrier", shipment.carrier
+1617:             ).strip()[:100]
+1618:             shipment.shipping_method = request.POST.get(
+1619:                 "shipping_method", shipment.shipping_method
+1620:             ).strip()[:100]
+1621:             shipment.notes = request.POST.get("notes", shipment.notes)
+1622: 
+1623:             if status == "shipped" and shipment.shipped_at is None:
+1624:                 shipment.shipped_at = timezone.now()
+1625:             if status == "delivered" and shipment.delivered_at is None:
+1626:                 shipment.delivered_at = timezone.now()
+1627: 
+1628:             shipment.save()
+1629:             messages.success(request, "Shipment details updated.")
+1630:             return redirect("staff_shipping_dashboard")
+1631: 
+1632:         messages.error(request, "Unknown shipping action.")
+1633:         return redirect("staff_shipping_dashboard")
+1634: 
+1635:     shipments = list(Shipment.objects.select_related("order").order_by("-updated_at"))
+1636: 
+1637:     # Create a clean display address without repeating address components.
+1638:     for shipment in shipments:
+1639:         order = shipment.order
+1640:         address_fields = [
+1641:             getattr(order, "shipping_address", ""),
+1642:             getattr(order, "shipping_city", ""),
+1643:             getattr(order, "shipping_state", ""),
+1644:             getattr(order, "shipping_postal_code", ""),
+1645:             getattr(order, "shipping_country", ""),
+1646:         ]
+1647: 
+1648:         parts = []
+1649:         seen = set()
+1650: 
+
+
+========== .\products\models.py ==========
+ 300:         max_length=30,
+ 301:         blank=True
+ 302:     )
+ 303: 
+ 304:     shipping_country = models.CharField(
+ 305:         max_length=100
+ 306:     )
+ 307: 
+ 308:     subtotal = models.DecimalField(
+ 309:         max_digits=12,
+ 310:         decimal_places=2,
+ 311:         default=0
+ 312:     )
+ 313: 
+ 314:     shipping_cost = models.DecimalField(
+ 315:         max_digits=12,
+ 316:         decimal_places=2,
+ 317:         default=0
+ 318:     )
+ 319: 
+ 320:     total = models.DecimalField(
+ 321:         max_digits=12,
+ 322:         decimal_places=2,
+ 323:         default=0
+ 324:     )
+ 325: 
+ 326:     currency = models.CharField(
+ 327:         max_length=3,
+ 328:         default="USD"
+ 329:     )
+ 330: 
+ 331:     status = models.CharField(
+ 332:         max_length=30,
+ 333:         choices=STATUS_CHOICES,
+ 334:         default="pending"
+ 335:     )
+ 336: 
+ 337:     notes = models.TextField(
+ 338:         blank=True
+ 339:     )
+ 340: 
+ 341:     created_at = models.DateTimeField(
+ 342:         auto_now_add=True
+ 343:     )
+ 344: 
+ 345:     updated_at = models.DateTimeField(
+ 346:         auto_now=True
+ 347:     )
+ 348: 
+ 349:     def __str__(self):
+ 350:         return f"Order #{self.id} - {self.customer_name}"
+ 351: 
+ 352: 
+ 353: class OrderItem(models.Model):
+ 354: 
+ 355:     order = models.ForeignKey(
+ 356:         Order,
+ 357:         on_delete=models.CASCADE,
+ 358:         related_name="items"
+ 359:     )
+ 360: 
+ 361:     product = models.ForeignKey(
+ 362:         Product,
+ 363:         on_delete=models.PROTECT,
+ 364:         related_name="order_items"
+ 365:     )
+ 366: 
+ 367:     product_name = models.CharField(
+ 368:         max_length=200
+ 369:     )
+ 370: 
+ 371:     quantity = models.PositiveIntegerField(
+ 372:         default=1
+ 373:     )
+ 374: 
+ 375:     unit_price = models.DecimalField(
+ 376:         max_digits=12,
+ 377:         decimal_places=2,
+ 378:         blank=True,
+ 379:         null=True
+ 380:     )
+ 381: 
+ 382:     total_price = models.DecimalField(
+ 383:         max_digits=12,
+ 384:         decimal_places=2,
+ 385:         blank=True,
+ 386:         null=True
+ 387:     )
+ 388: 
+ 389:     currency = models.CharField(
+ 390:         max_length=3,
+ 391:         default="USD"
+ 392:     )
+ 393: 
+ 394:     def __str__(self):
+ 395:         return f"{self.product_name} x {self.quantity}"
+ 396: 
+ 397: 
+ 398: class Shipment(models.Model):
+ 399: 
+ 400:     STATUS_CHOICES = [
+ 401:         ("pending", "Pending"),
+ 402:         ("processing", "Preparing Shipment"),
+ 403:         ("packed", "Packed"),
+ 404:         ("shipped", "Shipped"),
+ 405:         ("in_transit", "In Transit"),
+ 406:         ("out_for_delivery", "Out for Delivery"),
+ 407:         ("delivered", "Delivered"),
+ 408:         ("delayed", "Delayed"),
+ 409:         ("returned", "Returned"),
+ 410:         ("cancelled", "Cancelled"),
+ 411:     ]
+ 412: 
+ 413:     order = models.OneToOneField(
+ 414:         Order,
+ 415:         on_delete=models.CASCADE,
+ 416:         related_name="shipment"
+ 417:     )
+ 418: 
+ 419:     carrier = models.CharField(
+ 420:         max_length=100,
+ 421:         blank=True
+ 422:     )
+ 423: 
+ 424:     shipping_method = models.CharField(
+ 425:         max_length=100,
+ 426:         blank=True
+ 427:     )
+ 428: 
+ 429:     tracking_number = models.CharField(
+ 430:         max_length=200,
+ 431:         blank=True
+ 432:     )
+ 433: 
+ 434:     status = models.CharField(
+ 435:         max_length=30,
+ 436:         choices=STATUS_CHOICES,
+ 437:         default="pending"
+ 438:     )
+ 439: 
+ 440:     estimated_delivery = models.DateField(
+ 441:         null=True,
+ 442:         blank=True
+ 443:     )
+ 444: 
+ 445:     shipped_at = models.DateTimeField(
+ 446:         null=True,
+ 447:         blank=True
+ 448:     )
+ 449: 
+ 450:     delivered_at = models.DateTimeField(
+ 451:         null=True,
+ 452:         blank=True
+ 453:     )
+ 454: 
+ 455:     notes = models.TextField(
+ 456:         blank=True
+ 457:     )
+ 458:     shippo_rate_id = models.CharField(max_length=200, blank=True)
+ 459:     shippo_transaction_id = models.CharField(max_length=200, blank=True)
+ 460:     label_url = models.URLField(max_length=1000, blank=True)
+ 461:     tracking_url = models.URLField(max_length=1000, blank=True)
+ 462: 
+ 463:     created_at = models.DateTimeField(
+ 464:         auto_now_add=True
+ 465:     )
+ 466: 
+ 467:     updated_at = models.DateTimeField(
+ 468:         auto_now=True
+ 469:     )
+ 470: 
+ 471:     def __str__(self):
+ 472:         return f"Shipment for Order #{self.order.id}"
+ 473: 
+ 474: 
+ 475: class StaffProfile(models.Model):
+
+
+========== .\products\views.py ==========
+1180:                 shipping_state=state,
+1181:                 shipping_postal_code=postal_code,
+1182:                 shipping_country=country,
+1183:                 subtotal=subtotal,
+1184:                 shipping_cost=shipping_cost,
+1185:                 total=total,
+1186:                 currency="USD",
+1187:                 notes=combined_notes,
+1188:             )
+1189: 
+1190:             for item in items:
+1191:                 OrderItem.objects.create(
+1192:                     order=order,
+1193:                     product=item["product"],
+1194:                     product_name=item["product"].name,
+1195:                     quantity=item["quantity"],
+1196:                     unit_price=item["unit_price"],
+1197:                     total_price=item["subtotal"],
+1198:                     currency="USD",
+1199:                 )
+1200: 
+1201:             from .models import Shipment
+1202: 
+1203:             Shipment.objects.create(
+1204:                 order=order,
+1205:                 carrier=str(selected_rate.get("provider") or "")[:100],
+1206:                 shipping_method=str(selected_rate.get("service") or "")[:100],
+1207:                 shippo_rate_id=str(selected_rate.get("object_id") or "").strip(),
+1208:                 notes="Shippo rate selected at checkout. Label not purchased.",
+1209:             )
+1210:     except Exception:
+1211:         # Log technical details server-side; don't lose the customer's cart.
+1212:         import logging
+1213:         logging.getLogger(__name__).exception(
+1214:             "Checkout order creation failed."
+1215:         )
+1216:         return render_checkout(
+1217:             items,
+1218:             subtotal,
+1219:             rates=cached_rates,
+1220:             error=(
+1221:                 "We couldn't save your order. Your cart is preserved. "
+1222:                 "Please try again or contact us."
+1223:             ),
+1224:         )
+1225: 
+1226:     request.session["cart"] = {}
+1227:     request.session.pop(SESSION_RATES, None)
+1228:     request.session.pop(SESSION_SIGNATURE, None)
+1229:     request.session.pop(SESSION_TIME, None)
+1230:     request.session.modified = True
+1231: 
+1232:     messages.success(
+1233:         request,
+1234:         "Your order was submitted successfully. Shipping labels are not "
+1235:         "purchased automatically.",
+1236:     )
+1237:     return redirect("order_success", order_id=order.pk)
+1238: 
+1239: 
+1240: def order_success(request, order_id):
+1241:     from django.shortcuts import render, get_object_or_404
+1242:     from .models import Order
+1243: 
+1244:     order = get_object_or_404(Order, pk=order_id)
+1245:     return render(request, "order_success.html", {"order": order})
+1246: 
+1247: # THE_LABEL_GROUP_CUSTOMER_TRACKING_VIEW
+1248: def track_order(request):
+1249:     from urllib.parse import quote
+1250:     from django.shortcuts import render
+1251:     from .models import Order, Shipment
+1252: 
+1253:     order = None
+1254:     shipment = None
+1255:     tracking_url = ""
+1256:     error_message = ""
+1257:     email_value = ""
+1258:     order_number = ""
+1259: 
+1260:     if request.method == "POST":
+1261:         order_number = request.POST.get("order_number", "").strip().lstrip("#").strip()
+1262:         email_value = request.POST.get("email", "").strip()
+1263: 
+1264:         if not order_number or not email_value:
+1265:             error_message = "Enter both your order number and checkout email."
+1266:         elif not order_number.isdigit():
+1267:             error_message = "Please enter a valid numeric order number."
+1268:         else:
+1269:             order = Order.objects.filter(
+1270:                 pk=int(order_number),
+1271:                 customer_email__iexact=email_value
+1272:             ).first()
+1273: 
+1274:             if order is None:
+1275:                 error_message = (
+1276:                     "We couldn't find an order matching those details. "
+1277:                     "Check your order number and the email used at checkout."
+1278:                 )
+1279:             else:
+1280:                 try:
+1281:                     shipment = order.shipment
+1282:                 except Shipment.DoesNotExist:
+1283:                     shipment = None
+1284: 
+1285:                 if shipment and shipment.tracking_number:
+1286:                     tracking_number = quote(shipment.tracking_number.strip(), safe="")
+1287:                     carrier = (shipment.carrier or "").lower()
+1288: 
+1289:                     saved_tracking_url = (shipment.tracking_url or "").strip()
+1290:                     if saved_tracking_url.startswith("https://"):
+1291:                         tracking_url = saved_tracking_url
+1292: 
+1293:                     if not tracking_url and "ups" in carrier:
+1294:                         tracking_url = (
+1295:                             "https://www.ups.com/track?tracknum=" + tracking_number
+1296:                         )
+1297:                     elif not tracking_url and "fedex" in carrier:
+1298:                         tracking_url = (
+1299:                             "https://www.fedex.com/fedextrack/?trknbr=" + tracking_number
+1300:                         )
+1301:                     elif not tracking_url and "dhl" in carrier:
+1302:                         tracking_url = (
+1303:                             "https://www.dhl.com/global-en/home/tracking.html?tracking-id="
+1304:                             + tracking_number
+1305:                         )
+1306: 
+1307:     status_steps = [
+1308:         {"value": "pending", "label": "Order received"},
+1309:         {"value": "confirmed", "label": "Order confirmed"},
+1310:         {"value": "processing", "label": "Being prepared"},
+1311:         {"value": "packed", "label": "Packed"},
+1312:         {"value": "shipped", "label": "Shipped"},
+1313:         {"value": "completed", "label": "Completed"},
+1314:     ]
+1315: 
+1316:     current_step = -1
+1317:     is_cancelled = False
+1318:     if order:
+1319:         status_value = (order.status or "").lower()
+1320:         is_cancelled = status_value == "cancelled"
+1321:         for index, step in enumerate(status_steps):
+1322:             if step["value"] == status_value:
+1323:                 current_step = index
+1324: 
+1325:         # If a shipment has progressed further than the order status,
+1326:         # show the recorded shipment progress without claiming live carrier data.
+1327:         if shipment:
+1328:             shipment_status = (shipment.status or "").lower()
+1329:             shipment_rank = {
+1330:                 "pending": 0,
+
+
+========== .\products\ups_integration.py ==========
+   1: """
+   2: The Label Group - UPS integration foundation.
+   3: 
+   4: Safe while waiting for UPS API credentials.
+   5: No shipping rates are invented.
+   6: No checkout or order models are modified.
+   7: """
+   8: 
+   9: import json
+  10: import os
+  11: import time
+  12: import urllib.error
+  13: import urllib.parse
+  14: import urllib.request
+  15: 
+  16: 
+  17: def _setting(name, default=""):
+  18:     """Read a setting from environment variables."""
+  19:     return os.environ.get(name, default).strip()
+  20: 
+  21: 
+  22: def get_ups_config():
+  23:     """Read UPS configuration without exposing secrets."""
+  24:     environment = _setting("UPS_ENVIRONMENT", "sandbox").lower()
+  25: 
+  26:     if environment not in {"sandbox", "production"}:
+  27:         environment = "sandbox"
+  28: 
+  29:     if environment == "production":
+  30:         api_base = "https://onlinetools.ups.com"
+  31:     else:
+  32:         api_base = "https://wwwcie.ups.com"
+  33: 
+  34:     return {
+  35:         "client_id": _setting("UPS_CLIENT_ID"),
+  36:         "client_secret": _setting("UPS_CLIENT_SECRET"),
+  37:         "account_number": _setting("UPS_ACCOUNT_NUMBER"),
+  38:         "environment": environment,
+  39:         "api_base": api_base,
+  40:         "origin_postal_code": _setting("UPS_ORIGIN_POSTAL_CODE"),
+  41:         "origin_country_code": _setting(
+  42:             "UPS_ORIGIN_COUNTRY_CODE", "US"
+  43:         ).upper(),
+  44:         "currency_code": _setting("UPS_CURRENCY_CODE", "USD").upper(),
+  45:         "timeout": 20,
+  46:     }
+  47: 
+  48: 
+  49: def ups_status():
+  50:     """
+  51:     Return readiness information safe to display in staff diagnostics.
+  52:     Never return credentials or tokens.
+  53:     """
+  54:     config = get_ups_config()
+  55: 
+  56:     missing = []
+  57: 
+  58:     if not config["client_id"]:
+  59:         missing.append("UPS_CLIENT_ID")
+  60: 
+  61:     if not config["client_secret"]:
+  62:         missing.append("UPS_CLIENT_SECRET")
+  63: 
+  64:     if not config["account_number"]:
+  65:         missing.append("UPS_ACCOUNT_NUMBER")
+  66: 
+  67:     if not config["origin_postal_code"]:
+  68:         missing.append("UPS_ORIGIN_POSTAL_CODE")
+  69: 
+  70:     if not config["origin_country_code"]:
+  71:         missing.append("UPS_ORIGIN_COUNTRY_CODE")
+  72: 
+  73:     ready = not missing
+  74: 
+  75:     return {
+  76:         "provider": "UPS",
+  77:         "environment": config["environment"],
+  78:         "configured": ready,
+  79:         "live_rates_available": False,
+  80:         "missing_settings": missing,
+  81:         "message": (
+  82:             "UPS credentials are configured. API authentication and "
+  83:             "service approval must still be tested before live rates "
+  84:             "can be enabled."
+  85:             if ready
+  86:             else
+  87:             "UPS setup is waiting for credentials and shipping details. "
+  88:             "Checkout must not treat estimated rates as live UPS quotes."
+  89:         ),
+  90:     }
+  91: 
+  92: 
+  93: def _http_json(url, method="GET", headers=None, payload=None, timeout=20):
+  94:     """Make a JSON HTTP request using Python's standard library."""
+  95:     request_headers = {
+  96:         "Accept": "application/json",
+  97:         "User-Agent": "TheLabelGroup-Django/1.0",
+  98:     }
+  99: 
+ 100:     if headers:
+ 101:         request_headers.update(headers)
+ 102: 
+ 103:     data = None
+ 104: 
+ 105:     if payload is not None:
+ 106:         data = json.dumps(payload).encode("utf-8")
+ 107:         request_headers["Content-Type"] = "application/json"
+ 108: 
+ 109:     request = urllib.request.Request(
+ 110:         url,
+ 111:         data=data,
+ 112:         headers=request_headers,
+ 113:         method=method,
+ 114:     )
+ 115: 
+ 116:     try:
+ 117:         with urllib.request.urlopen(request, timeout=timeout) as response:
+ 118:             raw = response.read().decode("utf-8")
+ 119:             return json.loads(raw) if raw else {}
+ 120: 
+ 121:     except urllib.error.HTTPError as exc:
+ 122:         # Do not include request headers or secrets in error messages.
+ 123:         try:
+ 124:             response_body = exc.read().decode("utf-8")
+ 125:             parsed = json.loads(response_body) if response_body else {}
+ 126:         except (ValueError, UnicodeDecodeError):
+ 127:             parsed = {}
+ 128: 
+ 129:         raise RuntimeError(
+ 130:             "UPS returned HTTP status "
+ 131:             f"{exc.code}. Check API access, account permissions, "
+ 132:             "request details, and UPS documentation."
+ 133:         ) from None
+ 134: 
+ 135:     except (urllib.error.URLError, TimeoutError, OSError):
+ 136:         raise RuntimeError(
+ 137:             "UPS could not be reached. Check the internet connection, "
+ 138:             "firewall, and UPS service status."
+ 139:         ) from None
+ 140: 
+ 141:     except (ValueError, UnicodeDecodeError):
+ 142:         raise RuntimeError(
+ 143:             "UPS returned an unexpected response format."
+ 144:         ) from None
+ 145: 
+ 146: 
+ 147: def get_ups_access_token():
+ 148:     """
+ 149:     Request a fresh UPS OAuth client-credentials token.
+ 150: 
+ 151:     Call only after UPS has supplied valid API credentials.
+ 152:     Tokens are deliberately not cached or written to disk.
+ 153:     """
+ 154:     config = get_ups_config()
+ 155: 
+ 156:     if not config["client_id"] or not config["client_secret"]:
+ 157:         raise RuntimeError(
+ 158:             "UPS credentials are missing. Set UPS_CLIENT_ID and "
+ 159:             "UPS_CLIENT_SECRET before testing authentication."
+ 160:         )
+ 161: 
+ 162:     token_url = config["api_base"] + "/security/v1/oauth/token"
+ 163: 
+ 164:     credentials = (
+ 165:         config["client_id"] + ":" + config["client_secret"]
+ 166:     ).encode("utf-8")
+ 167: 
+ 168:     import base64
+ 169: 
+ 170:     authorization = base64.b64encode(credentials).decode("ascii")
+ 171: 
+ 172:     body = urllib.parse.urlencode({
+ 173:         "grant_type": "client_credentials"
+ 174:     }).encode("utf-8")
+ 175: 
+ 176:     request = urllib.request.Request(
+ 177:         token_url,
+ 178:         data=body,
+ 179:         headers={
+ 180:             "Authorization": "Basic " + authorization,
+ 181:             "Content-Type": "application/x-www-form-urlencoded",
+ 182:             "Accept": "application/json",
+ 183:         },
+ 184:         method="POST",
+ 185:     )
+ 186: 
+ 187:     try:
+ 188:         with urllib.request.urlopen(
+ 189:             request, timeout=config["timeout"]
+ 190:         ) as response:
+ 191:             result = json.loads(response.read().decode("utf-8"))
+ 192: 
+ 193:     except urllib.error.HTTPError as exc:
+ 194:         raise RuntimeError(
+ 195:             "UPS OAuth authentication failed with HTTP "
+ 196:             f"{exc.code}. Verify credentials, environment, and "
+ 197:             "the UPS application's enabled APIs."
+ 198:         ) from None
+ 199: 
+ 200:     except (urllib.error.URLError, TimeoutError, OSError):
+ 201:         raise RuntimeError(
+ 202:             "Could not reach the UPS OAuth service."
+ 203:         ) from None
+ 204: 
+ 205:     except (ValueError, UnicodeDecodeError):
+ 206:         raise RuntimeError(
+ 207:             "UPS OAuth returned an invalid response."
+ 208:         ) from None
+ 209: 
+ 210:     token = result.get("access_token")
+ 211: 
+ 212:     if not token:
+ 213:         raise RuntimeError(
+ 214:             "UPS did not return an access token."
+ 215:         )
+ 216: 
+ 217:     return token
+ 218: 
+ 219: 
+ 220: def test_ups_authentication():
+ 221:     """
+ 222:     Test OAuth without creating shipments or buying labels.
+ 223:     Never return the token itself.
+ 224:     """
+ 225:     token = get_ups_access_token()
+ 226: 
+ 227:     return {
+ 228:         "provider": "UPS",
+ 229:         "authenticated": bool(token),
+ 230:         "environment": get_ups_config()["environment"],
+ 231:         "message": (
+ 232:             "UPS authentication succeeded. Shipping rates and "
+ 233:             "production permissions still need separate testing."
+ 234:         ),
+ 235:     }
+ 236: 
+ 237: 
+ 238: def get_ups_rate_endpoint():
+ 239:     """
+ 240:     Return the UPS Rating API endpoint for the selected environment.
+ 241:     The request body must be built from validated shipment details.
+ 242:     """
+ 243:     config = get_ups_config()
+ 244: 
+ 245:     return (
+ 246:         config["api_base"]
+ 247:         + "/api/rating/v2403/Rate"
+ 248:     )
+ 249: 
+ 250: 
+ 251: def get_ups_rate_placeholder():
+ 252:     """
+ 253:     Deliberately refuse to fabricate a shipping price.
+ 254:     A real rating request should be added after confirming the UPS
+ 255:     account, API version, shipping origin, package data, and services.
+ 256:     """
+ 257:     return {
+ 258:         "provider": "UPS",
+ 259:         "available": False,
+ 260:         "price": None,
+ 261:         "currency": get_ups_config()["currency_code"],
+ 262:         "message": (
+ 263:             "Live UPS rates are not enabled yet. No shipping amount "
+ 264:             "has been estimated or fabricated."
+ 265:         ),
+ 266:     }
+ 267: 
+ 268: 
+ 269: def get_ups_tracking_endpoint(tracking_number):
+ 270:     """Build a tracking endpoint only for a supplied tracking number."""
+ 271:     tracking_number = str(tracking_number).strip()
+ 272: 
+ 273:     if not tracking_number:
+ 274:         raise ValueError("A tracking number is required.")
+ 275: 
+ 276:     if len(tracking_number) > 50:
+ 277:         raise ValueError("The tracking number is too long.")
+ 278: 
+ 279:     if not all(
+ 280:         char.isalnum() or char in "-_"
+ 281:         for char in tracking_number
+ 282:     ):
+ 283:         raise ValueError("The tracking number contains invalid characters.")
+ 284: 
+ 285:     config = get_ups_config()
+ 286: 
+ 287:     return (
+ 288:         config["api_base"]
+ 289:         + "/api/track/v1/details/"
+ 290:         + urllib.parse.quote(tracking_number, safe="")
+ 291:     )
+
+
+========== .\staff\urls.py ==========
+   1: from django.urls import path
+   2: from . import views
+   3: 
+   4: urlpatterns = [
+   5:     path("shipping/", views.staff_shipping_dashboard, name="staff_shipping_dashboard"),
+   6:     path("", views.staff_dashboard, name="staff_dashboard"),
+   7:     path("login/", views.staff_login, name="staff_login"),
+   8:     path("logout/", views.staff_logout, name="staff_logout"),
+   9:     path("register/", views.staff_register, name="staff_register"),
+  10:     path("register/success/", views.staff_registration_success, name="staff_registration_success"),
+  11:     path("profile/", views.staff_profile, name="staff_profile"),
+  12:     
+  13:     # Products
+  14:     path("products/", views.staff_products, name="staff_products"),
+  15:     path("products/add/", views.staff_product_add, name="staff_product_add"),
+  16:     path("products/<int:pk>/edit/", views.staff_product_edit, name="staff_product_edit"),
+  17:     path("products/<int:pk>/image/delete/", views.staff_product_image_delete, name="staff_product_image_delete"),
+  18:     
+  19:     # Customers
+  20:     path("customers/", views.staff_customers, name="staff_customers"),
+  21:     
+  22:     # Orders
+  23:     path("orders/", views.staff_orders, name="staff_orders"),
+  24:     path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+  25:     
+  26:     # Quotes
+  27:     path("quotes/", views.staff_quotes, name="staff_quotes"),
+  28:     path("quotes/<int:pk>/", views.staff_quote_detail, name="staff_quote_detail"),
+  29:     
+  30:     # Calendar Orders
+  31:     path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+  32:     path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+  33:     
+  34:     # Boss / Staff Management paths
+  35:     path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
+  36:     path("staff-management/", views.boss_staff_management),
+  37:     
+  38:     path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
+  39:     path("staff-management/create/", views.owner_create_staff),
+  40:     
+  41:     path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
+  42:     path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
+  43:     path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
+  44:     path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
+  45:     path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+  46:     path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
+  47:     path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+  48: ]
+
+
+========== .\products\urls.py ==========
+   1: from django.urls import path
+   2: from . import views
+   3: 
+   4: urlpatterns = [
+   5:     path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+   6:     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+   7:     path('cart/clear/', views.clear_cart, name='clear_cart'),
+   8:     path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+   9:     path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+  10: 
+  11:     path('', views.home, name='home'),
+  12:     path('products/', views.product_list, name='product_list'),
+  13:     path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+  14:     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+  15:     path("checkout/", views.checkout, name="checkout"),
+  16:     path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+  17:     path("track-order/", views.track_order, name="track_order"),
+  18:     path('cart/', views.cart, name='cart'),
+  19:     path('quote/', views.quote_cart, name='quote_cart'),
+  20:     path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+  21:     path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+  22:     path('custom-orders/', views.custom_order, name='custom_order'),
+  23:     path('shipping/', views.shipping, name='shipping'),
+  24:     path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+  25: ]
+  26: 
+  27: 
+  28: 

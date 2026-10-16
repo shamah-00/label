@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Staff Activity Log | The Label Group</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 24px 40px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 26px;
+        }
+
+        header p {
+            margin: 6px 0 0;
+            color: #cbd5e1;
+        }
+
+        .top-links {
+            margin-top: 15px;
+        }
+
+        .top-links a {
+            color: #93c5fd;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .back {
+            display: inline-block;
+            margin-bottom: 25px;
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+        }
+
+        .section h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 950px;
+        }
+
+        th {
+            background: #111827;
+            color: white;
+            text-align: left;
+            padding: 13px;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 13px;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: top;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .staff-name {
+            font-weight: bold;
+        }
+
+        .username {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        .action {
+            display: inline-block;
+            padding: 5px 9px;
+            border-radius: 15px;
+            background: #e5e7eb;
+            color: #374151;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .description {
+            max-width: 350px;
+            line-height: 1.5;
+        }
+
+        .small {
+            color: #6b7280;
+            font-size: 12px;
+        }
+
+        .empty {
+            color: #6b7280;
+            padding: 20px 0;
+        }
+
+        @media (max-width: 700px) {
+            header {
+                padding: 20px;
+            }
+
+            .container {
+                margin-top: 25px;
+            }
+
+            .section {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <h1>The Label Group</h1>
+
+    <p>Business Owner • Staff Activity Monitoring</p>
+
+    <div class="top-links">
+
+        <a href="{% url 'staff_dashboard' %}">
+            Dashboard
+        </a>
+
+        <a href="{% url 'boss_staff_management' %}">
+            Staff Management
+        </a>
+
+    </div>
+
+</header>
+
+
+<div class="container">
+
+    <a
+        class="back"
+        href="{% url 'boss_staff_management' %}"
+    >
+        ← Back to Staff Management
+    </a>
+
+
+    <div class="section">
+
+        <h2>
+            Staff Activity Log
+        </h2>
+
+        <p class="small">
+            This page records staff activity within the
+            management system.
+        </p>
+
+
+        {% if logs %}
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            Staff Member
+                        </th>
+
+                        <th>
+                            Action
+                        </th>
+
+                        <th>
+                            Page
+                        </th>
+
+                        <th>
+                            Description
+                        </th>
+
+                        <th>
+                            Date & Time
+                        </th>
+
+                        <th>
+                            IP Address
+                        </th>
+
+                        <th>
+                            Browser / Device
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for log in logs %}
+
+                        <tr>
+
+                            <td>
+
+                                <div class="staff-name">
+                                    {{ log.staff.full_name }}
+                                </div>
+
+                                <div class="username">
+                                    @{{ log.staff.user.username }}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                <span class="action">
+                                    {{ log.get_action_display }}
+                                </span>
+
+                            </td>
+
+
+                            <td>
+                                {{ log.page|default:"—" }}
+                            </td>
+
+
+                            <td>
+
+                                <div class="description">
+                                    {{ log.description|default:"—" }}
+                                </div>
+
+                            </td>
+
+
+                            <td>
+
+                                {{ log.created_at|date:"F j, Y" }}
+
+                                <br>
+
+                                <strong>
+                                    {{ log.created_at|date:"g:i:s A" }}
+                                </strong>
+
+                            </td>
+
+
+                            <td>
+                                {{ log.ip_address|default:"—" }}
+                            </td>
+
+
+                            <td>
+
+                                <div class="description">
+                                    {{ log.user_agent|default:"—" }}
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        {% else %}
+
+            <div class="empty">
+                No staff activity has been recorded yet.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+</html>

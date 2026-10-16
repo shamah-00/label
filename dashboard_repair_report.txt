@@ -1,0 +1,149 @@
+THE LABEL GROUP - DASHBOARD DIAGNOSTIC
+
+DATABASE COUNTS
+Products: 100
+Orders: 4
+Quote requests: 1
+Available products: 100
+
+MODEL FIELDS
+
+Product:
+  order_items
+  quote_request_items
+  id
+  name
+  product_code
+  product_type
+  slug
+  description
+  category
+  industry
+  brand
+  price
+  discount_price
+  image
+  stock
+  material
+  finish
+  shape
+  printing_method
+  adhesive
+  is_custom
+  is_available
+  is_featured
+  created_at
+  updated_at
+
+Order:
+  items
+  shipment
+  id
+  customer_name
+  customer_email
+  customer_phone
+  shipping_address
+  shipping_city
+  shipping_state
+  shipping_postal_code
+  shipping_country
+  subtotal
+  shipping_cost
+  total
+  currency
+  status
+  notes
+  created_at
+  updated_at
+
+QuoteRequest:
+  items
+  id
+  customer_name
+  company_name
+  customer_email
+  customer_phone
+  street_address
+  address_continued
+  city
+  state
+  postal_code
+  country
+  requirements
+  uploaded_file
+  status
+  staff_notes
+  created_at
+  updated_at
+
+QUOTE STATUSES
+quoted: 1
+
+STAFF COUNTS
+Staff profiles: 5
+Approved staff: 2
+Pending staff: 0
+Activity records: 181
+
+STAFF PROFILE FIELDS
+  activity_logs
+  id
+  user
+  profile_picture
+  full_name
+  phone
+  role
+  status
+  approved
+  approved_at
+  joined_at
+  last_activity
+  rejection_reason
+
+ACTIVITY MODEL FIELDS
+  id
+  staff
+  action
+  page
+  description
+  ip_address
+  user_agent
+  created_at
+
+ACTIVE DASHBOARD VIEW
+URL name: staff_dashboard
+View: staff.views.wrapper
+    @login_required(login_url="staff_login")
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_active:
+            messages.error(
+                request,
+                "Your staff account has been deactivated or removed. Please contact the Boss.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        if request.user.is_superuser:
+            return view_func(request, *args, **kwargs)
+
+        profile = get_staff_profile(request.user)
+
+        if not profile:
+            messages.error(request, "You do not have a staff profile.")
+            logout(request)
+            return redirect("staff_login")
+
+        if not profile.approved or profile.status != "approved":
+            messages.error(
+                request,
+                "Your staff account has not been approved yet.",
+            )
+            logout(request)
+            return redirect("staff_login")
+
+        return view_func(request, *args, **kwargs)
+
+
+DASHBOARD TEMPLATE
+Template path: C:\Users\Tumaini\Desktop\ecommerce\ecommerce\templates\staff\dashboard.html
+Template size: 16003

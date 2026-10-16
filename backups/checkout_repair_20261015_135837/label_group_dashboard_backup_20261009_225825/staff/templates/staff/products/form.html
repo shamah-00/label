@@ -1,0 +1,1266 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% if form.instance.pk %}
+            Edit Product | THE LABEL GROUP
+        {% else %}
+            Add Product | THE LABEL GROUP
+        {% endif %}
+    </title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f6f8;
+            color: #111827;
+        }
+
+        /* NAVBAR */
+
+        .navbar {
+            background: #050505;
+            color: white;
+            min-height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 35px;
+            gap: 25px;
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .brand span {
+            color: #f97316;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .nav-links a:hover {
+            background: #1f2937;
+        }
+
+        .nav-links .dashboard {
+            background: #f97316;
+        }
+
+        .nav-links .dashboard:hover {
+            background: #ea580c;
+        }
+
+        .nav-links .logout {
+            border: 1px solid #374151;
+        }
+
+        /* PAGE */
+
+        .page {
+            max-width: 1250px;
+            margin: 0 auto;
+            padding: 40px 25px 70px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .page-header h1 {
+            margin: 0 0 8px;
+            font-size: 34px;
+            line-height: 1.15;
+        }
+
+        .page-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            color: #111827;
+            border: 1px solid #d1d5db;
+            background: white;
+            padding: 11px 17px;
+            border-radius: 7px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            background: #f9fafb;
+        }
+
+        /* FORM LAYOUT */
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 320px;
+            gap: 25px;
+            align-items: start;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            background: #fafafa;
+        }
+
+        .card-header h2 {
+            margin: 0 0 5px;
+            font-size: 19px;
+        }
+
+        .card-header p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* FIELDS */
+
+        .field-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        .field label {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            padding: 12px 13px;
+            font-family: inherit;
+            font-size: 14px;
+            background: white;
+            color: #111827;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
+        }
+
+        .field textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .field input[type="file"] {
+            padding: 9px;
+        }
+
+        .help-text {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .error {
+            color: #dc2626;
+            font-size: 12px;
+            margin-top: 6px;
+            font-weight: 600;
+        }
+
+        .non-field-errors {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            padding: 14px 16px;
+            border-radius: 7px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        /* PRICE */
+
+        .price-box {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            padding: 18px;
+            border-radius: 8px;
+        }
+
+        .price-box .field input {
+            background: white;
+        }
+
+        .price-note {
+            margin-top: 12px;
+            padding: 11px 13px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 6px;
+            color: #9a3412;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* CHECKBOXES */
+
+        .checkbox-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            border: 1px solid #e5e7eb;
+            border-radius: 7px;
+            padding: 13px;
+            background: #fafafa;
+        }
+
+        .checkbox-item:hover {
+            background: #f9fafb;
+        }
+
+        .checkbox-item input {
+            width: 17px;
+            height: 17px;
+            accent-color: #f97316;
+        }
+
+        .checkbox-item label {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* IMAGE PREVIEW */
+
+        .image-preview {
+            border: 1px dashed #cbd5e1;
+            background: #f8fafc;
+            border-radius: 9px;
+            min-height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            overflow: hidden;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 5px;
+        }
+
+        .no-image {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        .no-image strong {
+            display: block;
+            color: #6b7280;
+            margin-bottom: 6px;
+        }
+
+        /* SIDE PANEL */
+
+        .side-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .side-header {
+            background: #050505;
+            color: white;
+            padding: 17px 19px;
+        }
+
+        .side-header h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .side-body {
+            padding: 19px;
+        }
+
+        .info-row {
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #6b7280;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.5;
+        }
+
+        .usd {
+            color: #ea580c;
+            font-size: 20px;
+        }
+
+        /* BUTTONS */
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+            background: #fafafa;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 7px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-cancel {
+            color: #374151;
+            background: white;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-cancel:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-save {
+            color: white;
+            background: #f97316;
+        }
+
+        .btn-save:hover {
+            background: #ea580c;
+        }
+
+        /* DJANGO ERROR FIELD */
+
+        .field ul.errorlist {
+            list-style: none;
+            margin: 6px 0 0;
+            padding: 0;
+            color: #dc2626;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* RESPONSIVE */
+
+        @media (max-width: 900px) {
+
+            .form-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .field-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.full {
+                grid-column: auto;
+            }
+
+            .checkbox-section {
+                grid-template-columns: 1fr;
+            }
+
+            .side-panel {
+                order: -1;
+            }
+        }
+
+        @media (max-width: 650px) {
+
+            .navbar {
+                padding: 15px 18px;
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+            }
+
+            .page {
+                padding: 25px 15px 50px;
+            }
+
+            .page-header {
+                flex-direction: column;
+            }
+
+            .page-header h1 {
+                font-size: 28px;
+            }
+
+            .card-body {
+                padding: 18px;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+
+    <div class="brand">
+        THE LABEL <span>GROUP</span>
+    </div>
+
+    <div class="nav-links">
+
+        <a href="{% url 'staff_dashboard' %}" class="dashboard">
+            Dashboard
+        </a>
+
+        <a href="{% url 'staff_product_list' %}">
+            Products
+        </a>
+
+        <a href="{% url 'home' %}">
+            Website
+        </a>
+
+        <a href="{% url 'staff_logout' %}" class="logout">
+            Logout
+        </a>
+
+    </div>
+
+</nav>
+
+
+<main class="page">
+
+    <div class="page-header">
+
+        <div>
+
+            <h1>
+                {% if form.instance.pk %}
+                    Edit Product
+                {% else %}
+                    Add Product
+                {% endif %}
+            </h1>
+
+            <p>
+                {% if form.instance.pk %}
+                    Update this product and keep the information on your website current.
+                {% else %}
+                    Add a new product to the THE LABEL GROUP catalogue.
+                {% endif %}
+            </p>
+
+        </div>
+
+        <a href="{% url 'staff_product_list' %}" class="back-link">
+            ← Back to Products
+        </a>
+
+    </div>
+
+
+    <form method="post" enctype="multipart/form-data">
+
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="non-field-errors">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+
+        <div class="form-layout">
+
+
+            <!-- MAIN FORM -->
+
+            <div>
+
+
+                <!-- BASIC INFORMATION -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2>
+                            Product Information
+                        </h2>
+
+                        <p>
+                            Basic information customers will see on the website.
+                        </p>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="field-grid">
+
+
+                            <div class="field">
+
+                                <label for="{{ form.name.id_for_label }}">
+                                    {{ form.name.label }}
+                                </label>
+
+                                {{ form.name }}
+
+                                {{ form.name.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.product_code.id_for_label }}">
+                                    {{ form.product_code.label }}
+                                </label>
+
+                                {{ form.product_code }}
+
+                                {{ form.product_code.errors }}
+
+                                <div class="help-text">
+                                    Example: DGO, P001, G001
+                                </div>
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.product_type.id_for_label }}">
+                                    {{ form.product_type.label }}
+                                </label>
+
+                                {{ form.product_type }}
+
+                                {{ form.product_type.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.industry.id_for_label }}">
+                                    {{ form.industry.label }}
+                                </label>
+
+                                {{ form.industry }}
+
+                                {{ form.industry.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.category.id_for_label }}">
+                                    {{ form.category.label }}
+                                </label>
+
+                                {{ form.category }}
+
+                                {{ form.category.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.brand.id_for_label }}">
+                                    {{ form.brand.label }}
+                                </label>
+
+                                {{ form.brand }}
+
+                                {{ form.brand.errors }}
+
+                            </div>
+
+
+                            <div class="field full">
+
+                                <label for="{{ form.slug.id_for_label }}">
+                                    {{ form.slug.label }}
+                                </label>
+
+                                {{ form.slug }}
+
+                                {{ form.slug.errors }}
+
+                                <div class="help-text">
+                                    Used to create the product's website URL.
+                                </div>
+
+                            </div>
+
+
+                            <div class="field full">
+
+                                <label for="{{ form.description.id_for_label }}">
+                                    {{ form.description.label }}
+                                </label>
+
+                                {{ form.description }}
+
+                                {{ form.description.errors }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PRICING -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2>
+                            Pricing
+                        </h2>
+
+                        <p>
+                            All website prices are displayed in United States dollars.
+                        </p>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="price-box">
+
+                            <div class="field-grid">
+
+                                <div class="field">
+
+                                    <label for="{{ form.price.id_for_label }}">
+                                        {{ form.price.label }}
+                                    </label>
+
+                                    {{ form.price }}
+
+                                    {{ form.price.errors }}
+
+                                    <div class="help-text">
+                                        Minimum price is $1.00 USD. Leave blank for Price on Request.
+                                    </div>
+
+                                </div>
+
+
+                                <div class="field">
+
+                                    <label for="{{ form.discount_price.id_for_label }}">
+                                        {{ form.discount_price.label }}
+                                    </label>
+
+                                    {{ form.discount_price }}
+
+                                    {{ form.discount_price.errors }}
+
+                                    <div class="help-text">
+                                        Must be at least $1.00 and cannot exceed the regular price.
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="price-note">
+                                Products without a price will appear as
+                                <strong>Price on Request</strong>.
+                                Entered prices can be changed at any time.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- PRODUCT DETAILS -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2>
+                            Product Specifications
+                        </h2>
+
+                        <p>
+                            Add the technical details customers may need before ordering.
+                        </p>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="field-grid">
+
+
+                            <div class="field">
+
+                                <label for="{{ form.material.id_for_label }}">
+                                    {{ form.material.label }}
+                                </label>
+
+                                {{ form.material }}
+
+                                {{ form.material.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.finish.id_for_label }}">
+                                    {{ form.finish.label }}
+                                </label>
+
+                                {{ form.finish }}
+
+                                {{ form.finish.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.shape.id_for_label }}">
+                                    {{ form.shape.label }}
+                                </label>
+
+                                {{ form.shape }}
+
+                                {{ form.shape.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.printing_method.id_for_label }}">
+                                    {{ form.printing_method.label }}
+                                </label>
+
+                                {{ form.printing_method }}
+
+                                {{ form.printing_method.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.adhesive.id_for_label }}">
+                                    {{ form.adhesive.label }}
+                                </label>
+
+                                {{ form.adhesive }}
+
+                                {{ form.adhesive.errors }}
+
+                            </div>
+
+
+                            <div class="field">
+
+                                <label for="{{ form.stock.id_for_label }}">
+                                    {{ form.stock.label }}
+                                </label>
+
+                                {{ form.stock }}
+
+                                {{ form.stock.errors }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- IMAGE -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2>
+                            Product Image
+                        </h2>
+
+                        <p>
+                            Upload the picture customers will see for this sticker.
+                        </p>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="field">
+
+                            <label for="{{ form.image.id_for_label }}">
+                                {{ form.image.label }}
+                            </label>
+
+                            {{ form.image }}
+
+                            {{ form.image.errors }}
+
+                            <div class="help-text">
+                                Use a clear product image. JPG, PNG and other supported image formats are accepted.
+                            </div>
+
+                        </div>
+
+                        <br>
+
+                        <div class="image-preview" id="imagePreview">
+
+                            {% if form.instance.image %}
+
+                                <img
+                                    src="{{ form.instance.image.url }}"
+                                    alt="{{ form.instance.name }}"
+                                >
+
+                            {% else %}
+
+                                <div class="no-image">
+
+                                    <strong>
+                                        No product image uploaded
+                                    </strong>
+
+                                    The product will use the available placeholder until an image is uploaded.
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- WEBSITE SETTINGS -->
+
+                <section class="card">
+
+                    <div class="card-header">
+
+                        <h2>
+                            Website Settings
+                        </h2>
+
+                        <p>
+                            Control how this product behaves on the customer website.
+                        </p>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="checkbox-section">
+
+
+                            <div class="checkbox-item">
+
+                                {{ form.is_custom }}
+
+                                <label for="{{ form.is_custom.id_for_label }}">
+                                    {{ form.is_custom.label }}
+                                </label>
+
+                            </div>
+
+
+                            <div class="checkbox-item">
+
+                                {{ form.is_available }}
+
+                                <label for="{{ form.is_available.id_for_label }}">
+                                    {{ form.is_available.label }}
+                                </label>
+
+                            </div>
+
+
+                            <div class="checkbox-item">
+
+                                {{ form.is_featured }}
+
+                                <label for="{{ form.is_featured.id_for_label }}">
+                                    {{ form.is_featured.label }}
+                                </label>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ACTIONS -->
+
+                <section class="card">
+
+                    <div class="form-actions">
+
+                        <a
+                            href="{% url 'staff_product_list' %}"
+                            class="btn btn-cancel"
+                        >
+                            Cancel
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-save"
+                        >
+
+                            {% if form.instance.pk %}
+                                Save Product Changes
+                            {% else %}
+                                Add Product
+                            {% endif %}
+
+                        </button>
+
+                    </div>
+
+                </section>
+
+
+            </div>
+
+
+            <!-- SIDEBAR -->
+
+            <aside class="side-panel">
+
+
+                <div class="side-card">
+
+                    <div class="side-header">
+
+                        <h3>
+                            Product Guide
+                        </h3>
+
+                    </div>
+
+                    <div class="side-body">
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Industry
+                            </div>
+
+                            <div class="info-value">
+                                Choose one of the five main THE LABEL GROUP industries.
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Product Code
+                            </div>
+
+                            <div class="info-value">
+                                Use the sticker code where available.
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Price
+                            </div>
+
+                            <div class="info-value usd">
+                                $1.00+
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                No Price
+                            </div>
+
+                            <div class="info-value">
+                                Leave the price blank for Price on Request.
+                            </div>
+
+                        </div>
+
+
+                        <div class="info-row">
+
+                            <div class="info-label">
+                                Image
+                            </div>
+
+                            <div class="info-value">
+                                Every individual sticker can have its own image.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="side-card">
+
+                    <div class="side-header">
+
+                        <h3>
+                            Before Saving
+                        </h3>
+
+                    </div>
+
+                    <div class="side-body">
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Product name is correct
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Correct industry selected
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Sticker code entered
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Price is $1.00 or higher
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Correct image uploaded
+                            </div>
+
+                        </div>
+
+                        <div class="info-row">
+
+                            <div class="info-value">
+                                ✓ Website availability checked
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </aside>
+
+        </div>
+
+    </form>
+
+</main>
+
+
+<script>
+
+    const imageInput = document.getElementById("id_image");
+    const imagePreview = document.getElementById("imagePreview");
+
+    if (imageInput) {
+
+        imageInput.addEventListener("change", function () {
+
+            const file = this.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+
+                imagePreview.innerHTML = `
+                    <img
+                        src="${event.target.result}"
+                        alt="Product image preview"
+                    >
+                `;
+
+            };
+
+            reader.readAsDataURL(file);
+
+        });
+
+    }
+
+</script>
+
+</body>
+</html>

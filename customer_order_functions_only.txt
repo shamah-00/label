@@ -1,0 +1,390 @@
+THE LABEL GROUP: CUSTOMER AND ORDER VIEW FUNCTIONS
+
+===========================================================================
+FUNCTION: staff_customers (lines 305-396)
+===========================================================================
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+===========================================================================
+FUNCTION: staff_orders (lines 400-453)
+===========================================================================
+@staff_required
+def staff_orders(request):
+    from django.db.models import Q, Sum
+    from decimal import Decimal
+    from products.models import Order
+
+    all_orders = Order.objects.all().order_by("-created_at")
+    search = request.GET.get("search", "").strip()
+    status_filter = request.GET.get("status", "").strip()
+    status_choices = list(Order._meta.get_field("status").choices)
+
+    if search:
+        condition = (
+            Q(customer_name__icontains=search)
+            | Q(customer_email__icontains=search)
+            | Q(customer_phone__icontains=search)
+            | Q(shipping_city__icontains=search)
+            | Q(shipping_country__icontains=search)
+            | Q(status__icontains=search)
+        )
+        if search.isdigit():
+            condition |= Q(pk=int(search))
+        all_orders = all_orders.filter(condition)
+
+    if status_filter and any(str(k) == status_filter for k, _ in status_choices):
+        all_orders = all_orders.filter(status=status_filter)
+
+    all_orders = all_orders.prefetch_related("items")
+    status_cards = []
+    for key, label in status_choices:
+        status_cards.append({
+            "key": key,
+            "label": label,
+            "count": Order.objects.filter(status=key).count(),
+        })
+
+    totals = Order.objects.aggregate(value=Sum("total"))
+    total_value = totals["value"] or Decimal("0.00")
+    active_statuses = [
+        key for key, _ in status_choices
+        if key not in ("completed", "cancelled")
+    ]
+
+    return render(request, "staff/orders/list.html", {
+        "orders": all_orders,
+        "search": search,
+        "status_filter": status_filter,
+        "status_choices": status_choices,
+        "status_cards": status_cards,
+        "total_orders": Order.objects.count(),
+        "active_orders": Order.objects.filter(status__in=active_statuses).count(),
+        "completed_orders": Order.objects.filter(status="completed").count(),
+        "total_value": total_value,
+    })
+
+===========================================================================
+FUNCTION: _label_group_customer_records (lines 1080-1163)
+===========================================================================
+def _label_group_customer_records():
+    """
+    Build one customer directory from existing orders and quote requests.
+    This does not create or modify database records.
+    """
+    from types import SimpleNamespace
+    from products.models import Order, QuoteRequest
+
+    records = {}
+
+    def value(obj, *names):
+        for name in names:
+            result = getattr(obj, name, None)
+            if result not in (None, ""):
+                return str(result).strip()
+        return ""
+
+    def add_record(obj, source_type):
+        name = value(obj, "customer_name", "full_name", "name")
+        email = value(obj, "customer_email", "email").lower()
+        phone = value(obj, "customer_phone", "phone", "telephone")
+        address = value(obj, "shipping_address", "address")
+
+        if not (name or email or phone):
+            return
+
+        key = email or phone or name.casefold()
+        if not key:
+            return
+
+        if key not in records:
+            records[key] = {
+                "name": name or email or phone,
+                "email": email,
+                "phone": phone,
+                "address": address,
+                "total_orders": 0,
+                "total_quotes": 0,
+                "sources": set(),
+            }
+
+        customer = records[key]
+
+        if name and not customer["name"]:
+            customer["name"] = name
+        if email and not customer["email"]:
+            customer["email"] = email
+        if phone and not customer["phone"]:
+            customer["phone"] = phone
+        if address and not customer["address"]:
+            customer["address"] = address
+
+        customer["sources"].add(source_type)
+
+        if source_type == "order":
+            customer["total_orders"] += 1
+        elif source_type == "quote":
+            customer["total_quotes"] += 1
+
+    for order in Order.objects.all().iterator():
+        add_record(order, "order")
+
+    for quote in QuoteRequest.objects.all().iterator():
+        add_record(quote, "quote")
+
+    customers = []
+
+    for item in records.values():
+        item["sources"] = ", ".join(sorted(item["sources"]))
+        customers.append(SimpleNamespace(
+            name=item["name"],
+            full_name=item["name"],
+            customer_name=item["name"],
+            email=item["email"],
+            customer_email=item["email"],
+            phone=item["phone"],
+            customer_phone=item["phone"],
+            address=item["address"],
+            total_orders=item["total_orders"],
+            total_quotes=item["total_quotes"],
+            sources=item["sources"],
+        ))
+
+    return sorted(customers, key=lambda customer: customer.name.lower())
+
+===========================================================================
+FUNCTION: staff_customers (lines 1196-1287)
+===========================================================================
+@staff_required
+def staff_customers(request):
+    from collections import defaultdict
+    from decimal import Decimal
+    from django.db.models import Q
+    from products.models import Order, QuoteRequest
+
+    people = {}
+    search = request.GET.get("search", "").strip()
+
+    def add_person(name, email, phone, company, kind, record):
+        name = (name or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        company = (company or "").strip()
+        key = email.casefold() if email else (
+            (name.casefold(), phone) if name or phone
+            else ("record", kind, record.pk)
+        )
+        person = people.get(key)
+        if person is None:
+            person = {
+                "name": name or "Customer",
+                "email": email,
+                "phone": phone,
+                "company": company,
+                "orders_count": 0,
+                "quotes_count": 0,
+                "total_spend": Decimal("0.00"),
+                "last_seen": getattr(record, "created_at", None),
+            }
+            people[key] = person
+        else:
+            for field, value in (
+                ("name", name), ("email", email),
+                ("phone", phone), ("company", company),
+            ):
+                if value and (not person[field] or person[field] == "Customer"):
+                    person[field] = value
+            created = getattr(record, "created_at", None)
+            if created and (
+                not person["last_seen"]
+                or created.timestamp() > person["last_seen"].timestamp()
+            ):
+                person["last_seen"] = created
+
+        if kind == "order":
+            person["orders_count"] += 1
+            person["total_spend"] += record.total or Decimal("0.00")
+        else:
+            person["quotes_count"] += 1
+
+    for obj in Order.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            "", "order", obj,
+        )
+
+    for obj in QuoteRequest.objects.all().order_by("-created_at"):
+        add_person(
+            obj.customer_name, obj.customer_email, obj.customer_phone,
+            obj.company_name, "quote", obj,
+        )
+
+    customers = list(people.values())
+    if search:
+        needle = search.casefold()
+        customers = [
+            p for p in customers
+            if any(needle in str(p[field] or "").casefold()
+                   for field in ("name", "email", "phone", "company"))
+        ]
+
+    customers.sort(
+        key=lambda p: p["last_seen"].timestamp() if p["last_seen"] else 0,
+        reverse=True,
+    )
+
+    total_order_count = sum(p["orders_count"] for p in customers)
+    total_quote_count = sum(p["quotes_count"] for p in customers)
+    total_customer_spend = sum(
+        (p["total_spend"] for p in customers), Decimal("0.00")
+    )
+
+    return render(request, "staff/customers/list.html", {
+        "customers": customers,
+        "total_customers": len(customers),
+        "total_order_count": total_order_count,
+        "total_quote_count": total_quote_count,
+        "total_customer_spend": total_customer_spend,
+        "search": search,
+    })
+
+===========================================================================
+FUNCTION: staff_order_detail (lines 1372-1418)
+===========================================================================
+@staff_required
+def staff_order_detail(request, pk):
+    from django.contrib import messages
+    from products.models import Order
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related("items"),
+        pk=pk,
+    )
+    status_choices = list(Order._meta.get_field("status").choices)
+    allowed_statuses = {str(key) for key, _ in status_choices}
+
+    if request.method == "POST":
+        new_status = request.POST.get("status", "").strip()
+        new_notes = request.POST.get("notes", order.notes)
+
+        if new_status not in allowed_statuses:
+            messages.error(request, "Please choose a valid order status.")
+        else:
+            changed = []
+            if order.status != new_status:
+                old_status = order.status
+                order.status = new_status
+                changed.append(f"status changed from {old_status} to {new_status}")
+            if order.notes != new_notes:
+                order.notes = new_notes
+                changed.append("internal notes updated")
+
+            if changed:
+                order.save()
+                profile = get_staff_profile(request.user)
+                log_staff_activity(
+                    request, profile, "update",
+                    f"Order #{order.pk}: " + "; ".join(changed),
+                    f"Order #{order.pk}",
+                )
+                messages.success(request, f"Order #{order.pk} has been updated.")
+            else:
+                messages.info(request, "No changes were needed.")
+
+            return redirect("staff_order_detail", pk=order.pk)
+
+    return render(request, "staff/orders/detail.html", {
+        "order": order,
+        "status_choices": status_choices,
+        "item_count": order.items.count(),
+    })

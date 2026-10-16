@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Website Settings | THE LABEL GROUP</title>
+<style>
+body{margin:0;background:#f4f7fb;color:#0b1f3a;font-family:Arial,sans-serif}
+header{background:#06152a;color:white;padding:25px}
+main{max-width:1000px;margin:30px auto;padding:20px}
+.card{background:white;padding:25px;margin-bottom:20px;border-radius:12px;box-shadow:0 5px 20px #0001}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.full{grid-column:1/-1}
+label{font-weight:bold;display:block;margin-bottom:6px}
+input,textarea{width:100%;padding:12px;border:1px solid #ccd5df;border-radius:7px;box-sizing:border-box}
+textarea{min-height:100px}
+button{background:#f47b20;color:white;border:0;padding:14px 25px;border-radius:7px;font-weight:bold;cursor:pointer}
+a{color:#0b1f3a;font-weight:bold}
+@media(max-width:700px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+<h1>Website Settings</h1>
+<p>Manage THE LABEL GROUP contact details and social media.</p>
+</header>
+<main>
+<a href="{% url 'staff_dashboard' %}">← Back to Staff Dashboard</a>
+{% if messages %}{% for message in messages %}<div class="card">{{ message }}</div>{% endfor %}{% endif %}
+<form method="post">
+{% csrf_token %}
+<div class="card">
+<h2>Company & Contact Details</h2>
+<div class="grid">
+<div><label>Company Name</label><input name="company_name" value="{{ site_settings.company_name }}"></div>
+<div><label>Tagline</label><input name="tagline" value="{{ site_settings.tagline }}"></div>
+<div><label>Phone</label><input name="phone" value="{{ site_settings.phone }}"></div>
+<div><label>Email</label><input type="email" name="email" value="{{ site_settings.email }}"></div>
+<div class="full"><label>Address</label><textarea name="address">{{ site_settings.address }}</textarea></div>
+<div><label>WhatsApp</label><input name="whatsapp" value="{{ site_settings.whatsapp }}"></div>
+</div>
+</div>
+<div class="card">
+<h2>Social Media</h2>
+<div class="grid">
+<div><label>Facebook</label><input type="url" name="facebook" value="{{ site_settings.facebook }}"></div>
+<div><label>Instagram</label><input type="url" name="instagram" value="{{ site_settings.instagram }}"></div>
+<div><label>TikTok</label><input type="url" name="tiktok" value="{{ site_settings.tiktok }}"></div>
+<div><label>LinkedIn</label><input type="url" name="linkedin" value="{{ site_settings.linkedin }}"></div>
+<div><label>YouTube</label><input type="url" name="youtube" value="{{ site_settings.youtube }}"></div>
+</div>
+</div>
+<div class="card"><button type="submit">SAVE WEBSITE SETTINGS</button></div>
+</form>
+</main>
+</body>
+</html>

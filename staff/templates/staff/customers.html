@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customers | THE LABEL GROUP</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#202b3c;font:15px/1.5 Arial}
+header{background:#0b1f3a;color:white;padding:22px max(18px,calc((100% - 1150px)/2))}
+main{max-width:1150px;margin:28px auto;padding:0 18px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.panel{background:white;padding:20px;border:1px solid #e0e6ef;border-radius:12px;margin-top:20px}
+.muted{color:#667085}a{color:#174f91;text-decoration:none}
+input{padding:11px;border:1px solid #ccd4e0;border-radius:7px;min-width:220px}
+button{padding:11px 16px;background:#f47b20;color:white;border:0;border-radius:7px;cursor:pointer}
+table{width:100%;border-collapse:collapse;min-width:700px}th,td{text-align:left;padding:12px;border-bottom:1px solid #edf0f5}
+th{background:#f8fafc;color:#667085;font-size:12px;text-transform:uppercase}
+.wrap{overflow-x:auto}.count{background:#eef3fa;border-radius:20px;padding:4px 9px}
+</style></head><body>
+<header><strong>THE LABEL GROUP</strong><div>Customer relationship directory</div></header>
+<main><div class="top"><div><h1>Customers</h1>
+<div class="muted">Customer contacts, purchase history and quote activity.</div></div>
+<a href="/staff/">&#8592; Staff Dashboard</a></div>
+<section class="panel">
+<h2>{{ total_customers }} customers</h2>
+<form method="get"><input name="search" value="{{ search }}" placeholder="Search name, email, phone or company">
+<button>Search</button> <a href="?">Clear</a></form>
+<div class="wrap"><table><thead><tr><th>Customer</th><th>Contact</th><th>Company</th><th>Orders</th><th>Quotes</th><th>Last activity</th></tr></thead><tbody>
+{% for c in customers %}
+<tr><td><strong>{{ c.name }}</strong></td><td>{% if c.email %}<a href="mailto:{{ c.email }}">{{ c.email }}</a>{% else %}No email{% endif %}{% if c.phone %}<div>{{ c.phone }}</div>{% endif %}</td>
+<td>{{ c.company|default:"-" }}</td><td><span class="count">{{ c.orders_count }}</span></td>
+<td><span class="count">{{ c.quotes_count }}</span></td><td>{% if c.last_seen %}{{ c.last_seen|date:"M j, Y, g:i a" }}{% else %}-{% endif %}</td></tr>
+{% empty %}<tr><td colspan="6">No matching customers found.</td></tr>{% endfor %}
+</tbody></table></div></section></main></body></html>

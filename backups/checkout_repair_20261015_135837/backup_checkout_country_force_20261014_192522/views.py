@@ -1,0 +1,1051 @@
+from .models import QuoteRequest
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Product
+
+def home(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(is_available=True).order_by("-id")
+
+    industry_filter = request.GET.get("industry", "").strip().lower()
+
+    if industry_filter == "waste":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "motor":
+        products = products.filter(
+            Q(id__gte=1, id__lte=60)
+        )
+    elif industry_filter == "construction":
+        products = products.filter(
+            Q(id__gte=41, id__lte=60)
+        )
+    elif industry_filter == "pool":
+        products = products.filter(
+            Q(id__gte=61, id__lte=80)
+        )
+    elif industry_filter == "government":
+        products = products.filter(
+            Q(id__gte=81, id__lte=100)
+        )
+    elif industry_filter == "other":
+        products = products.filter(id__gte=101)
+
+    return render(
+        request,
+        "products/home.html",
+        {
+            "products": products,
+            "industry_filter": industry_filter,
+        },
+    )
+
+
+def product_list(request):
+    from django.db.models import Q
+
+    products = Product.objects.filter(
+        is_available=True
+    ).order_by("id")
+
+    industry = request.GET.get("industry", "").strip().lower()
+    search = request.GET.get("search", "").strip()
+
+    category_ranges = {
+        "motor": (1, 20),
+        "waste": (21, 40),
+        "construction": (41, 60),
+        "pool": (61, 80),
+        "government": (81, 100),
+    }
+
+    if industry in category_ranges:
+        first_id, last_id = category_ranges[industry]
+        products = products.filter(
+            id__gte=first_id,
+            id__lte=last_id
+        )
+    elif industry == "other":
+        products = products.exclude(
+            id__gte=1,
+            id__lte=100
+        )
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(brand__icontains=search) |
+            Q(category__icontains=search) |
+            Q(product_type__icontains=search) |
+            Q(product_code__icontains=search)
+        )
+
+    return render(
+        request,
+        "products/product_list.html",
+        {
+            "products": products,
+            "selected_industry": industry,
+            "search_query": search,
+            "product_count": products.count(),
+        },
+    )
+
+
+def industry_products(request, industry_name):
+    industry_name = (industry_name or "").strip().lower()
+
+    allowed = {
+        "motor": "motor",
+        "waste": "waste",
+        "construction": "construction",
+        "pool": "pool",
+        "government": "government",
+        "other": "other",
+    }
+
+    industry = allowed.get(industry_name)
+
+    if not industry:
+        return redirect("product_list")
+
+    from django.http import HttpResponseRedirect
+    from django.urls import reverse
+
+    url = reverse("product_list") + "?industry=" + industry
+    search = request.GET.get("search", "").strip()
+
+    if search:
+        from urllib.parse import quote
+        url += "&search=" + quote(search)
+
+    return HttpResponseRedirect(url)
+
+def product_detail(request, product_id):
+    product = get_object_or_404(Product, id=product_id)
+    return render(request, "products/product_detail.html", {'product': product})
+
+def cart(request):
+    return render(request, "products/cart.html", {})
+
+
+def add_to_quote(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+
+    product = get_object_or_404(Product, id=product_id)
+
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product.id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(quantity, 1)
+
+    quote_cart[product_key] = quote_cart.get(product_key, 0) + quantity
+
+    request.session["quote_cart"] = quote_cart
+    request.session.modified = True
+
+    return redirect("quote_cart")
+
+def remove_from_quote(request, product_id):
+    quote_cart = request.session.get("quote_cart", {})
+    product_key = str(product_id)
+
+    if product_key in quote_cart:
+        del quote_cart[product_key]
+        request.session["quote_cart"] = quote_cart
+        request.session.modified = True
+
+    return redirect("quote_cart")
+def quote_cart(request):
+    from .models import Product
+    from django.shortcuts import render
+
+    cart = request.session.get("quote_cart", {})
+    products_by_id = {}
+    valid_cart = {}
+
+    for product_id, raw_quantity in cart.items():
+        try:
+            product_id = int(product_id)
+            quantity = max(1, int(raw_quantity))
+        except (TypeError, ValueError):
+            continue
+        valid_cart[str(product_id)] = quantity
+
+    products = Product.objects.filter(pk__in=valid_cart.keys())
+    for product in products:
+        products_by_id[str(product.pk)] = product
+
+    quote_items = []
+    for product_id, quantity in valid_cart.items():
+        product = products_by_id.get(product_id)
+        if product is None:
+            continue
+        product.quote_quantity = quantity
+        quote_items.append({
+            "product": product,
+            "quantity": quantity,
+        })
+
+    request.session["quote_cart"] = {
+        str(item["product"].pk): item["quantity"]
+        for item in quote_items
+    }
+
+    return render(request, "products/quote_cart.html", {
+        "quote_items": quote_items,
+        "quote_products": [item["product"] for item in quote_items],
+        "products": [item["product"] for item in quote_items],
+        "quote_count": sum(item["quantity"] for item in quote_items),
+        "quote_cart_empty": not bool(quote_items),
+    })
+
+
+def shipping(request):
+    return render(request, "products/shipping.html", {})
+
+def add_to_cart(request, product_id):
+    from django.shortcuts import get_object_or_404, redirect
+    from .models import Product
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cart = request.session.get("cart", {})
+    key = str(product_id)
+
+    try:
+        quantity = int(request.POST.get("quantity", 1))
+    except (TypeError, ValueError):
+        quantity = 1
+
+    quantity = max(1, quantity)
+    cart[key] = int(cart.get(key, 0)) + quantity
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def cart(request):
+    from django.shortcuts import render
+    from .models import Product
+
+    session_cart = request.session.get("cart", {})
+    products = []
+
+    for product_id, quantity in session_cart.items():
+        try:
+            product = Product.objects.get(id=int(product_id))
+            quantity = max(1, int(quantity))
+            products.append({
+                "product": product,
+                "quantity": quantity,
+                "subtotal": product.price * quantity,
+            })
+        except (Product.DoesNotExist, ValueError, TypeError):
+            continue
+
+    total = sum(item["subtotal"] for item in products)
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "cart_items": products,
+            "cart": products,
+            "total": total,
+            "cart_total": total,
+        },
+    )
+
+
+def update_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+
+    if request.method == "POST":
+        try:
+            quantity = int(request.POST.get("quantity", 1))
+        except (TypeError, ValueError):
+            quantity = 1
+
+        if quantity > 0:
+            cart[str(product_id)] = quantity
+        else:
+            cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def remove_from_cart(request, product_id):
+    from django.shortcuts import redirect
+
+    cart = request.session.get("cart", {})
+    cart.pop(str(product_id), None)
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+def clear_cart(request):
+    from django.shortcuts import redirect
+
+    request.session["cart"] = {}
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+
+def custom_order(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/custom_order.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/custom_order.html", {})
+
+
+
+
+
+
+
+
+
+# =========================================================
+# SHIPPING QUOTE DESK
+# =========================================================
+
+def shipping_quote(request):
+    from .models import QuoteRequest, QuoteRequestItem, Product
+    from django.shortcuts import render
+    from django.db import transaction
+
+    if request.method == "POST":
+        customer_name = request.POST.get("customer_name", "").strip()
+        customer_email = request.POST.get("customer_email", "").strip()
+        customer_phone = request.POST.get("customer_phone", "").strip()
+
+        if not customer_name or not customer_email or not customer_phone:
+            return render(request, "products/shipping_quote.html", {
+                "error": "Please provide your name, email address, and phone number.",
+            })
+
+        with transaction.atomic():
+            quote = QuoteRequest.objects.create(
+                customer_name=customer_name,
+                company_name=request.POST.get("company_name", "").strip(),
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                street_address=request.POST.get("street_address", "").strip(),
+                address_continued=request.POST.get("address_continued", "").strip(),
+                city=request.POST.get("city", "").strip(),
+                state=request.POST.get("state", "").strip(),
+                postal_code=request.POST.get("postal_code", "").strip(),
+                country=request.POST.get("country", "").strip(),
+                requirements=request.POST.get("requirements", "").strip(),
+                uploaded_file=request.FILES.get("uploaded_file"),
+            )
+
+            cart = request.session.get("quote_cart", {})
+            for product_id, raw_quantity in cart.items():
+                try:
+                    product = Product.objects.get(pk=int(product_id))
+                    quantity = max(1, int(raw_quantity))
+                except (Product.DoesNotExist, TypeError, ValueError):
+                    continue
+
+                QuoteRequestItem.objects.create(
+                    quote_request=quote,
+                    product=product,
+                    product_name=str(product),
+                    product_code=str(
+                        getattr(product, "product_code", "")
+                        or getattr(product, "sku", "")
+                    ),
+                    quantity=quantity,
+                )
+
+        request.session["quote_cart"] = {}
+        request.session.modified = True
+        return render(request, "products/quote_success.html", {
+            "quote": quote,
+            "quote_id": quote.pk,
+        })
+
+    return render(request, "products/shipping_quote.html", {})
+
+def custom_orders(request):
+    if request.method == 'POST':
+        from .models import CustomOrder
+        full_name = request.POST.get('full_name')
+        company_name = request.POST.get('company_name')
+        email = request.POST.get('email')
+        phone = request.POST.get('phone')
+        address = request.POST.get('street_address', '') + ', ' + request.POST.get('city', '')
+        requirements = request.POST.get('requirements')
+        artwork = request.FILES.get('artwork')
+
+        CustomOrder.objects.create(
+            full_name=full_name,
+            company_name=company_name,
+            email=email,
+            phone=phone,
+            address=address,
+            requirements=requirements,
+            artwork=artwork
+        )
+        return render(request, 'products/custom_order_success.html', {'full_name': full_name})
+
+    return render(request, 'products/custom_orders.html')
+
+
+
+
+
+
+
+
+
+
+
+# THE LABEL GROUP: invoice payment page foundation.
+# Connect a real payment provider before accepting payments.
+def invoice_payment(request):
+    from django.shortcuts import render
+
+    invoice_number = ""
+    amount = ""
+    message = ""
+
+    if request.method == "POST":
+        invoice_number = request.POST.get("invoice_number", "").strip()
+        amount = request.POST.get("amount", "").strip()
+
+        if not invoice_number:
+            message = "Please enter your invoice number."
+        else:
+            try:
+                value = float(amount)
+                if value <= 0:
+                    raise ValueError
+                amount = f"{value:.2f}"
+                message = (
+                    "Your invoice details are ready. Online payment processing "
+                    "must be connected by the site administrator before payment "
+                    "can be completed. Please contact THE LABEL GROUP to arrange payment."
+                )
+            except (TypeError, ValueError):
+                message = "Please enter a valid invoice amount in USD."
+
+    return render(
+        request,
+        "products/invoice_payment.html",
+        {
+            "invoice_number": invoice_number,
+            "amount": amount,
+            "message": message,
+        },
+    )
+
+
+# ============================================================
+# CUSTOMER CHECKOUT AND ORDER CONFIRMATION
+# ============================================================
+
+
+def checkout(request):
+    # LABEL_GROUP_US_ONLY_SHIPPING_GUARD
+    if request.method == "POST":
+        from django.http import HttpResponseBadRequest
+
+        posted_country = str(
+            request.POST.get("shipping_country", "")
+        ).strip().casefold()
+
+        allowed_countries = {
+            "us",
+            "u.s.",
+            "u.s.a.",
+            "usa",
+            "united states",
+            "united states of america",
+        }
+
+        if posted_country not in allowed_countries:
+            return HttpResponseBadRequest(
+                "The Label Group currently ships within the United States only. "
+                "Please select United States as your delivery country."
+            )
+
+    import hashlib
+    import json
+    import os
+    import time
+    from decimal import Decimal, InvalidOperation
+
+    import requests
+    from django.contrib import messages
+    from django.db import transaction
+    from django.shortcuts import render, redirect
+
+    from .models import Product, Order, OrderItem
+
+    ZERO = Decimal("0.00")
+    SESSION_RATES = "shippo_checkout_rates"
+    SESSION_SIGNATURE = "shippo_checkout_signature"
+    SESSION_TIME = "shippo_checkout_rates_time"
+
+    def render_checkout(items, subtotal, rates=None, error="", shipping_cost=ZERO):
+        total = subtotal + shipping_cost
+        context = {
+            "checkout_items": items,
+            "cart_items": items,
+            "items": items,
+            "subtotal": subtotal,
+            "cart_total": subtotal,
+            "shipping_cost": shipping_cost,
+            "total": total,
+            "grand_total": total,
+            "shipping_rates": rates or [],
+            "shipping_rate_error": error,
+            "rate_error": error,
+        }
+        return render(request, "checkout.html", context)
+
+    def get_items():
+        items = []
+        cart = request.session.get("cart", {})
+
+        if not isinstance(cart, dict):
+            return items
+
+        for product_id, raw_quantity in cart.items():
+            try:
+                quantity = int(raw_quantity)
+                if quantity < 1:
+                    continue
+
+                product = Product.objects.get(
+                    pk=int(product_id),
+                    is_available=True,
+                )
+
+                unit_price = (
+                    product.discount_price
+                    if product.discount_price is not None
+                    and product.discount_price > ZERO
+                    else product.price
+                )
+                unit_price = Decimal(str(unit_price))
+                line_total = unit_price * quantity
+
+                items.append({
+                    "product": product,
+                    "quantity": quantity,
+                    "unit_price": unit_price,
+                    "subtotal": line_total,
+                    "total_price": line_total,
+                    "item_total": line_total,
+                })
+            except (
+                Product.DoesNotExist,
+                ValueError,
+                TypeError,
+                InvalidOperation,
+            ):
+                continue
+
+        return items
+
+    def country_code(value):
+        value = (value or "").strip()
+        if len(value) == 2 and value.isalpha():
+            return value.upper()
+
+        aliases = {
+            "UNITED STATES": "US",
+            "UNITED STATES OF AMERICA": "US",
+            "USA": "US",
+            "UNITED KINGDOM": "GB",
+            "GREAT BRITAIN": "GB",
+            "KENYA": "KE",
+            "PHILIPPINES": "PH",
+            "CANADA": "CA",
+            "AUSTRALIA": "AU",
+            "NEW ZEALAND": "NZ",
+            "SOUTH AFRICA": "ZA",
+            "INDIA": "IN",
+            "UGANDA": "UG",
+            "TANZANIA": "TZ",
+        }
+        return aliases.get(value.upper(), "")
+
+    def build_packages(items):
+        packages = []
+        missing = []
+
+        for item in items:
+            product = item["product"]
+            quantity = item["quantity"]
+
+            try:
+                weight = Decimal(str(product.shipping_weight_lb))
+                length = Decimal(str(product.shipping_length_in))
+                width = Decimal(str(product.shipping_width_in))
+                height = Decimal(str(product.shipping_height_in))
+
+                if any(v <= 0 for v in (weight, length, width, height)):
+                    raise ValueError("measurements must be greater than zero")
+
+            except (ValueError, TypeError, InvalidOperation):
+                missing.append(
+                    "{} ({})".format(
+                        product.name,
+                        getattr(product, "product_code", product.pk),
+                    )
+                )
+                continue
+
+            # Each unit is represented as a parcel. This deliberately avoids
+            # inventing combined-package dimensions for multiple quantities.
+            for unused in range(quantity):
+                packages.append({
+                    "length": str(length),
+                    "width": str(width),
+                    "height": str(height),
+                    "distance_unit": "in",
+                    "weight": str(weight),
+                    "mass_unit": "lb",
+                })
+
+        if missing:
+            raise ValueError(
+                "Shipping measurements are missing or invalid for: "
+                + ", ".join(missing[:12])
+                + (
+                    " and additional products"
+                    if len(missing) > 12 else ""
+                )
+                + ". Enter the actual packed weight and outside dimensions "
+                  "for each product, then calculate shipping again."
+            )
+
+        if not packages:
+            raise ValueError("There are no valid packages to ship.")
+
+        if len(packages) > 100:
+            raise ValueError(
+                "This order contains more than 100 individual parcels. "
+                "Please request a shipping quote so the packages can be "
+                "consolidated and priced correctly."
+            )
+
+        return packages
+
+    def checkout_signature(address, items, packages):
+        payload = {
+            "address": address,
+            "cart": [
+                {
+                    "product_id": item["product"].pk,
+                    "quantity": item["quantity"],
+                    "unit_price": str(item["unit_price"]),
+                }
+                for item in items
+            ],
+            "packages": packages,
+        }
+        encoded = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        return hashlib.sha256(encoded).hexdigest()
+
+    def get_shippo_rates(address, packages):
+        token = os.getenv("SHIPPO_API_KEY", "").strip()
+        if not token:
+            raise ValueError(
+                "Shipping-rate service is not configured. Please contact us "
+                "for a shipping quote."
+            )
+
+        origin = {
+            "name": "The Label Group LLC",
+            "street1": "580 St. James Avenue",
+            "city": "Springfield",
+            "state": "MA",
+            "zip": "01109",
+            "country": "US",
+            "phone": "413-731-6700",
+            "email": "labelgroup@comcast.net",
+        }
+
+        shipment = {
+            "address_from": origin,
+            "address_to": address,
+            "parcels": packages,
+            "async": False,
+        }
+
+        try:
+            response = requests.post(
+                "https://api.goshippo.com/shipments/",
+                headers={
+                    "Authorization": "ShippoToken " + token,
+                    "Content-Type": "application/json",
+                },
+                json=shipment,
+                timeout=35,
+            )
+        except requests.RequestException:
+            raise ValueError(
+                "We could not connect to the shipping service. "
+                "Please try again or request a shipping quote."
+            )
+
+        if not response.ok:
+            # Do not expose credentials or raw API responses to customers.
+            raise ValueError(
+                "The shipping provider could not calculate rates for this "
+                "address and package. Check the address and measurements, "
+                "then try again."
+            )
+
+        data = response.json()
+        results = []
+
+        for rate in data.get("rates", []):
+            try:
+                rate_id = str(rate.get("object_id", "")).strip()
+                amount = Decimal(str(rate.get("amount", "")))
+                currency = str(rate.get("currency", "USD")).upper()
+
+                if not rate_id or amount < ZERO or currency != "USD":
+                    continue
+
+                results.append({
+                    "object_id": rate_id,
+                    "provider": str(rate.get("provider", "Carrier")),
+                    "service": str(rate.get("servicelevel", {}).get(
+                        "name", "Shipping service"
+                    )),
+                    "amount": str(amount),
+                    "currency": currency,
+                    "estimated_days": rate.get("estimated_days"),
+                })
+            except (InvalidOperation, TypeError, AttributeError):
+                continue
+
+        return results
+
+    items = get_items()
+    subtotal = sum(
+        (item["subtotal"] for item in items),
+        ZERO,
+    )
+
+    if not items:
+        messages.error(
+            request,
+            "Your cart is empty or its products are unavailable.",
+        )
+        return redirect("cart")
+
+    if request.method != "POST":
+        return render_checkout(items, subtotal)
+
+    action = request.POST.get("action", "").strip()
+    if not action:
+        action = (
+            "place_order"
+            if request.POST.get("shipping_rate_id", "").strip()
+            else "get_rates"
+        )
+
+    customer_name = request.POST.get("customer_name", "").strip()
+    customer_email = request.POST.get("customer_email", "").strip()
+    customer_phone = request.POST.get("customer_phone", "").strip()
+    street = request.POST.get("shipping_address", "").strip()
+    city = request.POST.get("shipping_city", "").strip()
+    state = request.POST.get("shipping_state", "").strip()
+    postal_code = request.POST.get("shipping_postal_code", "").strip()
+    country = country_code(request.POST.get("shipping_country", ""))
+    notes = request.POST.get("notes", "").strip()
+
+    required = {
+        "full name": customer_name,
+        "email address": customer_email,
+        "phone number": customer_phone,
+        "street address": street,
+        "city": city,
+        "postal code": postal_code,
+        "country": country,
+    }
+    missing_fields = [label for label, value in required.items() if not value]
+
+    if missing_fields:
+        return render_checkout(
+            items,
+            subtotal,
+            error="Please complete: " + ", ".join(missing_fields) + ".",
+        )
+
+    address = {
+        "name": customer_name,
+        "street1": street,
+        "city": city,
+        "state": state,
+        "zip": postal_code,
+        "country": country,
+        "phone": customer_phone,
+        "email": customer_email,
+    }
+
+    try:
+        packages = build_packages(items)
+    except ValueError as exc:
+        request.session.pop(SESSION_RATES, None)
+        request.session.pop(SESSION_SIGNATURE, None)
+        request.session.pop(SESSION_TIME, None)
+        return render_checkout(items, subtotal, error=str(exc))
+
+    signature = checkout_signature(address, items, packages)
+    cached_rates = request.session.get(SESSION_RATES, [])
+    cached_signature = request.session.get(SESSION_SIGNATURE)
+    cached_time = request.session.get(SESSION_TIME, 0)
+    cache_valid = (
+        cached_signature == signature
+        and time.time() - float(cached_time or 0) <= 900
+        and isinstance(cached_rates, list)
+        and bool(cached_rates)
+    )
+
+    if action == "get_rates":
+        try:
+            rates = get_shippo_rates(address, packages)
+        except ValueError as exc:
+            request.session.pop(SESSION_RATES, None)
+            request.session.pop(SESSION_SIGNATURE, None)
+            request.session.pop(SESSION_TIME, None)
+            return render_checkout(items, subtotal, error=str(exc))
+
+        if not rates:
+            request.session.pop(SESSION_RATES, None)
+            request.session.pop(SESSION_SIGNATURE, None)
+            request.session.pop(SESSION_TIME, None)
+            return render_checkout(
+                items,
+                subtotal,
+                error=(
+                    "No shipping services were returned. Check the delivery "
+                    "address and package measurements, or request a quote."
+                ),
+            )
+
+        request.session[SESSION_RATES] = rates
+        request.session[SESSION_SIGNATURE] = signature
+        request.session[SESSION_TIME] = time.time()
+        request.session.modified = True
+
+        return render_checkout(items, subtotal, rates=rates)
+
+    if action != "place_order":
+        return render_checkout(
+            items,
+            subtotal,
+            error="Please calculate shipping before placing your order.",
+        )
+
+    if not cache_valid:
+        request.session.pop(SESSION_RATES, None)
+        request.session.pop(SESSION_SIGNATURE, None)
+        request.session.pop(SESSION_TIME, None)
+        return render_checkout(
+            items,
+            subtotal,
+            error=(
+                "Your shipping rates have expired or your address/cart changed. "
+                "Calculate shipping again and select a service."
+            ),
+        )
+
+    selected_id = request.POST.get("shipping_rate_id", "").strip()
+    selected_rate = next(
+        (
+            rate for rate in cached_rates
+            if rate.get("object_id") == selected_id
+        ),
+        None,
+    )
+
+    if not selected_rate:
+        return render_checkout(
+            items,
+            subtotal,
+            rates=cached_rates,
+            error="Select one of the available shipping services.",
+        )
+
+    try:
+        shipping_cost = Decimal(str(selected_rate["amount"]))
+    except (InvalidOperation, KeyError, TypeError):
+        return render_checkout(
+            items,
+            subtotal,
+            rates=cached_rates,
+            error="The selected shipping price is invalid. Calculate rates again.",
+        )
+
+    if shipping_cost < ZERO:
+        return render_checkout(
+            items,
+            subtotal,
+            rates=cached_rates,
+            error="The selected shipping price is invalid.",
+        )
+
+    total = subtotal + shipping_cost
+    service_note = (
+        "Shipping provider: {}. Service: {}. "
+        "Shippo rate ID: {}. Shipping amount: ${} USD."
+    ).format(
+        selected_rate.get("provider", ""),
+        selected_rate.get("service", ""),
+        selected_rate.get("object_id", ""),
+        format(shipping_cost, ".2f"),
+    )
+    combined_notes = "\n".join(part for part in (notes, service_note) if part)
+
+    try:
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer_name=customer_name,
+                customer_email=customer_email,
+                customer_phone=customer_phone,
+                shipping_address=street,
+                shipping_city=city,
+                shipping_state=state,
+                shipping_postal_code=postal_code,
+                shipping_country=country,
+                subtotal=subtotal,
+                shipping_cost=shipping_cost,
+                total=total,
+                currency="USD",
+                notes=combined_notes,
+            )
+
+            for item in items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item["product"],
+                    product_name=item["product"].name,
+                    quantity=item["quantity"],
+                    unit_price=item["unit_price"],
+                    total_price=item["subtotal"],
+                    currency="USD",
+                )
+
+    except Exception:
+        # Log technical details server-side; don't lose the customer's cart.
+        import logging
+        logging.getLogger(__name__).exception(
+            "Checkout order creation failed."
+        )
+        return render_checkout(
+            items,
+            subtotal,
+            rates=cached_rates,
+            error=(
+                "We couldn't save your order. Your cart is preserved. "
+                "Please try again or contact us."
+            ),
+        )
+
+    request.session["cart"] = {}
+    request.session.pop(SESSION_RATES, None)
+    request.session.pop(SESSION_SIGNATURE, None)
+    request.session.pop(SESSION_TIME, None)
+    request.session.modified = True
+
+    messages.success(
+        request,
+        "Your order was submitted successfully. Shipping labels are not "
+        "purchased automatically.",
+    )
+    return redirect("order_success", order_id=order.pk)
+
+
+def order_success(request, order_id):
+    from django.shortcuts import render, get_object_or_404
+    from .models import Order
+
+    order = get_object_or_404(Order, pk=order_id)
+    return render(request, "order_success.html", {"order": order})
+

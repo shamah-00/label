@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Order Management | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--orange:#f47b20;--bg:#f3f6fa;--border:#e0e6ee;--muted:#68778b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#263449;font:14px/1.6 Arial,sans-serif}
+.sidebar{position:fixed;inset:0 auto 0 0;width:235px;background:var(--navy);color:white;padding:25px 0;overflow:auto}
+.brand{padding:0 22px 22px;border-bottom:1px solid #ffffff22}
+.brand h1{font-size:20px;margin:0;color:white}
+.brand p{color:#bdc9d8;margin:6px 0 0}
+.nav-title{padding:20px 22px 6px;color:#a8b5c7;font-size:11px;text-transform:uppercase;font-weight:bold;letter-spacing:1px}
+.nav-link{display:block;padding:11px 22px;color:#e6edf5;text-decoration:none}
+.nav-link:hover,.nav-link.active{background:var(--orange);color:white}
+.main{margin-left:235px;min-height:100vh}
+.topbar{background:white;padding:16px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:12px}
+.content{padding:28px;max-width:1600px;margin:auto}
+h2,h3{color:var(--navy);margin-top:0}
+h2{font-size:29px;margin-bottom:4px}
+.muted{color:var(--muted)}
+.header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:22px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.card{background:white;border:1px solid var(--border);border-radius:12px;padding:20px;box-shadow:0 3px 12px #0b1f3a08;min-width:0}
+.stat-label{color:var(--muted);font-size:13px}
+.stat-value{font-size:26px;font-weight:bold;color:var(--navy);margin-top:5px;overflow-wrap:anywhere}
+.filters{display:grid;grid-template-columns:minmax(180px,1fr) minmax(160px,230px) auto auto;gap:10px;align-items:center;margin-bottom:20px}
+input,select{width:100%;padding:12px;border:1px solid #ccd5e1;border-radius:8px;background:white;font-size:14px}
+button,.button{display:inline-block;padding:11px 16px;border:0;border-radius:8px;background:var(--orange);color:white;text-decoration:none;font-weight:bold;cursor:pointer}
+.button.secondary{background:var(--navy)}
+.status-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.status-card{background:white;border:1px solid var(--border);border-radius:10px;padding:14px}
+.status-card strong{display:block;font-size:22px;color:var(--navy)}
+.status-card span{color:var(--muted);font-size:12px}
+.table-card{padding:0;overflow:hidden}
+.table-title{padding:20px;border-bottom:1px solid var(--border)}
+.table-wrap{overflow-x:auto}
+table{width:100%;min-width:1050px;border-collapse:collapse;background:white}
+th{background:var(--navy);color:white;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.4px;padding:14px}
+td{padding:14px;border-bottom:1px solid #e9edf3;vertical-align:top}
+tbody tr:nth-child(even){background:#f8fafc}
+tbody tr:hover{background:#fff5ed}
+.order-link{font-weight:bold;color:#0b63ce;text-decoration:none}
+.order-link:hover{text-decoration:underline}
+.badge{display:inline-block;border-radius:20px;padding:5px 10px;background:#fff0e5;color:#99420a;font-weight:bold;font-size:12px;white-space:nowrap}
+.empty{text-align:center;padding:40px 18px;color:var(--muted)}
+@media(max-width:1100px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.filters{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){.sidebar{position:static;width:100%;height:auto}.main{margin:0}.content{padding:16px}.topbar{padding:14px 16px}.header{align-items:flex-start;flex-direction:column}.stats{grid-template-columns:1fr 1fr}.filters{grid-template-columns:1fr}.stat-value{font-size:22px}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+<div class="brand"><h1>THE LABEL GROUP</h1><p>Staff Management</p></div>
+<div class="nav-title">Main</div>
+<a class="nav-link" href="{% url 'staff_dashboard' %}">Dashboard</a>
+<div class="nav-title">Management</div>
+<a class="nav-link" href="{% url 'staff_products' %}">Products</a>
+<a class="nav-link" href="{% url 'staff_customers' %}">Customers</a>
+<a class="nav-link" href="{% url 'staff_quotes' %}">Quote Requests</a>
+<a class="nav-link active" href="{% url 'staff_orders' %}">Orders</a>
+<div class="nav-title">Account</div>
+<a class="nav-link" href="{% url 'staff_profile' %}">Staff Profile</a>
+{% if user.is_superuser %}
+<a class="nav-link" href="{% url 'boss_staff_management' %}">Staff Management</a>
+<a class="nav-link" href="{% url 'staff_activity_log' %}">Activity Log</a>
+{% endif %}
+<a class="nav-link" href="{% url 'staff_logout' %}">Logout</a>
+</aside>
+<main class="main">
+<div class="topbar"><strong>THE LABEL GROUP Staff Portal</strong><span>{{ user.username }}</span></div>
+<div class="content">
+<div class="header"><div><h2>Order Management</h2><div class="muted">Review customer orders, totals, and order status.</div></div></div>
+<div class="stats">
+<div class="card"><div class="stat-label">All Orders</div><div class="stat-value">{{ total_orders }}</div></div>
+<div class="card"><div class="stat-label">Active Orders</div><div class="stat-value">{{ active_orders }}</div></div>
+<div class="card"><div class="stat-label">Completed Orders</div><div class="stat-value">{{ completed_orders }}</div></div>
+<div class="card"><div class="stat-label">Total Order Value</div><div class="stat-value">${{ total_value|floatformat:2 }}</div></div>
+</div>
+<div class="status-cards">
+{% for card in status_cards %}
+<div class="status-card"><strong>{{ card.count }}</strong><span>{{ card.label }}</span></div>
+{% endfor %}
+</div>
+<form class="filters" method="get">
+<input type="search" name="search" value="{{ search }}" placeholder="Search customer, email, phone, location or order number">
+<select name="status">
+<option value="">All Order Statuses</option>
+{% for value, label in status_choices %}
+<option value="{{ value }}"{% if status_filter == value|stringformat:"s" %} selected{% endif %}>{{ label }}</option>
+{% endfor %}
+</select>
+<button type="submit">Search Orders</button>
+{% if search or status_filter %}<a class="button secondary" href="{% url 'staff_orders' %}">Clear Filters</a>{% endif %}
+</form>
+<div class="card table-card">
+<div class="table-title"><h3 style="margin:0">Customer Orders</h3></div>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Order</th><th>Customer</th><th>Phone</th><th>Location</th><th>Total</th><th>Currency</th><th>Status</th><th>Order Date</th><th>Action</th></tr></thead>
+<tbody>
+{% for order in orders %}
+<tr>
+<td><a class="order-link" href="{% url 'staff_order_detail' order.pk %}">Order #{{ order.pk }}</a></td>
+<td><strong>{{ order.customer_name|default:"Customer" }}</strong><br><span class="muted">{{ order.customer_email|default:"No email" }}</span></td>
+<td>{{ order.customer_phone|default:"—" }}</td>
+<td>{{ order.shipping_city|default:"" }}{% if order.shipping_state %}, {{ order.shipping_state }}{% endif %}{% if order.shipping_country %}<br>{{ order.shipping_country }}{% endif %}</td>
+<td><strong>${{ order.total|default_if_none:0|floatformat:2 }}</strong></td>
+<td>{{ order.currency|default:"USD" }}</td>
+<td><span class="badge">{{ order.get_status_display|default:order.status }}</span></td>
+<td>{% if order.created_at %}{{ order.created_at|date:"M d, Y" }}<br><span class="muted">{{ order.created_at|date:"H:i" }}</span>{% else %}—{% endif %}</td>
+<td><a class="button" href="{% url 'staff_order_detail' order.pk %}">View Order</a></td>
+</tr>
+{% empty %}
+<tr><td colspan="9"><div class="empty">{% if search or status_filter %}No orders match these filters. Try a different search or clear the filters.{% else %}No orders have been recorded yet.{% endif %}</div></td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body>
+</html>

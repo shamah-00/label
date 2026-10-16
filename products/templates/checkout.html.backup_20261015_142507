@@ -1,0 +1,947 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1f3a">
+    <title>Checkout | The Label Group</title>
+    <style>
+        :root {
+            --navy: #0b1f3a;
+            --navy-dark: #06152a;
+            --orange: #f47b20;
+            --orange-dark: #d9620d;
+            --ink: #172235;
+            --muted: #667085;
+            --line: #dce3ec;
+            --surface: #f5f7fa;
+            --white: #fff;
+            --success: #187647;
+            --danger: #a52828;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--surface);
+            color: var(--ink);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        a { color: var(--navy); }
+
+        .topbar {
+            background: var(--navy);
+            color: white;
+            border-bottom: 4px solid var(--orange);
+        }
+
+        .topbar-inner {
+            width: min(1180px, calc(100% - 32px));
+            min-height: 76px;
+            margin: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .brand {
+            color: white;
+            text-decoration: none;
+            font-size: 19px;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .brand small {
+            display: block;
+            color: #d9e2ee;
+            font-size: 12px;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .secure {
+            color: #fff;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .secure span { color: #ffad65; }
+
+        .page {
+            width: min(1180px, calc(100% - 32px));
+            margin: 25px auto 40px;
+        }
+
+        .page-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .eyebrow {
+            color: var(--orange-dark);
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 3px 0 5px;
+            color: var(--navy);
+            font-size: clamp(27px, 3vw, 35px);
+            line-height: 1.2;
+        }
+
+        h2 {
+            margin: 0;
+            color: var(--navy);
+            font-size: 18px;
+            line-height: 1.3;
+        }
+
+        p { margin-top: 5px; }
+
+        .muted { color: var(--muted); }
+
+        .steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 0 0 20px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .steps li {
+            padding: 7px 11px;
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            background: white;
+            color: #475467;
+            font-size: 12px;
+        }
+
+        .steps strong { color: var(--navy); }
+
+        .layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(290px, .8fr);
+            gap: 22px;
+            align-items: start;
+        }
+
+        .main-column, .side-column {
+            display: grid;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .panel {
+            min-width: 0;
+            padding: 20px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            background: white;
+            box-shadow: 0 3px 12px rgba(11, 31, 58, .035);
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            margin-bottom: 17px;
+        }
+
+        .number {
+            display: grid;
+            place-items: center;
+            flex: 0 0 30px;
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            background: #fff0e4;
+            color: var(--navy);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .panel-heading p {
+            margin: 3px 0 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 13px;
+        }
+
+        .field { min-width: 0; }
+        .field.full { grid-column: 1 / -1; }
+
+        label.field-label {
+            display: block;
+            margin-bottom: 5px;
+            color: #263449;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .required { color: var(--orange-dark); }
+        .optional { color: var(--muted); font-weight: 400; }
+
+        input:not([type="radio"]):not([type="checkbox"]),
+        select, textarea {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            min-height: 42px;
+            padding: 10px 11px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: white;
+            color: var(--ink);
+            font: inherit;
+            font-size: 13px;
+        }
+
+        input[readonly] {
+            background: #f1f4f8;
+            color: #475467;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 3px solid rgba(244, 123, 32, .15);
+            border-color: var(--orange);
+        }
+
+        .hint {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .origin {
+            margin-top: 15px;
+            padding: 12px 14px;
+            border: 1px solid #dbe4f0;
+            border-radius: 7px;
+            background: #f6f9fd;
+        }
+
+        .origin strong {
+            display: block;
+            margin-bottom: 3px;
+            color: var(--navy);
+        }
+
+        .origin p {
+            margin: 0;
+            color: #475467;
+            font-size: 12px;
+        }
+
+        .origin-tag {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 4px 7px;
+            border-radius: 4px;
+            background: #e9eff8;
+            color: var(--navy);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .5px;
+        }
+
+        .notice {
+            margin: 12px 0;
+            padding: 11px 12px;
+            border: 1px solid;
+            border-radius: 6px;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .notice.info {
+            border-color: #d5e3f3;
+            background: #f1f6fc;
+            color: #344b68;
+        }
+
+        .notice.error {
+            border-color: #f2c4bd;
+            background: #fff2f0;
+            color: var(--danger);
+        }
+
+        .notice.success {
+            border-color: #b8e2c6;
+            background: #edf9f1;
+            color: var(--success);
+        }
+
+        .rate-list {
+            display: grid;
+            gap: 8px;
+            margin: 13px 0;
+        }
+
+        .rate-option {
+            display: grid;
+            grid-template-columns: 18px minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            padding: 12px;
+            border: 1px solid #d4dce7;
+            border-radius: 7px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .rate-option:hover {
+            border-color: var(--orange);
+            background: #fffaf5;
+        }
+
+        .rate-option:has(input:checked) {
+            border: 2px solid var(--orange);
+            padding: 11px;
+            background: #fff7ed;
+        }
+
+        .rate-option input[type="radio"] {
+            width: 17px;
+            height: 17px;
+            margin: 0;
+            accent-color: var(--orange-dark);
+        }
+
+        .rate-details { min-width: 0; }
+        .rate-title { display: block; color: var(--navy); font-weight: 800; }
+        .rate-description { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+        .rate-price { color: var(--navy); font-weight: 800; white-space: nowrap; }
+
+        .button-row {
+            display: grid;
+            grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr);
+            gap: 9px;
+            margin-top: 15px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            padding: 11px 14px;
+            border: 1px solid var(--orange);
+            border-radius: 6px;
+            background: var(--orange);
+            color: white;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 800;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            border-color: var(--orange-dark);
+            background: var(--orange-dark);
+        }
+
+        .button.secondary {
+            border-color: #cbd5e1;
+            background: white;
+            color: var(--navy);
+        }
+
+        .button.secondary:hover { background: #f5f7fa; }
+
+        .button:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .fine-print {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .order-panel { position: sticky; top: 16px; }
+
+        .order-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 13px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .item-count {
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        .product-table th {
+            padding: 10px 8px;
+            background: var(--navy);
+            color: white;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .product-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid #edf0f4;
+            vertical-align: top;
+        }
+
+        .product-table th:last-child,
+        .product-table td:last-child {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .product-name {
+            min-width: 125px;
+            color: var(--navy);
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .product-qty {
+            margin-top: 4px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .line-price { white-space: nowrap; font-weight: 700; }
+
+        .totals {
+            display: grid;
+            gap: 0;
+            padding-top: 8px;
+        }
+
+        .total-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #edf0f4;
+            font-size: 13px;
+        }
+
+        .total-line span:first-child { color: #475467; }
+        .total-line strong { text-align: right; white-space: nowrap; }
+
+        .grand-total {
+            margin-top: 5px;
+            padding-top: 14px;
+            border-bottom: 0;
+            border-top: 2px solid var(--navy);
+            font-size: 15px;
+        }
+
+        .grand-total span:first-child {
+            color: var(--navy);
+            font-weight: 900;
+        }
+
+        .grand-total strong {
+            color: var(--orange-dark);
+            font-size: 22px;
+        }
+
+        .edit-cart {
+            display: block;
+            margin-top: 13px;
+            padding: 10px;
+            border: 1px solid #d5dce6;
+            border-radius: 6px;
+            color: var(--navy);
+            text-align: center;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .edit-cart:hover {
+            border-color: var(--orange);
+            background: #fffaf5;
+        }
+
+        .review-note {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            background: #f5f7fa;
+            color: #475467;
+            font-size: 11px;
+        }
+
+        footer {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            text-align: center;
+            font-size: 11px;
+        }
+
+        @media (max-width: 820px) {
+            .layout { grid-template-columns: minmax(0, 1fr); }
+            .side-column { order: -1; }
+            .order-panel { position: static; }
+        }
+
+        @media (max-width: 520px) {
+            .topbar-inner {
+                width: calc(100% - 24px);
+                min-height: 68px;
+            }
+
+            .brand { font-size: 16px; }
+            .brand small { font-size: 10px; }
+            .secure { font-size: 10px; }
+
+            .page {
+                width: calc(100% - 20px);
+                margin-top: 18px;
+            }
+
+            .page-heading {
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            .steps { gap: 5px; }
+            .steps li { padding: 6px 8px; font-size: 10px; }
+
+            .panel { padding: 14px; }
+            .form-grid { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+            .field.full { grid-column: auto; }
+
+            .rate-option {
+                grid-template-columns: 17px minmax(0, 1fr);
+                gap: 8px;
+            }
+
+            .rate-price {
+                grid-column: 2;
+                white-space: normal;
+            }
+
+            .button-row { grid-template-columns: minmax(0, 1fr); }
+            .product-table th, .product-table td { padding: 9px 6px; }
+        }
+    </style>
+
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar-inner">
+        <a class="brand" href="/">THE LABEL GROUP
+            <small>Professional prints. Built for business.</small>
+        </a>
+        <div class="secure"><span>●</span> Secure checkout</div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="page-heading">
+        <div>
+            <div class="eyebrow">Order review</div>
+            <h1>Checkout</h1>
+            <p class="muted">Confirm your delivery details and shipping cost before placing your order.</p>
+        </div>
+    </div>
+
+    <ol class="steps">
+        <li><strong>1.</strong> Customer details</li>
+        <li><strong>2.</strong> Delivery address</li>
+        <li><strong>3.</strong> Shipping service</li>
+        <li><strong>4.</strong> Review and order</li>
+    </ol>
+
+    <form method="post" action="" id="tlg-checkout-form">
+        {% csrf_token %}
+
+        <div class="layout">
+            <div class="main-column">
+                <section class="panel">
+                    <div class="panel-heading">
+                        <div class="number">1</div>
+                        <div>
+                            <h2>Customer information</h2>
+                            <p>Who should we contact about this order?</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label class="field-label" for="customer_name">Full name <span class="required">*</span></label>
+                            <input id="customer_name" name="customer_name" type="text"
+                                   autocomplete="name" maxlength="200" required
+                                   value="{{ request.POST.customer_name|default:'' }}">
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="customer_email">Email address <span class="required">*</span></label>
+                            <input id="customer_email" name="customer_email" type="email"
+                                   autocomplete="email" maxlength="254" required
+                                   value="{{ request.POST.customer_email|default:'' }}">
+                        </div>
+                        <div class="field">
+                            <label class="field-label" for="customer_phone">Phone number <span class="required">*</span></label>
+                            <input id="customer_phone" name="customer_phone" type="tel"
+                                   autocomplete="tel" maxlength="40" required
+                                   value="{{ request.POST.customer_phone|default:'' }}">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-heading">
+                        <div class="number">2</div>
+                        <div>
+                            <h2>Shipping address</h2>
+                            <p>Enter the US delivery address for your order.</p>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field full">
+                            <label class="field-label" for="shipping_address">Street address <span class="required">*</span></label>
+                            <input id="shipping_address" name="shipping_address" type="text"
+                                   autocomplete="address-line1" maxlength="255" required
+                                   value="{{ request.POST.shipping_address|default:'' }}">
+                        </div>
+
+                        <div class="field full">
+                            <label class="field-label" for="shipping_address2">
+                                Apartment, suite or unit <span class="optional">(optional)</span>
+                            </label>
+                            <input id="shipping_address2" name="shipping_address2" type="text"
+                                   autocomplete="address-line2" maxlength="255"
+                                   placeholder="Apartment, suite, unit or building"
+                                   value="{{ request.POST.shipping_address2|default:'' }}">
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="shipping_city">City <span class="required">*</span></label>
+                            <input id="shipping_city" name="shipping_city" type="text"
+                                   autocomplete="address-level2" maxlength="100" required
+                                   value="{{ request.POST.shipping_city|default:'' }}">
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="shipping_state">State <span class="required">*</span></label>
+                            <select id="shipping_state" name="shipping_state"
+                                    autocomplete="address-level1" required>
+                                <option value="">Choose a state</option>
+                                <option value="AL" {% if request.POST.shipping_state == "AL" %}selected{% endif %}>Alabama</option>
+                                <option value="AK" {% if request.POST.shipping_state == "AK" %}selected{% endif %}>Alaska</option>
+                                <option value="AZ" {% if request.POST.shipping_state == "AZ" %}selected{% endif %}>Arizona</option>
+                                <option value="AR" {% if request.POST.shipping_state == "AR" %}selected{% endif %}>Arkansas</option>
+                                <option value="CA" {% if request.POST.shipping_state == "CA" %}selected{% endif %}>California</option>
+                                <option value="CO" {% if request.POST.shipping_state == "CO" %}selected{% endif %}>Colorado</option>
+                                <option value="CT" {% if request.POST.shipping_state == "CT" %}selected{% endif %}>Connecticut</option>
+                                <option value="DE" {% if request.POST.shipping_state == "DE" %}selected{% endif %}>Delaware</option>
+                                <option value="DC" {% if request.POST.shipping_state == "DC" %}selected{% endif %}>District of Columbia</option>
+                                <option value="FL" {% if request.POST.shipping_state == "FL" %}selected{% endif %}>Florida</option>
+                                <option value="GA" {% if request.POST.shipping_state == "GA" %}selected{% endif %}>Georgia</option>
+                                <option value="HI" {% if request.POST.shipping_state == "HI" %}selected{% endif %}>Hawaii</option>
+                                <option value="ID" {% if request.POST.shipping_state == "ID" %}selected{% endif %}>Idaho</option>
+                                <option value="IL" {% if request.POST.shipping_state == "IL" %}selected{% endif %}>Illinois</option>
+                                <option value="IN" {% if request.POST.shipping_state == "IN" %}selected{% endif %}>Indiana</option>
+                                <option value="IA" {% if request.POST.shipping_state == "IA" %}selected{% endif %}>Iowa</option>
+                                <option value="KS" {% if request.POST.shipping_state == "KS" %}selected{% endif %}>Kansas</option>
+                                <option value="KY" {% if request.POST.shipping_state == "KY" %}selected{% endif %}>Kentucky</option>
+                                <option value="LA" {% if request.POST.shipping_state == "LA" %}selected{% endif %}>Louisiana</option>
+                                <option value="ME" {% if request.POST.shipping_state == "ME" %}selected{% endif %}>Maine</option>
+                                <option value="MD" {% if request.POST.shipping_state == "MD" %}selected{% endif %}>Maryland</option>
+                                <option value="MA" {% if request.POST.shipping_state == "MA" %}selected{% endif %}>Massachusetts</option>
+                                <option value="MI" {% if request.POST.shipping_state == "MI" %}selected{% endif %}>Michigan</option>
+                                <option value="MN" {% if request.POST.shipping_state == "MN" %}selected{% endif %}>Minnesota</option>
+                                <option value="MS" {% if request.POST.shipping_state == "MS" %}selected{% endif %}>Mississippi</option>
+                                <option value="MO" {% if request.POST.shipping_state == "MO" %}selected{% endif %}>Missouri</option>
+                                <option value="MT" {% if request.POST.shipping_state == "MT" %}selected{% endif %}>Montana</option>
+                                <option value="NE" {% if request.POST.shipping_state == "NE" %}selected{% endif %}>Nebraska</option>
+                                <option value="NV" {% if request.POST.shipping_state == "NV" %}selected{% endif %}>Nevada</option>
+                                <option value="NH" {% if request.POST.shipping_state == "NH" %}selected{% endif %}>New Hampshire</option>
+                                <option value="NJ" {% if request.POST.shipping_state == "NJ" %}selected{% endif %}>New Jersey</option>
+                                <option value="NM" {% if request.POST.shipping_state == "NM" %}selected{% endif %}>New Mexico</option>
+                                <option value="NY" {% if request.POST.shipping_state == "NY" %}selected{% endif %}>New York</option>
+                                <option value="NC" {% if request.POST.shipping_state == "NC" %}selected{% endif %}>North Carolina</option>
+                                <option value="ND" {% if request.POST.shipping_state == "ND" %}selected{% endif %}>North Dakota</option>
+                                <option value="OH" {% if request.POST.shipping_state == "OH" %}selected{% endif %}>Ohio</option>
+                                <option value="OK" {% if request.POST.shipping_state == "OK" %}selected{% endif %}>Oklahoma</option>
+                                <option value="OR" {% if request.POST.shipping_state == "OR" %}selected{% endif %}>Oregon</option>
+                                <option value="PA" {% if request.POST.shipping_state == "PA" %}selected{% endif %}>Pennsylvania</option>
+                                <option value="RI" {% if request.POST.shipping_state == "RI" %}selected{% endif %}>Rhode Island</option>
+                                <option value="SC" {% if request.POST.shipping_state == "SC" %}selected{% endif %}>South Carolina</option>
+                                <option value="SD" {% if request.POST.shipping_state == "SD" %}selected{% endif %}>South Dakota</option>
+                                <option value="TN" {% if request.POST.shipping_state == "TN" %}selected{% endif %}>Tennessee</option>
+                                <option value="TX" {% if request.POST.shipping_state == "TX" %}selected{% endif %}>Texas</option>
+                                <option value="UT" {% if request.POST.shipping_state == "UT" %}selected{% endif %}>Utah</option>
+                                <option value="VT" {% if request.POST.shipping_state == "VT" %}selected{% endif %}>Vermont</option>
+                                <option value="VA" {% if request.POST.shipping_state == "VA" %}selected{% endif %}>Virginia</option>
+                                <option value="WA" {% if request.POST.shipping_state == "WA" %}selected{% endif %}>Washington</option>
+                                <option value="WV" {% if request.POST.shipping_state == "WV" %}selected{% endif %}>West Virginia</option>
+                                <option value="WI" {% if request.POST.shipping_state == "WI" %}selected{% endif %}>Wisconsin</option>
+                                <option value="WY" {% if request.POST.shipping_state == "WY" %}selected{% endif %}>Wyoming</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="shipping_postal_code">ZIP code <span class="required">*</span></label>
+                            <input id="shipping_postal_code" name="shipping_postal_code"
+                                   type="text" inputmode="numeric" autocomplete="postal-code"
+                                   maxlength="10" pattern="[0-9]{5}(-[0-9]{4})?"
+                                   title="Enter a 5-digit US ZIP code or ZIP+4, such as 01109 or 01109-1234."
+                                   placeholder="e.g. 01109 or 01109-1234" required
+                                   value="{{ request.POST.shipping_postal_code|default:'' }}">
+                        </div>
+
+                        <div class="field">
+                            <label class="field-label" for="shipping_country">Country</label>
+                            <input id="shipping_country" name="shipping_country"
+                                   type="text" value="United States" readonly>
+                        </div>
+                    </div>
+
+                    <div class="origin">
+                        <strong>Dispatch location</strong>
+                        <p>The Label Group LLC · Springfield, MA 01109, United States</p>
+                        <span class="origin-tag">UNITED STATES SHIPPING ONLY</span>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-heading">
+                        <div class="number">3</div>
+                        <div>
+                            <h2>Choose a shipping service</h2>
+                            <p>Calculate available shipping rates for your delivery address.</p>
+                        </div>
+                    </div>
+
+                    {% if shipping_rate_error %}
+                        <div class="notice error" role="alert">
+                            <strong>We couldn't calculate shipping.</strong>
+                            <div>{{ shipping_rate_error }}</div>
+                            <div class="hint">Check your delivery address and try again. If the problem continues, contact us for assistance.</div>
+                        </div>
+                    {% elif shipping_rates %}
+                        <div class="notice success" role="status">
+                            Shipping rates are available. Select your preferred service below.
+                        </div>
+                    {% else %}
+                        <div class="notice info">
+                            Complete your customer and delivery details, then select
+                            <strong>Calculate shipping</strong> to retrieve available rates.
+                        </div>
+                    {% endif %}
+
+                    {% if shipping_rates %}
+                        <div class="rate-list">
+                            {% for rate in shipping_rates %}
+                                <label class="rate-option">
+                                    <input type="radio"
+                                           name="shipping_rate_id"
+                                           value="{{ rate.object_id }}"
+                                           data-amount="{{ rate.amount }}"
+                                           {% if forloop.first %}checked{% endif %}
+                                           required>
+                                    <span class="rate-details">
+                                        <span class="rate-title">{{ rate.service|default:"Standard Shipping" }}</span>
+                                        <span class="rate-description">{{ rate.provider|default:"Shipping provider" }}</span>
+                                    </span>
+                                    <span class="rate-price">${{ rate.amount|floatformat:2 }} {{ rate.currency|default:"USD" }}</span>
+                                </label>
+                            {% endfor %}
+                        </div>
+
+                        <div class="notice info" role="note">
+                            Rates are supplied by the connected shipping service. Review the selected service and total before placing your order. A shipping label is not purchased automatically.
+                        </div>
+                    {% endif %}
+
+                    <div class="button-row">
+                        <button class="button secondary" type="submit"
+                                name="action" value="get_rates">
+                            Calculate shipping
+                        </button>
+                        <button class="button" type="submit"
+                                name="action" value="place_order"
+                                id="place-order-button"
+                                {% if not shipping_rates or not checkout_items %}disabled{% endif %}>
+                            Place order · <span id="place-button-total">${{ total|floatformat:2 }} USD</span>
+                        </button>
+                    </div>
+
+                    <p class="fine-print">
+                        Placing an order submits it for processing. It does not charge a payment method or buy a shipping label.
+                    </p>
+                </section>
+            </div>
+
+            <aside class="side-column">
+                <section class="panel order-panel">
+                    <div class="order-heading">
+                        <h2>Order summary</h2>
+                        <span class="item-count">Review before ordering</span>
+                    </div>
+
+                    <div class="table-wrap">
+                        <table class="product-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Qty</th>
+                                    <th>Line total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in checkout_items %}
+                                    <tr>
+                                        <td>
+                                            <div class="product-name">{{ item.product }}</div>
+                                        </td>
+                                        <td>{{ item.quantity|default:1 }}</td>
+                                        <td class="line-price">${{ item.item_total|floatformat:2 }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3">Your cart is empty. Return to the cart to add products.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="totals" id="order-totals"
+                         data-subtotal="{{ subtotal|floatformat:2 }}">
+                        <div class="total-line">
+                            <span>Subtotal</span>
+                            <strong>${{ subtotal|floatformat:2 }} USD</strong>
+                        </div>
+                        <div class="total-line">
+                            <span>Shipping</span>
+                            <strong id="shipping-total">${{ shipping_cost|floatformat:2 }} USD</strong>
+                        </div>
+                        <div class="total-line grand-total">
+                            <span>Total (USD)</span>
+                            <strong id="grand-total">${{ total|floatformat:2 }}</strong>
+                        </div>
+                    </div>
+
+                    <a class="edit-cart" href="{% url 'cart' %}">← Edit cart / remove items</a>
+
+                    <div class="review-note">
+                        Please verify your delivery address, quantities, selected shipping service, and total. If anything is incorrect, return to the relevant section before submitting.
+                    </div>
+                </section>
+            </aside>
+        </div>
+    </form>
+
+    <footer>
+        The Label Group · Industrial Prints &amp; Decals
+    </footer>
+</main>
+
+<script>
+(function () {
+    "use strict";
+
+    const totals = document.getElementById("order-totals");
+    const shippingOutput = document.getElementById("shipping-total");
+    const grandOutput = document.getElementById("grand-total");
+    const buttonTotal = document.getElementById("place-button-total");
+    const placeButton = document.getElementById("place-order-button");
+    const radios = document.querySelectorAll('input[name="shipping_rate_id"]');
+
+    if (!totals || !shippingOutput || !grandOutput) return;
+
+    const subtotal = Number(totals.dataset.subtotal || 0);
+
+    function money(value) {
+        return "$" + value.toLocaleString("en-US", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function updateTotal() {
+        const selected = document.querySelector(
+            'input[name="shipping_rate_id"]:checked'
+        );
+
+        if (!selected) {
+            shippingOutput.textContent = "$0.00 USD";
+            grandOutput.textContent = money(subtotal);
+
+            if (buttonTotal) {
+                buttonTotal.textContent = money(subtotal) + " USD";
+            }
+
+            if (placeButton) {
+                placeButton.disabled = true;
+            }
+            return;
+        }
+
+        const amount = Number(selected.dataset.amount || 0);
+        const total = subtotal + amount;
+
+        shippingOutput.textContent = money(amount) + " USD";
+        grandOutput.textContent = money(total);
+
+        if (buttonTotal) {
+            buttonTotal.textContent = money(total) + " USD";
+        }
+
+        if (placeButton) {
+            placeButton.disabled = false;
+        }
+    }
+
+    radios.forEach(function (radio) {
+        radio.addEventListener("change", updateTotal);
+    });
+
+    updateTotal();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+THE LABEL GROUP - CHECKOUT / ORDER AUDIT
+=================================================================
+
+MODEL: products.models.Order
+  id (BigAutoField)
+  customer_name (CharField)
+  customer_email (EmailField)
+  customer_phone (CharField)
+  shipping_address (TextField)
+  shipping_city (CharField)
+  shipping_state (CharField)
+  shipping_postal_code (CharField)
+  shipping_country (CharField)
+  subtotal (DecimalField)
+  shipping_cost (DecimalField)
+  total (DecimalField)
+  currency (CharField)
+  status (CharField)
+  notes (TextField)
+  created_at (DateTimeField)
+  updated_at (DateTimeField)
+
+MODEL: products.models.OrderItem
+  id (BigAutoField)
+  order (ForeignKey)
+  product (ForeignKey)
+  product_name (CharField)
+  quantity (PositiveIntegerField)
+  unit_price (DecimalField)
+  total_price (DecimalField)
+  currency (CharField)
+
+MODEL: products.models.Product
+  id (BigAutoField)
+  name (CharField)
+  product_code (CharField)
+  product_type (CharField)
+  slug (SlugField)
+  description (TextField)
+  category (CharField)
+  industry (CharField)
+  brand (CharField)
+  price (DecimalField)
+  discount_price (DecimalField)
+  image (ImageField)
+  stock (PositiveIntegerField)
+  material (CharField)
+  finish (CharField)
+  shape (CharField)
+  printing_method (CharField)
+  adhesive (CharField)
+  is_custom (BooleanField)
+  is_available (BooleanField)
+  is_featured (BooleanField)
+  created_at (DateTimeField)
+  updated_at (DateTimeField)
+
+CHECKOUT VIEW FIELD COMPATIBILITY
+=================================================================
+Order.customer_name: OK
+Order.customer_email: OK
+Order.customer_phone: OK
+Order.shipping_address: OK
+Order.shipping_city: OK
+Order.shipping_state: OK
+Order.shipping_postal_code: OK
+Order.shipping_country: OK
+Order.subtotal: OK
+Order.shipping_cost: OK
+Order.total: OK
+Order.currency: OK
+Order.status: OK
+Order.notes: OK
+OrderItem.order: OK
+OrderItem.product: OK
+OrderItem.product_name: OK
+OrderItem.quantity: OK
+OrderItem.unit_price: OK
+OrderItem.total_price: OK
+OrderItem.currency: OK
+
+CHECKOUT TEMPLATE FORM FIELDS
+=================================================================
+Template: C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html
+Form field "customer_name": FOUND
+Form field "customer_email": FOUND
+Form field "customer_phone": FOUND
+Form field "shipping_address": FOUND
+Form field "shipping_city": FOUND
+Form field "shipping_state": FOUND
+Form field "shipping_postal_code": FOUND
+Form field "shipping_country": FOUND
+Form field "notes": FOUND
+
+STAFF MANAGEMENT FILES
+=================================================================
+staff/views.py: FOUND
+staff/urls.py: FOUND
+staff/templates/staff/customers/list.html: FOUND

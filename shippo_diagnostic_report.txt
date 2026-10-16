@@ -1,0 +1,269 @@
+﻿**********************
+Windows PowerShell transcript start
+Start time: 20261014194523
+Username: ADMIN-TUMAIN\Tumaini
+RunAs User: ADMIN-TUMAIN\Tumaini
+Configuration Name: 
+Machine: ADMIN-TUMAIN (Microsoft Windows NT 10.0.26200.0)
+Host Application: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -noexit -command try { . "c:\Users\Tumaini\AppData\Local\Programs\Microsoft VS Code\2a59476c9b\resources\app\out\vs\workbench\contrib\terminal\common\scripts\shellIntegration.ps1" } catch {}
+Process ID: 1584
+PSVersion: 5.1.26100.9711
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.9711
+BuildVersion: 10.0.26100.9711
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+]633;D;0]633;A]633;P;Cwd=C:\x5cUsers\x5cTumaini\x5cDesktop\x5cecommerce\x5cecommercePS C:\Users\Tumaini\Desktop\ecommerce\ecommerce> ]633;B
+]633;D]633;A]633;P;Cwd=C:\x5cUsers\x5cTumaini\x5cDesktop\x5cecommerce\x5cecommercePS C:\Users\Tumaini\Desktop\ecommerce\ecommerce> ]633;B
+(venv) try {
+    Write-Host "THE LABEL GROUP - SHIPPING DIAGNOSTICS" -ForegroundColor Cyan
+    Write-Host "Project: $((Get-Location).Path)"
+
+    Write-Host "`n===== 1. PYTHON SYNTAX =====" -ForegroundColor Yellow
+    & $python -m py_compile $viewsPath
+
+    Write-Host "`n===== 2. DJANGO CHECK =====" -ForegroundColor Yellow
+    & $python manage.py check
+
+    Write-Host "`n===== 3. SHIPPING FUNCTION LOCATIONS =====" -ForegroundColor Yellow
+    Select-String -Path $viewsPath -Pattern '^\s*def (build_packages|get_shippo_rates|checkout)\(' |
+        ForEach-Object { "{0}: {1}" -f $_.LineNumber, $_.Line.Trim() }
+
+    Write-Host "`n===== 4. PACKAGE BUILDER AND RATE HELPER =====" -ForegroundColor Yellow
+    $lines = Get-Content $viewsPath
+    $targets = Select-String -Path $viewsPath -Pattern '^\s*def (build_packages|get_shippo_rates)\('
+
+    foreach ($target in $targets) {
+        $start = $target.LineNumber - 1
+        $indent = ([regex]::Match($target.Line, '^\s*')).Value.Length
+        $end = $lines.Count
+
+        for ($i = $start + 1; $i -lt $lines.Count; $i++) {
+            if ($lines[$i] -match '^\s*(def|class)\s+' -and
+                ([regex]::Match($lines[$i], '^\s*')).Value.Length -le $indent) {
+                $end = $i
+                break
+            }
+        }
+
+        Write-Host "`n--- $($target.Line.Trim()) ---"
+        for ($i = $start; $i -lt [Math]::Min($end, $start + 100); $i++) {
+            "{0,4}: {1}" -f ($i + 1), $lines[$i]
+        }
+    }
+
+    Write-Host "`n===== 5. SHIPPO CONFIGURATION (NO SECRET VALUES) =====" -ForegroundColor Yellow
+    @'
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+p = Path.cwd() / ".env"
+print("Project .env exists:", p.is_file())
+if p.is_file():
+    load_dotenv(dotenv_path=p, override=False)
+key = os.getenv("SHIPPO_API_KEY", "")
+print("Shippo key configured:", bool(key.strip()))
+print("Surrounding whitespace:", bool(key) and key != key.strip())
+print("Recognized-looking prefix:",
+      key.strip().startswith("shippo_") or key.strip().startswith("ShippoToken "))
+'@ | & $python -
+
+    Write-Host "`nReport saved to: $report" -ForegroundColor Green
+}
+finally {
+    Stop-Transcript | Out-Null
+}
+THE LABEL GROUP - SHIPPING DIAGNOSTICS
+Project: C:\Users\Tumaini\Desktop\ecommerce\ecommerce
+
+===== 1. PYTHON SYNTAX =====
+
+
+===== 2. DJANGO CHECK =====
+
+
+===== 3. SHIPPING FUNCTION LOCATIONS =====
+522: def checkout(request):
+634: def build_packages(items):
+716: def get_shippo_rates(address, packages):
+
+===== 4. PACKAGE BUILDER AND RATE HELPER =====
+
+--- def build_packages(items): ---
+ 634:     def build_packages(items):
+ 635:         packages = []
+ 636:         missing = []
+ 637:
+ 638:         for item in items:
+ 639:             product = item["product"]
+ 640:             quantity = item["quantity"]
+ 641:
+ 642:             try:
+ 643:                 weight = Decimal(str(product.shipping_weight_lb))
+ 644:                 length = Decimal(str(product.shipping_length_in))
+ 645:                 width = Decimal(str(product.shipping_width_in))
+ 646:                 height = Decimal(str(product.shipping_height_in))
+ 647:
+ 648:                 if any(v <= 0 for v in (weight, length, width, height)):
+ 649:                     raise ValueError("measurements must be greater than zero")
+ 650:
+ 651:             except (ValueError, TypeError, InvalidOperation):
+ 652:                 missing.append(
+ 653:                     "{} ({})".format(
+ 654:                         product.name,
+ 655:                         getattr(product, "product_code", product.pk),
+ 656:                     )
+ 657:                 )
+ 658:                 continue
+ 659:
+ 660:             # Each unit is represented as a parcel. This deliberately avoids
+ 661:             # inventing combined-package dimensions for multiple quantities.
+ 662:             for unused in range(quantity):
+ 663:                 packages.append({
+ 664:                     "length": str(length),
+ 665:                     "width": str(width),
+ 666:                     "height": str(height),
+ 667:                     "distance_unit": "in",
+ 668:                     "weight": str(weight),
+ 669:                     "mass_unit": "lb",
+ 670:                 })
+ 671:
+ 672:         if missing:
+ 673:             raise ValueError(
+ 674:                 "Shipping measurements are missing or invalid for: "
+ 675:                 + ", ".join(missing[:12])
+ 676:                 + (
+ 677:                     " and additional products"
+ 678:                     if len(missing) > 12 else ""
+ 679:                 )
+ 680:                 + ". Enter the actual packed weight and outside dimensions "
+ 681:                   "for each product, then calculate shipping again."
+ 682:             )
+ 683:
+ 684:         if not packages:
+ 685:             raise ValueError("There are no valid packages to ship.")
+ 686:
+ 687:         if len(packages) > 100:
+ 688:             raise ValueError(
+ 689:                 "This order contains more than 100 individual parcels. "
+ 690:                 "Please request a shipping quote so the packages can be "
+ 691:                 "consolidated and priced correctly."
+ 692:             )
+ 693:
+ 694:         return packages
+ 695:
+
+--- def get_shippo_rates(address, packages): ---
+ 716:     def get_shippo_rates(address, packages):
+ 717:         token = os.getenv("SHIPPO_API_KEY", "").strip()
+ 718:         if not token:
+ 719:             raise ValueError(
+ 720:                 "Shipping-rate service is not configured. Please contact us "
+ 721:                 "for a shipping quote."
+ 722:             )
+ 723:
+ 724:         origin = {
+ 725:             "name": "The Label Group LLC",
+ 726:             "street1": "580 St. James Avenue",
+ 727:             "city": "Springfield",
+ 728:             "state": "MA",
+ 729:             "zip": "01109",
+ 730:             "country": "US",
+ 731:             "phone": "413-731-6700",
+ 732:             "email": "labelgroup@comcast.net",
+ 733:         }
+ 734:
+ 735:         shipment = {
+ 736:             "address_from": origin,
+ 737:             "address_to": address,
+ 738:             "parcels": packages,
+ 739:             "async": False,
+ 740:         }
+ 741:
+ 742:         try:
+ 743:             response = requests.post(
+ 744:                 "https://api.goshippo.com/shipments/",
+ 745:                 headers={
+ 746:                     "Authorization": "ShippoToken " + token,
+ 747:                     "Content-Type": "application/json",
+ 748:                 },
+ 749:                 json=shipment,
+ 750:                 timeout=35,
+ 751:             )
+ 752:         except requests.RequestException:
+ 753:             raise ValueError(
+ 754:                 "We could not connect to the shipping service. "
+ 755:                 "Please try again or request a shipping quote."
+ 756:             )
+ 757:
+ 758:         if not response.ok:
+ 759:             # Do not expose credentials or raw API responses to customers.
+ 760:             raise ValueError(
+ 761:                 "The shipping provider could not calculate rates for this "
+ 762:                 "address and package. Check the address and measurements, "
+ 763:                 "then try again."
+ 764:             )
+ 765:
+ 766:         data = response.json()
+ 767:         results = []
+ 768:
+ 769:         for rate in data.get("rates", []):
+ 770:             try:
+ 771:                 rate_id = str(rate.get("object_id", "")).strip()
+ 772:                 amount = Decimal(str(rate.get("amount", "")))
+ 773:                 currency = str(rate.get("currency", "USD")).upper()
+ 774:
+ 775:                 if not rate_id or amount < ZERO or currency != "USD":
+ 776:                     continue
+ 777:
+ 778:                 results.append({
+ 779:                     "object_id": rate_id,
+ 780:                     "provider": str(rate.get("provider", "Carrier")),
+ 781:                     "service": str(rate.get("servicelevel", {}).get(
+ 782:                         "name", "Shipping service"
+ 783:                     )),
+ 784:                     "amount": str(amount),
+ 785:                     "currency": currency,
+ 786:                     "estimated_days": rate.get("estimated_days"),
+ 787:                 })
+ 788:             except (InvalidOperation, TypeError, AttributeError):
+ 789:                 continue
+ 790:
+ 791:         return results
+ 792:
+ 793:     items = get_items()
+ 794:     subtotal = sum(
+ 795:         (item["subtotal"] for item in items),
+ 796:         ZERO,
+ 797:     )
+ 798:
+ 799:     if not items:
+ 800:         messages.error(
+ 801:             request,
+ 802:             "Your cart is empty or its products are unavailable.",
+ 803:         )
+ 804:         return redirect("cart")
+ 805:
+ 806:     if request.method != "POST":
+ 807:         return render_checkout(items, subtotal)
+ 808:
+ 809:     action = request.POST.get("action", "").strip()
+ 810:     if not action:
+ 811:         action = (
+ 812:             "place_order"
+ 813:             if request.POST.get("shipping_rate_id", "").strip()
+ 814:             else "get_rates"
+ 815:         )
+
+===== 5. SHIPPO CONFIGURATION (NO SECRET VALUES) =====
+
+
+Report saved to: C:\Users\Tumaini\Desktop\ecommerce\ecommerce\shippo_diagnostic_report.txt
+**********************
+Windows PowerShell transcript end
+End time: 20261014194528
+**********************

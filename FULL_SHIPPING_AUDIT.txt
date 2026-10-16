@@ -1,0 +1,349 @@
+THE LABEL GROUP - FULL SHIPPING AUDIT
+Audit time: 10/15/2026 17:00:21
+
+
+========== 1. DJANGO SYSTEM CHECK ==========
+System check identified no issues (0 silenced).
+
+
+========== 2. MIGRATIONS ==========
+products
+ [X] 0001_initial
+ [X] 0002_product_adhesive_product_finish_product_is_custom_and_more
+ [X] 0003_alter_product_options_product_product_type_and_more
+ [X] 0004_order_orderitem_shipment
+ [X] 0005_staffprofile
+ [X] 0006_alter_product_category_alter_product_product_type
+ [X] 0007_product_industry
+ [X] 0008_alter_product_category_alter_product_industry
+ [X] 0009_product_product_code
+ [X] 0010_make_price_optional
+ [X] 0011_quoterequest_alter_orderitem_total_price_and_more
+ [X] 0012_collectioncalendarstickerorder
+ [X] 0013_sitesettings
+ [X] 0014_product_packaging_type_product_shipping_height_in_and_more
+ [X] 0015_shippingrule_shippingsystemsettings
+ [X] 0016_collectioncalendarstickerorder_label_url_and_more
+ [X] 0017_remove_collectioncalendarstickerorder_label_url_and_more
+staff
+ [X] 0001_initial
+ [X] 0002_staffprofile_full_name_staffprofile_joined_at_and_more
+ [X] 0003_product
+ [X] 0004_delete_product
+ [X] 0005_staffprofile_rejection_reason_staffprofile_status_and_more
+
+
+========== 3. SHIPPING AND ORDER URL ROUTES ==========
+
+FILE: .\products\urls.py
+9: path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+15: path("checkout/", views.checkout, name="checkout"),
+16: path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+17: path("track-order/", views.track_order, name="track_order"),
+22: path('custom-orders/', views.custom_order, name='custom_order'),
+23: path('shipping/', views.shipping, name='shipping'),
+
+FILE: .\staff\urls.py
+5: path("shipping/", views.staff_shipping_dashboard, name="staff_shipping_dashboard"),
+22: # Orders
+23: path("orders/", views.staff_orders, name="staff_orders"),
+24: path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+30: # Calendar Orders
+31: path("calendar-orders/", views.staff_calendar_orders, name="staff_calendar_orders"),
+32: path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
+
+
+========== 4. SHIPPING CODE LOCATIONS ==========
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\models.py:429: tracking_number = models.CharField(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\models.py:458: shippo_rate_id = models.CharField(max_length=200, blank=True)
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\models.py:459: shippo_transaction_id = models.CharField(max_length=200, blank=True)
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\models.py:460: label_url = models.URLField(max_length=1000, blank=True)
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\models.py:461: tracking_url = models.URLField(max_length=1000, blank=True)
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:269: def get_ups_tracking_endpoint(tracking_number):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:271: tracking_number = str(tracking_number).strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:273: if not tracking_number:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:276: if len(tracking_number) > 50:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:281: for char in tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\ups_integration.py:290: + urllib.parse.quote(tracking_number, safe="")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_other_button_repair.backup.py:155: def shipping(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_other_button_repair.backup.py:158: def custom_order(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_other_products.backup.py:155: def shipping(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_other_products.backup.py:158: def custom_order(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_shipping_quote.backup.py:158: def shipping(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.before_shipping_quote.backup.py:161: def custom_order(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:211: def shipping(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:314: def custom_order(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:385: def shipping_quote(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:444: def custom_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:523: def checkout(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:527: # and Shippo rate requests so inconsistent browser values cannot break checkout.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:546: SESSION_RATES = "shippo_checkout_rates"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:547: SESSION_SIGNATURE = "shippo_checkout_signature"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:548: SESSION_TIME = "shippo_checkout_rates_time"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:550: def render_checkout(items, subtotal, rates=None, error="", shipping_cost=ZERO):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:697: def checkout_signature(address, items, packages):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:717: def get_shippo_shipping_rates(address, packages, order_subtotal):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:718: """Fetch actual available carrier rates from Shippo. Never use estimates as fallback."""
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:722: token = os.environ.get("SHIPPO_API_TOKEN", "").strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:725: "Live shipping is not configured yet. Add your Shippo API token "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:753: shippo_packages = [
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:773: "parcels": shippo_packages,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:779: "https://api.goshippo.com/shipments/",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:781: "Authorization": "ShippoToken " + token,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:783: "SHIPPO-API-VERSION": "2018-02-08",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:790: "Shippo rate request failed."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:800: "Shippo returned a non-JSON response (HTTP %s).",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:809: "Shippo rate request returned HTTP %s: %s",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:816: "Shippo rejected the API token. Check your token in the "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:820: "Shippo could not calculate rates for this shipment. Check the "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:821: "delivery address, parcel measurements, and Shippo carrier accounts."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:842: "SHIPPO_DIAGNOSTIC raw_rate_count=%s rate_summary=%s",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:848: "SHIPPO_DIAGNOSTIC logging_failed"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:897: "provider": provider or "Shippo carrier",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:903: "shippo_shipment_id": str(data.get("object_id") or ""),
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:911: "Shippo returned no eligible non-USPS shipping rates for this "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1064: rates = get_shippo_shipping_rates(address, packages, subtotal)
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1101: cached_rates = get_shippo_shipping_rates(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1207: shippo_rate_id=str(selected_rate.get("object_id") or "").strip(),
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1208: notes="Shippo rate selected at checkout. Label not purchased.",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1240: def order_success(request, order_id):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1248: def track_order(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1255: tracking_url = ""
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1285: if shipment and shipment.tracking_number:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1286: tracking_number = quote(shipment.tracking_number.strip(), safe="")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1290: tracking_url = (
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1291: "https://www.ups.com/track?tracknum=" + tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1294: tracking_url = (
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1295: "https://www.fedex.com/fedextrack/?trknbr=" + tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1298: tracking_url = (
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1300: + tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views.py:1342: "tracking_url": tracking_url,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_before_fix.py:328: def checkout(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_before_fix.py:549: def order_success(request, order_id):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_before_fix.py:915: def shipping_view(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_broken_backup.py:225: def checkout(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_broken_backup.py:302: def order_success(request, order_id):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_broken_backup.py:510: def collection_calendar_stickers_success(request, order_id):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\views_broken_backup.py:529: def shipping_view(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:401: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:859: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:910: def staff_calendar_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1373: def staff_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1422: def staff_shipping_dashboard(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1454: rate_id = request.POST.get("shippo_rate_id", "").strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1458: "Enter the valid Shippo rate ID for this order before purchasing the label."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1463: os.environ.get("SHIPPO_API_TOKEN")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1464: or getattr(settings, "SHIPPO_API_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1465: or os.environ.get("SHIPPO_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1470: "Shippo API token was not found in the server environment. Check your existing server configuration."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1474: if shipment.shippo_transaction_id and shipment.label_url:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1482: "Authorization": "ShippoToken " + token,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1484: "SHIPPO-API-VERSION": "2018-02-08",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1495: "https://api.goshippo.com/transactions/",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1511: "Shippo did not purchase the label (HTTP "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1514: + str(detail or "Check the rate ID and Shippo dashboard.")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1519: label_url = result.get("label_url", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1521: tracking_number = result.get("tracking_number", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1522: tracking_url = result.get("tracking_url_provider", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1526: if transaction_status != "SUCCESS" or not label_url:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1529: "Shippo did not return a successful transaction with a label URL. No label is marked as purchased. Check the transaction in Shippo before retrying."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1532: shipment.shippo_transaction_id = transaction_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1533: shipment.shippo_rate_id = rate_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1535: "shippo_transaction_id",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1536: "shippo_rate_id",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1541: shipment.shippo_rate_id = rate_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1542: shipment.shippo_transaction_id = transaction_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1543: shipment.label_url = label_url
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1544: shipment.tracking_url = tracking_url or ""
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1545: shipment.tracking_number = tracking_number or shipment.tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1546: shipment.carrier = carrier or shipment.carrier or "Shippo carrier"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1559: "Shippo label purchased successfully for Order #"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1567: "Could not reach Shippo. Check the server connection and Shippo dashboard before retrying. "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1582: shipment.tracking_number = request.POST.get(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views.py:1583: "tracking_number", shipment.tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:469: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:498: def staff_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:1733: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup.py:1762: def staff_calendar_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:302: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:315: def staff_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:1021: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_backup_20261009_194509.py:1038: def staff_calendar_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:401: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:859: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:910: def staff_calendar_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1373: def staff_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1421: def staff_shipping_dashboard(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1448: rate_id = request.POST.get("shippo_rate_id", "").strip()
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1452: "Enter the valid Shippo rate ID for this order before purchasing the label."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1457: os.environ.get("SHIPPO_API_TOKEN")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1458: or getattr(settings, "SHIPPO_API_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1459: or os.environ.get("SHIPPO_TOKEN", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1464: "Shippo API token was not found in the server environment. Check your existing server configuration."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1468: if shipment.shippo_transaction_id and shipment.label_url:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1476: "Authorization": "ShippoToken " + token,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1478: "SHIPPO-API-VERSION": "2018-02-08",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1489: "https://api.goshippo.com/transactions/",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1505: "Shippo did not purchase the label (HTTP "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1508: + str(detail or "Check the rate ID and Shippo dashboard.")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1513: label_url = result.get("label_url", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1515: tracking_number = result.get("tracking_number", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1516: tracking_url = result.get("tracking_url_provider", "")
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1520: if transaction_status != "SUCCESS" or not label_url:
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1523: "Shippo did not return a successful transaction with a label URL. No label is marked as purchased. Check the transaction in Shippo before retrying."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1526: shipment.shippo_transaction_id = transaction_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1527: shipment.shippo_rate_id = rate_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1529: "shippo_transaction_id",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1530: "shippo_rate_id",
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1535: shipment.shippo_rate_id = rate_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1536: shipment.shippo_transaction_id = transaction_id
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1537: shipment.label_url = label_url
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1538: shipment.tracking_url = tracking_url or ""
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1539: shipment.tracking_number = tracking_number or shipment.tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1540: shipment.carrier = carrier or shipment.carrier or "Shippo carrier"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1553: "Shippo label purchased successfully for Order #"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1561: "Could not reach Shippo. Check the server connection and Shippo dashboard before retrying. "
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1576: shipment.tracking_number = request.POST.get(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_before_order_page_fix_20261015_112428.py:1577: "tracking_number", shipment.tracking_number
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:293: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:305: def staff_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:995: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_broken_backup.py:1011: def staff_calendar_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:451: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:478: def staff_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:1681: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_clean.py:1708: def staff_calendar_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:469: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:498: def staff_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:1733: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_damaged_backup.py:1762: def staff_calendar_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:355: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:378: def staff_order_detail(request, order_id):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:1461: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_new.py:1490: def staff_calendar_order_detail(
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:293: def staff_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:305: def staff_order_detail(request, pk):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:995: def staff_calendar_orders(request):
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\views_repair_source.py:1011: def staff_calendar_order_detail(request, pk):
+
+
+========== 5. DATABASE ORDERS AND SHIPMENTS ==========
+24 objects imported automatically (use -v 2 for details).
+
+DATABASE ENGINE: django.db.backends.sqlite3
+
+MODEL: Order | RECORDS: 10
+status counts: [{'status': 'completed', 'count': 2}, {'status': 'pending', 'count': 8}]
+FIELDS: created_at, currency, customer_email, customer_name, customer_phone, id, notes, shipping_address, shipping_city, shipping_cost, shipping_country, shipping_postal_code, shipping_state, status, subtotal, total, updated_at
+
+MODEL: Shipment | RECORDS: 10
+status counts: [{'status': 'cancelled', 'count': 1}, {'status': 'pending', 'count': 9}]
+carrier counts: [{'carrier': '', 'count': 8}, {'carrier': 'UPS', 'count': 2}]
+tracking_number counts: [{'tracking_number': '', 'count': 10}]
+tracking_url counts: [{'tracking_url': '', 'count': 10}]
+label_url counts: [{'label_url': '', 'count': 10}]
+shipping_method counts: [{'shipping_method': '', 'count': 8}, {'shipping_method': 'Ground Saver', 'count': 2}]
+shippo_rate_id counts: [{'shippo_rate_id': '', 'count': 8}, {'shippo_rate_id': 'bdcd5f70e5ab4e7d97e7559c0fb1b4c9', 'count': 1}, {'shippo_rate_id': 'ec96f84f34f24da58c442e7921aab087', 'count': 1}]
+shippo_transaction_id counts: [{'shippo_transaction_id': '', 'count': 10}]
+FIELDS: carrier, created_at, delivered_at, estimated_delivery, id, label_url, notes, order, shipped_at, shipping_method, shippo_rate_id, shippo_transaction_id, status, tracking_number, tracking_url, updated_at
+SHIPMENT ORDER LINKS:
+shipment_id= 1 order_id= 1 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 2 order_id= 2 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 3 order_id= 3 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 4 order_id= 4 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 5 order_id= 5 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 6 order_id= 6 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 7 order_id= 7 status= cancelled has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 8 order_id= 8 status= pending has_rate= False has_transaction= False has_label= False has_tracking= False
+shipment_id= 9 order_id= 9 status= pending has_rate= True has_transaction= False has_label= False has_tracking= False
+shipment_id= 10 order_id= 10 status= pending has_rate= True has_transaction= False has_label= False has_tracking= False
+
+
+========== 6. SHIPPING CONFIGURATION PRESENCE ==========
+File: .env
+UPS_CLIENT_SECRET = [empty]
+UPS_ACCOUNT_NUMBER = [empty]
+UPS_CLIENT_ID = [empty]
+UPS_ENVIRONMENT = [empty]
+UPS_ORIGIN_COUNTRY_CODE = [present; value hidden]
+UPS_ORIGIN_POSTAL_CODE = [present; value hidden]
+SHIPPO_API_KEY = [configured; value hidden]
+SHIPPO_API_TOKEN = [configured; value hidden]
+File: .env.backup
+UPS_CLIENT_SECRET = [empty]
+UPS_ACCOUNT_NUMBER = [empty]
+UPS_CLIENT_ID = [empty]
+UPS_ENVIRONMENT = [empty]
+UPS_ORIGIN_COUNTRY_CODE = [present; value hidden]
+UPS_ORIGIN_POSTAL_CODE = [present; value hidden]
+SHIPPO_API_KEY = [configured; value hidden]
+
+
+========== 7. SHIPPING TEMPLATE MARKERS ==========
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:760: <strong>We couldn't calculate shipping.</strong>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:771: <strong>Calculate shipping</strong> to retrieve available rates.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:780: name="shipping_rate_id"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:802: Calculate shipping
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:892: const radios = document.querySelectorAll('input[name="shipping_rate_id"]');
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:907: 'input[name="shipping_rate_id"]:checked'
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\checkout.html:912: grandOutput.textContent = "Calculate shipping first";
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:247: <p>Manage shipment progress, tracking information, and shipping labels.</p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:250: {{ shipments|length }} shipment{{ shipments|length|pluralize }}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:262: {% for shipment in shipments %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:265: <h2>Order #{{ shipment.order_id }}</h2>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:266: <span class="shipping-status">{{ shipment.get_status_display }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:273: <span>{{ shipment.order.customer_name|default:"Not provided" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:277: <span>{{ shipment.order.customer_email|default:"Not provided" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:281: <span>{{ shipment.shipping_destination|default:"Address not provided" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:285: <span>{{ shipment.carrier|default:"Not set" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:289: <span>{{ shipment.shipping_method|default:"Not set" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:293: <span>{{ shipment.tracking_number|default:"Not available" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:297: <span>{{ shipment.estimated_delivery|default:"Not set" }}</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:301: {% if shipment.label_url %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:303: <a href="{{ shipment.label_url }}" target="_blank" rel="noopener noreferrer">Open / print label</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:307: {% if shipment.tracking_url %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:308: <p><a href="{{ shipment.tracking_url }}" target="_blank" rel="noopener noreferrer">Track shipment with carrier</a></p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:311: {% if shipment.shippo_transaction_id %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:312: <p class="shipping-help">Shippo transaction reference: {{ shipment.shippo_transaction_id }}</p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:317: {% if shipment.label_url %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:318: <p class="shipping-help">A label URL is already saved for this shipment. Review the existing label before taking any further action.</p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:326: <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:330: <label for="rate-{{ shipment.id }}">Shippo rate ID</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:331: <input id="rate-{{ shipment.id }}" name="shippo_rate_id"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:332: value="{{ shipment.shippo_rate_id }}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:340: Purchase label
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:348: <h3>Update shipment details</h3>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:349: <p class="shipping-help">Save the latest shipment status and any available carrier or tracking details.</p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:353: <input type="hidden" name="shipment_id" value="{{ shipment.id }}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:358: <label for="status-{{ shipment.id }}">Status</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:359: <select id="status-{{ shipment.id }}" name="status">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:361: <option value="{{ value }}" {% if shipment.status == value %}selected{% endif %}>{{ label }}</option>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:367: <label for="carrier-{{ shipment.id }}">Carrier</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:368: <input id="carrier-{{ shipment.id }}" name="carrier"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:369: value="{{ shipment.carrier }}" maxlength="100">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:373: <label for="method-{{ shipment.id }}">Shipping method</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:374: <input id="method-{{ shipment.id }}" name="shipping_method"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:375: value="{{ shipment.shipping_method }}" maxlength="100">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:379: <label for="tracking-{{ shipment.id }}">Tracking number</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:380: <input id="tracking-{{ shipment.id }}" name="tracking_number"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:381: value="{{ shipment.tracking_number }}" maxlength="200">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:385: <label for="notes-{{ shipment.id }}">Notes</label>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:386: <textarea id="notes-{{ shipment.id }}" name="notes" rows="3">{{ shipment.notes }}</textarea>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:391: <button class="shipping-button primary" type="submit">Save shipment details</button>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:399: <h2>No shipments yet</h2>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\staff\templates\staff\shipping\dashboard.html:400: <p>Shipments will appear here when they are linked to existing orders.</p>
+
+
+========== 8. URL REVERSAL CHECK ==========
+24 objects imported automatically (use -v 2 for details).
+
+checkout => /checkout/
+order_success => /order-success/1/
+track_order => /track-order/
+staff_shipping_dashboard => /staff/shipping/
+staff_orders => /staff/orders/
+staff_order_detail => /staff/orders/1/
+
+
+========== AUDIT COMPLETE ==========
+Read-only audit. No orders, labels, or external shipment transactions were created.

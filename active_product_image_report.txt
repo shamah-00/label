@@ -1,0 +1,160 @@
+﻿C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:410: <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:415: <a href="{% url 'product_list' %}">CONTINUE SHOPPING</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:428: <p>Review your selected products before continuing to checkout.</p>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:434: <a href="{% url 'product_list' %}" class="back">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:450: src="{{ item.product.image.url|slice:':-4' }}.webp"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:549: <a href="{% url 'product_list' %}" class="continue">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:565: You have not added any products yet.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:566: Browse our industrial labels, decals and identification products.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\cart.html:569: <a href="{% url 'product_list' %}" class="checkout" style="max-width:280px;margin:0 auto;">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\collection_calendar_stickers.html:290: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\collection_calendar_stickers.html:739: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\collection_calendar_stickers_success.html:160: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\collection_calendar_stickers_success.html:211: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:530: /* FEATURED PRODUCTS */
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:532: .products-section {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1081: .products,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1096: .products-grid,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1225: .products,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1247: .products-section .product-image {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1263: .products-section .product-image img {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1281: .products-section .product-image {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1297: .products-section .product-image img {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1379: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1424: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1428: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1429: Government Contractor Decals
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1432: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1436: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1440: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1448: <a href="#">PRODUCTS</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1453: <a href="{% url 'home' %}?category=reflective">Reflective Products</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1454: <a href="{% url 'home' %}?category=custom">Custom Products</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1492: designed for trucks, government contractors, construction,
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1514: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1518: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1519: <span>Government Contractor Decals</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1522: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1526: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1530: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1552: products designed around the needs of that industry.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1560: href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1582: href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1588: <h3>Government Contractor Decals</h3>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1603: href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1624: href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1645: href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1677: <span>Industrial Products</span>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1728: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1744: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1760: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1786: <!-- FEATURED PRODUCTS -->
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1788: <section class="products-section" id="featured">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1796: <h2>Featured Industrial Products</h2>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1807: {% if products %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1809: {% for product in products|slice:":8" %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1820: src="{% with trimmed_path=product.image.url|slice:":-4" %}{{ trimmed_path }}_trimmed.webp{% endwith %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1824: onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='{{ product.image.url }}';}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1894: <h3>No products are currently available.</h3>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1909: href="{% url 'industry_products' 'truck_motor_car' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1937: identification products and other print solutions can be
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1974: our products are organized around the industries and
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:1991: Products designed around business and operational needs.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2011: Find products through a catalogue structure that makes sense.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2021: Request products designed around your specific requirements.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2106: src="{% static 'products/logo 2 (1).png' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2122: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2126: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2127: Government Contractors
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2130: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2134: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\home.html:2138: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:395: .products-grid {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:667: .products-grid {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:722: .products-grid {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:751: .products-grid {
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:826: placeholder="Search decals, stickers, codes or products..."
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:856: PRODUCTS
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:888: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:921: <a href="#products" class="hero-action primary">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:922: Browse Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:943: href="{% url 'industry_products' 'truck_motor_car' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:950: href="{% url 'industry_products' 'government' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:953: Government Contractor
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:957: href="{% url 'industry_products' 'pool' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:964: href="{% url 'industry_products' 'construction' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:971: href="{% url 'industry_products' 'waste' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:984: <main class="main" id="products">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:995: Select from the products currently available through
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1004: {{ products|length }} Product{{ products|length|pluralize }}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1011: {% if products %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1013: <div class="products-grid">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1015: {% for product in products %}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1029: src="{{ product.image.url }}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1159: Products Coming Soon
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1164: products yet. Staff can add products from the
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1215: identification products built for businesses that
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1225: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1228: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1232: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1233: Government Contractor
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1236: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1240: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\industry_products.html:1244: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\order_success.html:211: href="{% url 'product_list' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\product_detail.html:361: <img class="logo" src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\product_detail.html:378: Home / Shop Products / {{ product.name }}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\product_detail.html:387: src="{{ product.image.url|slice:':-4' }}.webp"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:542: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:546: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:550: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:554: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:558: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:596: Review the products you would like included in your quote request.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:630: Selected Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:652: src="{{ item.product.image.url }}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:755: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:837: products you would like us to include in your quote.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:838: You can select multiple products and adjust quantities
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:846: BROWSE PRODUCTS
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:868: custom printed products for businesses contractors
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:881: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:885: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:889: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:893: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_cart.html:897: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html:361: review the products and quantities you selected together with any
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html:402: products built for businesses and organizations.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html:408: <a href="{% url 'home' %}">All Products</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\quote_success.html:410: <a href="{% url 'home' %}?industry=government">Government Contractor</a>
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:482: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:486: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:490: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:494: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:498: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:541: products and requirements before preparing your quote.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:837: Selected Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:841: These products will be included in your quote request.
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:883: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:941: custom printed products for businesses contractors
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:954: <a href="{% url 'industry_products' 'truck_motor_car' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:958: <a href="{% url 'industry_products' 'government' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:962: <a href="{% url 'industry_products' 'pool' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:966: <a href="{% url 'industry_products' 'construction' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\request_quote.html:970: <a href="{% url 'industry_products' 'waste' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\shipping.html:301: <a href="/products/" class="track-button">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:448: <a href="{% url 'staff_product_list' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:449: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:553: Total Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:557: {{ total_products }}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:560: <a href="{% url 'staff_product_list' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:561: Manage Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:569: Available Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:573: {{ available_products }}
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:576: <a href="{% url 'staff_product_list' %}">
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:577: View Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:721: href="{% url 'staff_product_list' %}"
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:726: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:730: Products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:734: Add, edit, delete and manage printing products
+C:\Users\Tumaini\Desktop\ecommerce\ecommerce\products\templates\staff\dashboard.html:980: products, customers, quote requests, orders and

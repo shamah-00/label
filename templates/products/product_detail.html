@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿{% load product_specifications %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -371,7 +372,267 @@
             .specs th, .specs td { padding: 10px 8px; font-size: 11px; }
             .specs th { width: 39%; }
         }
-    </style>
+    
+/* Product detail display fixes */
+.product-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin-top: 12px;
+}
+
+.product-meta .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.specs td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    line-height: 1.7;
+}
+
+.specs th {
+    vertical-align: top;
+}
+
+/* The Label Group product header and metadata spacing fix */
+.product-meta {
+    display: flex !important;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 12px 0 18px;
+}
+
+.product-meta .meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    padding: 6px 10px;
+    line-height: 1.5;
+    white-space: normal;
+}
+
+.product-meta .meta-chip + .meta-chip {
+    margin-left: 0;
+}
+
+/* Keep the brand, tagline and shopping link visually distinct. */
+a[href="/products/"] {
+    text-decoration: none;
+}
+
+a[href="/products/"] strong {
+    line-height: 1.5;
+}
+
+.specs td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
+/* Final product header and metadata layout */
+.product-page-header-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 22px;
+    width: 100%;
+}
+
+.product-page-brand-link {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 12px;
+    text-decoration: none;
+    min-width: 0;
+}
+
+.product-page-brand-name {
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+
+.product-page-brand-tagline {
+    display: inline-block;
+    line-height: 1.5;
+}
+
+.product-page-continue-link {
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1.5;
+    margin-left: auto;
+}
+
+.product-meta {
+    display: flex !important;
+    flex-flow: row wrap;
+    align-items: center;
+    gap: 8px 12px;
+    margin: 12px 0 18px;
+}
+
+.product-meta .meta-chip {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+    margin: 0;
+    line-height: 1.6;
+}
+
+.specs td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.7;
+}
+
+@media (max-width: 600px) {
+    .product-page-header-row {
+        justify-content: flex-start;
+    }
+
+    .product-page-brand-link {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+    }
+
+    .product-page-continue-link {
+        margin-left: 0;
+    }
+}
+
+
+/* TLG PRODUCT HEADER LAYOUT FIX */
+.site-header {
+    width: 100%;
+}
+
+.site-header .header-inner {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    flex-wrap: wrap !important;
+}
+
+.site-header .brand {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 5px !important;
+    flex: 0 1 auto !important;
+    min-width: 0;
+    text-decoration: none;
+}
+
+.site-header .brand .brand-name {
+    display: block !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+}
+
+.site-header .brand .brand-subtitle {
+    display: block !important;
+    line-height: 1.4 !important;
+    white-space: normal !important;
+}
+
+.site-header .navigation {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    flex: 0 0 auto !important;
+    gap: 12px !important;
+    margin-left: auto !important;
+}
+
+.site-header .navigation a {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .site-header .header-inner {
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .site-header .navigation {
+        width: 100%;
+        justify-content: flex-start !important;
+        margin-left: 0 !important;
+    }
+}
+
+</style>
+
+<style>
+.product-specifications-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    margin: 18px 0 28px;
+    overflow-x: auto;
+    border: 1px solid #dce2e9;
+    border-radius: 8px;
+    background: #fff;
+}
+.product-specifications-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 14px;
+    line-height: 1.65;
+}
+.product-specifications-table th,
+.product-specifications-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid #e3e7ed;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+.product-specifications-table th {
+    width: 25%;
+    color: #0b1f3a;
+    font-weight: 800;
+    background: #f3f6f9;
+}
+.product-specifications-table td {
+    color: #273444;
+    background: #fff;
+}
+.product-specifications-table tr:last-child th,
+.product-specifications-table tr:last-child td {
+    border-bottom: 0;
+}
+@media (max-width: 600px) {
+    .product-specifications-table th,
+    .product-specifications-table td {
+        padding: 10px;
+        font-size: 13px;
+    }
+    .product-specifications-table th { width: 36%; }
+}
+</style>
+
 </head>
 
 <body>
@@ -422,9 +683,8 @@
                     <div class="product-meta">
                         <span class="meta-chip">
                             Code: {{ product.product_code|default:"Not specified" }}
-                        </span>
-                        {% if product.industry %}
-                            <span class="meta-chip">{{ product.industry }}</span>
+                        </span>&nbsp;|&nbsp;{% if product.industry %}
+                            <span class="meta-chip">Industry: {% if product.industry == 'truck_motor_car' %}Truck &amp; Motor Vehicles{% elif product.industry == 'government_contractor' %}Government &amp; Contractors{% elif product.industry == 'waste' %}Waste Management{% elif product.industry == 'pool' %}Pool Companies{% else %}{{ product.industry|default:'General Commercial' }}{% endif %}</span>
                         {% endif %}
                     </div>
 
@@ -468,86 +728,25 @@
                 <section class="specs-card" aria-labelledby="specifications-heading">
                     <h2 class="specs-heading" id="specifications-heading">Product Specifications</h2>
 
-                    <table class="specs">
-                        <tbody>
-                            <tr>
-                                <th scope="row">Product Code</th>
-                                <td>{{ product.product_code|default:"Not specified" }}</td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Product Name</th>
-                                <td>{{ product.name }}</td>
-                            </tr>
-                            {% if product.category %}
-                                <tr>
-                                    <th scope="row">Category</th>
-                                    <td>{{ product.category }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if product.industry %}
-                                <tr>
-                                    <th scope="row">Industry</th>
-                                    <td>{{ product.industry }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if product.material %}
-                                {% if product.material %}
-{% if product.material and 'available on request' not in product.material|lower %}
-<tr>
-                                    <th scope="row">Ideal Material</th>
-                                    <td>{{ product.material }}</td>
-                                </tr>
-{% endif %}
-{% endif %}
-                            {% endif %}
-                            {% if product.finish %}
-                                {% if product.finish %}
-{% if product.finish and 'available on request' not in product.finish|lower %}
-<tr>
-                                    <th scope="row">Finish</th>
-                                    <td>{{ product.finish }}</td>
-                                </tr>
-{% endif %}
-{% endif %}
-                            {% endif %}
-                            {% if product.shape %}
-                                {% if product.shape %}
-{% if product.shape and 'available on request' not in product.shape|lower %}
-<tr>
-                                    <th scope="row">Shape</th>
-                                    <td>{{ product.shape }}</td>
-                                </tr>
-{% endif %}
-{% endif %}
-                            {% endif %}
-                            {% if product.printing_method %}
-                                {% if product.printing_method %}
-{% if product.printing_method and 'available on request' not in product.printing_method|lower %}
-<tr>
-                                    <th scope="row">Printing Method</th>
-                                    <td>{{ product.printing_method }}</td>
-                                </tr>
-{% endif %}
-{% endif %}
-                            {% endif %}
-                            {% if product.adhesive %}
-                                {% if product.adhesive %}
-{% if product.adhesive and 'available on request' not in product.adhesive|lower %}
-<tr>
-                                    <th scope="row">Adhesive</th>
-                                    <td>{{ product.adhesive }}</td>
-                                </tr>
-{% endif %}
-{% endif %}
-                            {% endif %}
-                            {% if product.description %}
-                                <tr>
-                                    <th scope="row">Description &amp; Buyer Notes</th>
-                                    <td>{{ product.description }}</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+                    
+<div class="product-specifications-table-wrap">
+    <table class="product-specifications-table">
+        <tbody>
+            <tr><th scope="row">Product Code</th><td>{{ product.product_code|default:"Not assigned" }}</td></tr>
+            <tr><th scope="row">Product Name</th><td>{{ product.name|default:"Product" }}</td></tr>
+            <tr><th scope="row">Category</th><td>{{ product.get_category_display|default:product.category|default:"Not specified" }}</td></tr>
+            <tr><th scope="row">Industry</th><td>{{ product.get_industry_display|default:product.industry|default:"Not specified" }}</td></tr>
+            <tr><th scope="row">Ideal Material</th><td>{{ product.description|spec_part:"Ideal Material"|default:product.material|default:"Confirm material for the intended application" }}</td></tr>
+            <tr><th scope="row">Finish</th><td>{{ product.description|spec_part:"Finish"|default:product.finish|default:"Confirm finish when ordering" }}</td></tr>
+            <tr><th scope="row">Standard Size</th><td>{{ product.description|spec_part:"Standard Size"|default:"Confirm size when ordering" }}</td></tr>
+            <tr><th scope="row">Adhesive</th><td>{{ product.description|spec_part:"Adhesive"|default:product.adhesive|default:"Confirm adhesive for the intended surface" }}</td></tr>
+            <tr><th scope="row">Description</th><td>{{ product.description|spec_part:"Description"|default:product.description|spec_plain|default:"Contact us for product details." }}</td></tr>
+            <tr><th scope="row">Primary Application</th><td>{{ product.description|spec_part:"Primary Application"|default:"Refer to the product's intended use." }}</td></tr>
+            <tr><th scope="row">Buyer's Notes</th><td>{{ product.description|spec_part:"What to Include / Buyer's Notes"|default:product.description|spec_part:"Buyer's Notes"|default:"Confirm dimensions, surface compatibility, and installation requirements before ordering." }}</td></tr>
+        </tbody>
+    </table>
+</div>
+
                 </section>
             </div>
         </div>
@@ -558,6 +757,8 @@
     </footer>
 </body>
 </html>
+
+
 
 
 

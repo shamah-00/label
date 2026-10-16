@@ -1,0 +1,2195 @@
+
+======================================================================
+FILE: products/urls.py
+======================================================================
+1: from django.urls import path
+2: from . import views
+3: 
+4: urlpatterns = [
+5:     path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
+6:     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
+7:     path('cart/clear/', views.clear_cart, name='clear_cart'),
+8:     path('cart/add/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
+9:     path("shipping/quote/", views.shipping_quote, name="shipping_quote"),
+10: 
+11:     path('', views.home, name='home'),
+12:     path('products/', views.product_list, name='product_list'),
+13:     path('products/industry/<str:industry_name>/', views.industry_products, name='industry_products'),
+14:     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+15:     path("checkout/", views.checkout, name="checkout"),
+16:     path("order-success/<int:order_id>/", views.order_success, name="order_success"),
+17:     path("track-order/", views.track_order, name="track_order"),
+18:     path('cart/', views.cart, name='cart'),
+19:     path('quote/', views.quote_cart, name='quote_cart'),
+20:     path('quote/add/<int:product_id>/', views.add_to_quote, name='add_to_quote'),
+21:     path('quote/remove/<int:product_id>/', views.remove_from_quote, name='remove_from_quote'),
+22:     path('custom-orders/', views.custom_order, name='custom_order'),
+23:     path('shipping/', views.shipping, name='shipping'),
+24:     path("invoice-payment/", views.invoice_payment, name="invoice_payment"),
+25: ]
+26: 
+27: 
+28: 
+
+======================================================================
+FILE: products/views.py
+======================================================================
+
+--- Lines 4-80 ---
+4: from .models import Product
+5: 
+6: def home(request):
+7:     from django.db.models import Q
+8:     from django.shortcuts import render
+9:     from .models import Product
+10: 
+11:     products = Product.objects.filter(is_available=True)
+12: 
+13:     industry_filter = request.GET.get("industry", "").strip().lower()
+14:     search = request.GET.get("search", "").strip()
+15: 
+16:     # Filter using the actual industry stored on each product.
+17:     if industry_filter:
+18:             from django.db.models import Q
+19:             filter_key = str(industry_filter).strip().lower()
+20:             filter_key = filter_key.replace(' ', '_').replace('-', '_')
+21:             industry_alias_map = {
+22:                 'waste': ['waste', 'waste_company', 'waste_companies'],
+23:                 'waste_companies': ['waste', 'waste_company', 'waste_companies'],
+24:                 'government': ['government', 'government_contractor', 'government_contractors'],
+25:                 'government_contractor': ['government', 'government_contractor', 'government_contractors'],
+26:                 'government_contractors': ['government', 'government_contractor', 'government_contractors'],
+27:                 'construction': ['construction', 'construction_contractor', 'construction_contractors'],
+28:                 'construction_contractors': ['construction', 'construction_contractor', 'construction_contractors'],
+29:                 'pool': ['pool', 'pools', 'pool_company', 'pool_companies'],
+30:                 'pools': ['pool', 'pools', 'pool_company', 'pool_companies'],
+31:                 'pool_companies': ['pool', 'pools', 'pool_company', 'pool_companies'],
+32:                 'motor': ['motor', 'truck', 'truck_motor_car', 'truck_motor', 'car'],
+33:                 'truck': ['motor', 'truck', 'truck_motor_car', 'truck_motor', 'car'],
+34:                 'truck_motor_car': ['motor', 'truck', 'truck_motor_car', 'truck_motor', 'car'],
+35:             }
+36:             matching_industries = industry_alias_map.get(
+37:                 filter_key, [industry_filter]
+38:             )
+39:             category_query = Q()
+40:             for category_value in set([filter_key, *matching_industries]):
+41:                 if category_value:
+42:                     category_query |= Q(category__iexact=str(category_value))
+43:             industry_query = Q(industry__in=matching_industries)
+44:             # Exclude known legacy misclassifications from the industry match.
+45:             # The category match remains available for a correctly classified product.
+46:             if filter_key in ('waste', 'waste_companies'):
+47:                 industry_query &= ~Q(product_code__in=['G007', 'G012', 'P002', 'P007'])
+48:             elif filter_key in ('construction', 'construction_contractors'):
+49:                 industry_query &= ~Q(product_code__in=['G013', 'P003'])
+50:             catalogue_query = category_query | industry_query
+51:             # Include existing numbered series even when legacy category fields are wrong.
+52:             if filter_key in ('pool', 'pools', 'pool_companies'):
+53:                 catalogue_query |= Q(product_code__regex=r'^P[0-9]+$')
+54:             elif filter_key in ('government', 'government_contractor', 'government_contractors'):
+55:                 catalogue_query |= Q(product_code__regex=r'^G[0-9]+$')
+56:             elif filter_key in ('construction', 'construction_contractors'):
+57:                 catalogue_query |= Q(product_code__regex=r'^C[0-9]+$')
+58:             products = products.filter(catalogue_query).distinct()
+59: 
+60:     if search:
+61:         products = products.filter(
+62:             Q(name__icontains=search)
+63:             | Q(product_code__icontains=search)
+64:             | Q(description__icontains=search)
+65:         )
+66: 
+67:     if industry_filter in ("motor", "truck", "truck_motor_car"):
+68:         truck_order = [
+69:             "DGO", "320", "DMO", "DHO", "I711",
+70:             "312", "333", "362", "NCU", "T010",
+71:             "T011", "T012", "T013", "T014", "T015",
+72:             "T016", "T017", "T018", "T019", "T020",
+73:         ]
+74:         from django.db.models import Case, When, Value, IntegerField
+75:         products = products.annotate(
+76:             truck_position=Case(
+77:                 *[
+78:                     When(product_code=code, then=Value(position))
+79:                     for position, code in enumerate(truck_order)
+80:                 ],
+
+--- Lines 102-178 ---
+102: 
+103: 
+104: def product_list(request):
+105:     return home(request)
+106: 
+107: 
+108: def industry_products(request, industry_name):
+109:     industry_name = (industry_name or "").strip().lower()
+110: 
+111:     allowed = {
+112:         "motor": "motor",
+113:         "waste": "waste",
+114:         "construction": "construction",
+115:         "pool": "pool",
+116:         "government": "government",
+117:         "other": "other",
+118:     }
+119: 
+120:     industry = allowed.get(industry_name)
+121: 
+122:     if not industry:
+123:         return redirect("product_list")
+124: 
+125:     from django.http import HttpResponseRedirect
+126:     from django.urls import reverse
+127: 
+128:     url = reverse("product_list") + "?industry=" + industry
+129:     search = request.GET.get("search", "").strip()
+130: 
+131:     if search:
+132:         from urllib.parse import quote
+133:         url += "&search=" + quote(search)
+134: 
+135:     return HttpResponseRedirect(url)
+136: 
+137: def product_detail(request, product_id):
+138:     import re
+139: 
+140:     product = get_object_or_404(Product, id=product_id)
+141:     context = {"product": product}
+142: 
+143:     code = str(getattr(product, "product_code", "") or "").upper()
+144:     category = str(getattr(product, "category", "") or "").strip().lower()
+145: 
+146:     if category == "construction" and re.fullmatch(r"C\d{3}", code):
+147:         description = str(getattr(product, "description", "") or "")
+148:         lines = description.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+149: 
+150:         label_map = {
+151:             "standard size": "standard_size",
+152:             "primary application": "application",
+153:             "buyer's notes": "buyer_notes",
+154:             "what to include / buyer's notes": "buyer_notes",
+155:             "what to include / buyerâ€™s notes": "buyer_notes",
+156:             "ideal material": "ideal_material",
+157:             "finish": "finish",
+158:             "adhesive": "adhesive",
+159:             "printing method": "printing_method",
+160:         }
+161: 
+162:         def normalize_label(value):
+163:             return re.sub(r"\s+", " ", value.strip().rstrip(":")).lower()
+164: 
+165:         parsed = {}
+166:         description_lines = []
+167:         current_field = None
+168: 
+169:         for line in lines:
+170:             stripped = line.strip()
+171: 
+172:             # Handle labels written on their own line, with or without a colon.
+173:             heading_match = re.match(r"^([^:]+?)\s*:\s*(.*)$", stripped)
+174:             if heading_match:
+175:                 possible_label = normalize_label(heading_match.group(1))
+176:                 if possible_label in label_map:
+177:                     current_field = label_map[possible_label]
+178:                     value = heading_match.group(2).strip()
+
+--- Lines 106-182 ---
+106: 
+107: 
+108: def industry_products(request, industry_name):
+109:     industry_name = (industry_name or "").strip().lower()
+110: 
+111:     allowed = {
+112:         "motor": "motor",
+113:         "waste": "waste",
+114:         "construction": "construction",
+115:         "pool": "pool",
+116:         "government": "government",
+117:         "other": "other",
+118:     }
+119: 
+120:     industry = allowed.get(industry_name)
+121: 
+122:     if not industry:
+123:         return redirect("product_list")
+124: 
+125:     from django.http import HttpResponseRedirect
+126:     from django.urls import reverse
+127: 
+128:     url = reverse("product_list") + "?industry=" + industry
+129:     search = request.GET.get("search", "").strip()
+130: 
+131:     if search:
+132:         from urllib.parse import quote
+133:         url += "&search=" + quote(search)
+134: 
+135:     return HttpResponseRedirect(url)
+136: 
+137: def product_detail(request, product_id):
+138:     import re
+139: 
+140:     product = get_object_or_404(Product, id=product_id)
+141:     context = {"product": product}
+142: 
+143:     code = str(getattr(product, "product_code", "") or "").upper()
+144:     category = str(getattr(product, "category", "") or "").strip().lower()
+145: 
+146:     if category == "construction" and re.fullmatch(r"C\d{3}", code):
+147:         description = str(getattr(product, "description", "") or "")
+148:         lines = description.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+149: 
+150:         label_map = {
+151:             "standard size": "standard_size",
+152:             "primary application": "application",
+153:             "buyer's notes": "buyer_notes",
+154:             "what to include / buyer's notes": "buyer_notes",
+155:             "what to include / buyerâ€™s notes": "buyer_notes",
+156:             "ideal material": "ideal_material",
+157:             "finish": "finish",
+158:             "adhesive": "adhesive",
+159:             "printing method": "printing_method",
+160:         }
+161: 
+162:         def normalize_label(value):
+163:             return re.sub(r"\s+", " ", value.strip().rstrip(":")).lower()
+164: 
+165:         parsed = {}
+166:         description_lines = []
+167:         current_field = None
+168: 
+169:         for line in lines:
+170:             stripped = line.strip()
+171: 
+172:             # Handle labels written on their own line, with or without a colon.
+173:             heading_match = re.match(r"^([^:]+?)\s*:\s*(.*)$", stripped)
+174:             if heading_match:
+175:                 possible_label = normalize_label(heading_match.group(1))
+176:                 if possible_label in label_map:
+177:                     current_field = label_map[possible_label]
+178:                     value = heading_match.group(2).strip()
+179:                     if value:
+180:                         parsed.setdefault(current_field, []).append(value)
+181:                     continue
+182: 
+
+======================================================================
+FILE: templates/products/home.html
+======================================================================
+
+--- Lines 1380-1410 ---
+1380: 
+1381:                     <p class="hero-description">
+1382:                         Commercial decals, equipment identification labels,
+1383:                         safety graphics and custom industrial printing built
+1384:                         for demanding applications.
+1385:                     </p>
+1386: 
+1387:                     <div class="hero-buttons">
+1388:                         <a href="{% url 'shipping_quote' %}" class="button button-orange">
+1389:                             REQUEST A QUOTE <span aria-hidden="true">→</span>
+1390:                         </a>
+1391: 
+1392:                         <a href="{% url 'product_list' %}" class="button button-outline-light">
+1393:                             EXPLORE PRODUCTS <span aria-hidden="true">→</span>
+1394:                         </a>
+1395:                     </div>
+1396: 
+1397:                     <div class="hero-note">
+1398:                         <span>Commercial printing solutions</span>
+1399:                         <span>Custom project support</span>
+1400:                         <span>Products for working industries</span>
+1401:                     </div>
+1402: 
+1403:                 </div>
+1404:             </div>
+1405:         </section>
+1406: 
+1407:         <!-- TRUST STRIP -->
+1408:         <section class="trust-strip" aria-label="Our capabilities">
+1409:             <div class="container trust-inner">
+1410:                 <div class="trust-item">
+
+--- Lines 1590-1700 ---
+1590:                                 Make vehicles, equipment and facilities
+1591:                                 easier to identify with purpose-built graphics.
+1592:                             </p>
+1593:                         </div>
+1594:                     </article>
+1595: 
+1596:                     <article class="why-card">
+1597:                         <div class="why-number">03</div>
+1598:                         <div>
+1599:                             <h3>Support for Custom Requirements</h3>
+1600:                             <p>
+1601:                                 Share your specifications and artwork so
+1602:                                 your team can review your particular project.
+1603:                             </p>
+1604:                         </div>
+1605:                     </article>
+1606:                 </div>
+1607: 
+1608:             </div>
+1609:         </section>
+1610: 
+1611:         <!-- FEATURED PRODUCTS -->
+1612:         <section class="section section-light" id="featured-products">
+1613:             <div class="container">
+1614: 
+1615:                 <div class="heading-row">
+1616:                     <div class="section-heading">
+1617:                         <div class="eyebrow">Featured Selection</div>
+1618:                         <h2>Find the right product for the job.</h2>
+1619:                         <p>
+1620:                             Explore a selection from our product catalogue.
+1621:                             Open a product for its details or browse the
+1622:                             complete collection.
+1623:                         </p>
+1624:                     </div>
+1625: 
+1626:                     <a href="{% url 'product_list' %}" class="text-link">
+1627:                         VIEW FULL CATALOGUE <span aria-hidden="true">→</span>
+1628:                     </a>
+1629:                 </div>
+1630: 
+1631:                 <div class="product-grid">
+1632: 
+1633:                     {% for product in products|slice:":6" %}
+1634:                     <article class="product-card">
+1635: 
+1636:                         <a
+1637:                             href="{% url 'product_detail' product.id %}"
+1638:                             class="product-image"
+1639:                             aria-label="View {{ product.name }}"
+1640:                         >
+1641:                             {% if product.image %}
+1642:                                 <img
+1643:                                     src="{{ product.image.url }}"
+1644:                                     alt="{{ product.name }}"
+1645:                                     loading="lazy"
+1646:                                 >
+1647:                             {% else %}
+1648:                                 <img
+1649:                                     src="{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}"
+1650:                                     alt="{{ product.name }}"
+1651:                                     loading="lazy"
+1652:                                 >
+1653:                             {% endif %}
+1654:                         </a>
+1655: 
+1656:                         <div class="product-body">
+1657: 
+1658:                             {% if product.code %}
+1659:                                 <div class="product-code">
+1660:                                     PRODUCT {{ product.code }}
+1661:                                 </div>
+1662:                             {% elif product.product_code %}
+1663:                                 <div class="product-code">
+1664:                                     PRODUCT {{ product.product_code }}
+1665:                                 </div>
+1666:                             {% else %}
+1667:                                 <div class="product-code">THE LABEL GROUP</div>
+1668:                             {% endif %}
+1669: 
+1670:                             <h3>{{ product.name }}</h3>
+1671: 
+1672:                             {% if product.description %}
+1673:                                 <p>{{ product.description|truncatewords:18 }}</p>
+1674:                             {% else %}
+1675:                                 <p>
+1676:                                     A professional industrial printing
+1677:                                     and identification solution for
+1678:                                     commercial applications.
+1679:                                 </p>
+1680:                             {% endif %}
+1681: 
+1682:                             <a
+1683:                                 href="{% url 'product_detail' product.id %}"
+1684:                                 class="product-button"
+1685:                             >
+1686:                                 VIEW PRODUCT <span aria-hidden="true">→</span>
+1687:                             </a>
+1688: 
+1689:                         </div>
+1690:                     </article>
+1691:                     {% empty %}
+1692:                     <div class="empty-products">
+1693:                         <h3>No featured products are available yet.</h3>
+1694:                         <p>Visit the catalogue to explore available products.</p>
+1695:                         <a href="{% url 'product_list' %}" class="button button-orange">
+1696:                             BROWSE PRODUCTS
+1697:                         </a>
+1698:                     </div>
+1699:                     {% endfor %}
+1700: 
+
+--- Lines 1825-1865 ---
+1825: 
+1826:                 <div class="footer-column">
+1827:                     <h3>Quick Links</h3>
+1828:                     <a href="{% url 'home' %}">Home</a>
+1829:                     <a href="{% url 'product_list' %}">All Products</a>
+1830:                     <a href="{% url 'shipping_quote' %}">Request a Quote</a>
+1831:                     <a href="{% url 'custom_order' %}">Custom Orders</a>
+1832:                     <a href="{% url 'shipping' %}">Shipping Information</a>
+1833:                     <a href="{% url 'quote_cart' %}">Quote Cart</a>
+1834:                     <a href="/staff/login/">Staff Login</a>
+1835:                 </div>
+1836: 
+1837:                 <div class="footer-column">
+1838:                     <h3>Industries</h3>
+1839:                     <a href="{% url 'industry_products' 'motor' %}">Truck &amp; Motor</a>
+1840:                     <a href="{% url 'industry_products' 'waste' %}">Waste Companies</a>
+1841:                     <a href="{% url 'industry_products' 'construction' %}">Construction</a>
+1842:                     <a href="{% url 'industry_products' 'pool' %}">Pool Companies</a>
+1843:                     <a href="{% url 'industry_products' 'government' %}">Government Contractors</a>
+1844:                     <a href="{% url 'industry_products' 'other' %}">Other Products</a>
+1845:                 </div>
+1846: 
+1847:                 <div class="footer-column">
+1848:                     <h3>Contact Us</h3>
+1849: 
+1850:                     <a href="tel:+14137316700">
+1851:                         Phone: 413-731-6700
+1852:                     </a>
+1853: 
+1854:                     <a href="mailto:labelgroup@comcast.net">
+1855:                         Email: labelgroup@comcast.net
+1856:                     </a>
+1857: 
+1858:                     <a href="https://maps.google.com/?q=580+St.+James+Avenue+Springfield+MA+01109">
+1859:                         580 St. James Avenue,
+1860:                         Springfield, MA 01109, USA
+1861:                     </a>
+1862:                 </div>
+1863: 
+1864:             </div>
+1865: 
+
+======================================================================
+FILE: templates/products/product_list.html
+======================================================================
+1: ﻿
+2: {% load static %}
+3: <!DOCTYPE html>
+4: <html lang="en">
+5: <head>
+6:     <meta charset="UTF-8">
+7:     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+8:     <meta name="theme-color" content="#0b1f3a">
+9:     <title>THE LABEL GROUP | Industrial Prints &amp; Decals</title>
+10: 
+11:     <style>
+12:         :root {
+13:             --navy: #0b1f3a;
+14:             --navy-dark: #06152a;
+15:             --orange: #f47b20;
+16:             --orange-dark: #d9620d;
+17:             --light: #f5f7fa;
+18:             --border: #e3e7ec;
+19:             --text: #172033;
+20:             --muted: #687386;
+21:             --white: #fff;
+22:         }
+23: 
+24:         * { box-sizing: border-box; }
+25: 
+26:         html {
+27:             scroll-behavior: smooth;
+28:             scroll-padding-top: 120px;
+29:         }
+30: 
+31:         body {
+32:             margin: 0;
+33:             overflow-x: hidden;
+34:             font-family: Arial, Helvetica, sans-serif;
+35:             background: var(--light);
+36:             color: var(--text);
+37:         }
+38: 
+39:         a { text-decoration: none; color: inherit; }
+40: 
+41:         .topbar {
+42:             background: var(--navy-dark);
+43:             color: #fff;
+44:             text-align: center;
+45:             padding: 9px 16px;
+46:             font-size: 12px;
+47:             letter-spacing: .4px;
+48:         }
+49: 
+50:         .site-header {
+51:             background: #fff;
+52:             border-bottom: 1px solid var(--border);
+53:             position: sticky;
+54:             top: 0;
+55:             z-index: 1000;
+56:         }
+57: 
+58:         .header-inner {
+59:             max-width: 1250px;
+60:             margin: auto;
+61:             padding: 14px 24px;
+62:             display: flex;
+63:             align-items: center;
+64:             gap: 24px;
+65:         }
+66: 
+67:         .brand {
+68:             display: flex;
+69:             align-items: center;
+70:             flex-shrink: 0;
+71:         }
+72: 
+73:         .brand img {
+74:             display: block;
+75:             width: 220px;
+76:             max-width: 100%;
+77:             max-height: 58px;
+78:             object-fit: contain;
+79:         }
+80: 
+81:         .main-nav {
+82:             display: flex;
+83:             align-items: center;
+84:             justify-content: flex-end;
+85:             gap: 5px;
+86:             flex: 1;
+87:             flex-wrap: wrap;
+88:         }
+89: 
+90:         .main-nav a {
+91:             padding: 10px 11px;
+92:             font-size: 11px;
+93:             font-weight: 800;
+94:             letter-spacing: .25px;
+95:             color: var(--navy);
+96:             border-radius: 5px;
+97:         }
+98: 
+99:         .main-nav a:hover {
+100:             background: #f2f4f7;
+101:             color: var(--orange-dark);
+102:         }
+103: 
+104:         .main-nav .quote-link {
+105:             background: var(--orange);
+106:             color: #fff;
+107:         }
+108: 
+109:         .main-nav .quote-link:hover {
+110:             background: var(--orange-dark);
+111:             color: #fff;
+112:         }
+113: 
+114:         .catalogue-hero {
+115:             background:
+116:                 linear-gradient(110deg, rgba(6,21,42,.96), rgba(11,31,58,.88)),
+117:                 url("{% static 'products/Custom Industrial Sticker Catalog Collage.png' %}")
+118:                 center/cover;
+119:             color: #fff;
+120:             padding: 58px 24px;
+121:         }
+122: 
+123:         .hero-inner {
+124:             max-width: 1250px;
+125:             margin: auto;
+126:         }
+127: 
+128:         .eyebrow {
+129:             color: #ffad6d;
+130:             font-size: 12px;
+131:             font-weight: 800;
+132:             letter-spacing: 1.7px;
+133:             text-transform: uppercase;
+134:             margin-bottom: 12px;
+135:         }
+136: 
+137:         .catalogue-hero h1 {
+138:             margin: 0 0 14px;
+139:             max-width: 800px;
+140:             font-size: clamp(34px, 5vw, 58px);
+141:             line-height: 1.08;
+142:         }
+143: 
+144:         .catalogue-hero p {
+145:             margin: 0;
+146:             max-width: 700px;
+147:             color: #dce4ef;
+148:             font-size: 16px;
+149:             line-height: 1.7;
+150:         }
+151: 
+152:         .catalogue-shell {
+153:             max-width: 1250px;
+154:             margin: auto;
+155:             padding: 32px 24px 60px;
+156:         }
+157: 
+158:         .catalogue-toolbar {
+159:             background: #fff;
+160:             border: 1px solid var(--border);
+161:             border-radius: 12px;
+162:             padding: 18px;
+163:             display: flex;
+164:             align-items: center;
+165:             justify-content: space-between;
+166:             gap: 18px;
+167:             margin-bottom: 20px;
+168:             box-shadow: 0 4px 18px rgba(6,21,42,.05);
+169:         }
+170: 
+171:         .catalogue-count strong {
+172:             color: var(--navy);
+173:             font-size: 18px;
+174:         }
+175: 
+176:         .catalogue-count span {
+177:             display: inline-block;
+178:             margin-top: 5px;
+179:             color: var(--muted);
+180:             font-size: 13px;
+181:         }
+182: 
+183:         .search-form {
+184:             display: flex;
+185:             gap: 8px;
+186:             width: min(430px, 100%);
+187:         }
+188: 
+189:         .search-form input {
+190:             flex: 1;
+191:             min-width: 0;
+192:             border: 1px solid #ccd3dc;
+193:             border-radius: 6px;
+194:             padding: 12px 13px;
+195:             font-size: 14px;
+196:             outline: none;
+197:         }
+198: 
+199:         .search-form input:focus {
+200:             border-color: var(--orange);
+201:         }
+202: 
+203:         .search-form button {
+204:             border: 0;
+205:             background: var(--navy);
+206:             color: #fff;
+207:             border-radius: 6px;
+208:             padding: 0 18px;
+209:             font-weight: 800;
+210:             cursor: pointer;
+211:         }
+212: 
+213:         .search-form button:hover {
+214:             background: var(--orange-dark);
+215:         }
+216: 
+217:         .category-panel {
+218:             background: #fff;
+219:             border: 1px solid var(--border);
+220:             border-radius: 12px;
+221:             padding: 18px;
+222:             margin-bottom: 28px;
+223:             box-shadow: 0 4px 18px rgba(6,21,42,.04);
+224:         }
+225: 
+226:         .category-title {
+227:             margin: 0 0 13px;
+228:             font-size: 12px;
+229:             color: var(--muted);
+230:             font-weight: 800;
+231:             letter-spacing: 1px;
+232:             text-transform: uppercase;
+233:         }
+234: 
+235:         .categories {
+236:             display: grid;
+237:             grid-template-columns: repeat(6, minmax(0, 1fr));
+238:             gap: 8px;
+239:         }
+240: 
+241:         .category {
+242:             border: 1px solid #d7dde5;
+243:             background: #fff;
+244:             color: var(--navy);
+245:             min-height: 48px;
+246:             display: flex;
+247:             align-items: center;
+248:             justify-content: center;
+249:             text-align: center;
+250:             padding: 9px;
+251:             border-radius: 6px;
+252:             font-size: 11px;
+253:             font-weight: 800;
+254:             transition: .18s ease;
+255:         }
+256: 
+257:         .category:hover {
+258:             border-color: var(--orange);
+259:             color: var(--orange-dark);
+260:             transform: translateY(-1px);
+261:         }
+262: 
+263:         .category.active {
+264:             background: var(--orange);
+265:             border-color: var(--orange);
+266:             color: #fff;
+267:         }
+268: 
+269:         .results-heading {
+270:             display: flex;
+271:             justify-content: space-between;
+272:             align-items: center;
+273:             gap: 15px;
+274:             margin: 0 0 15px;
+275:         }
+276: 
+277:         .results-heading h2 {
+278:             margin: 0;
+279:             font-size: 22px;
+280:             color: var(--navy);
+281:         }
+282: 
+283:         .results-heading span {
+284:             font-size: 12px;
+285:             color: var(--muted);
+286:             text-align: right;
+287:         }
+288: 
+289:         .product-grid {
+290:             display: grid;
+291:             grid-template-columns: repeat(4, minmax(0, 1fr));
+292:             align-items: stretch;
+293:             gap: 18px;
+294:         }
+295: 
+296:         .product-card {
+297:             background: #fff;
+298:             border: 1px solid var(--border);
+299:             border-radius: 10px;
+300:             overflow: hidden;
+301:             display: flex;
+302:             flex-direction: column;
+303:             min-width: 0;
+304:             height: 100%;
+305:             transition: transform .18s ease, box-shadow .18s ease;
+306:         }
+307: 
+308:         .product-card:hover {
+309:             transform: translateY(-3px);
+310:             box-shadow: 0 12px 28px rgba(6,21,42,.10);
+311:         }
+312: 
+313:         .product-image {
+314:             height: 340px;
+315:             flex-shrink: 0;
+316:             background: #fff;
+317:             border-bottom: 1px solid var(--border);
+318:             display: flex;
+319:             align-items: center;
+320:             justify-content: center;
+321:             padding: 10px;
+322:             overflow: hidden;
+323:         }
+324: 
+325:         .product-image img {
+326:             display: block;
+327:             width: 100%;
+328:             height: 100%;
+329:             object-fit: contain;
+330:             object-position: center;
+331:         }
+332: 
+333:         .image-placeholder {
+334:             width: 100%;
+335:             height: 100%;
+336:             display: flex;
+337:             align-items: center;
+338:             justify-content: center;
+339:             text-align: center;
+340:             padding: 25px;
+341:             color: #7a8595;
+342:             font-size: 11px;
+343:             font-weight: 800;
+344:             letter-spacing: 1px;
+345:             text-transform: uppercase;
+346:         }
+347: 
+348:         .product-content {
+349:             padding: 17px;
+350:             display: flex;
+351:             flex-direction: column;
+352:             flex: 1;
+353:         }
+354: 
+355:         .product-category {
+356:             font-size: 10px;
+357:             font-weight: 800;
+358:             color: var(--orange-dark);
+359:             text-transform: uppercase;
+360:             letter-spacing: .8px;
+361:             margin-bottom: 7px;
+362:         }
+363: 
+364:         .product-name {
+365:             color: var(--navy);
+366:             font-size: 16px;
+367:             line-height: 1.4;
+368:             margin: 0 0 8px;
+369:             overflow-wrap: anywhere;
+370:         }
+371: 
+372:         .product-code {
+373:             font-size: 11px;
+374:             color: var(--muted);
+375:             margin-bottom: 12px;
+376:         }
+377: 
+378:         .product-price {
+379:             font-size: 17px;
+380:             font-weight: 800;
+381:             color: var(--navy);
+382:             margin-top: auto;
+383:             padding-top: 8px;
+384:         }
+385: 
+386:         .old-price {
+387:             color: var(--muted);
+388:             font-size: 12px;
+389:             font-weight: 400;
+390:             text-decoration: line-through;
+391:             margin-left: 5px;
+392:         }
+393: 
+394:         .quote-note {
+395:             font-size: 11px;
+396:             color: var(--muted);
+397:             margin-top: 5px;
+398:         }
+399: 
+400:         .product-actions {
+401:             display: grid;
+402:             grid-template-columns: 1fr 1fr;
+403:             gap: 8px;
+404:             margin-top: 15px;
+405:         }
+406: 
+407:         .btn {
+408:             min-height: 40px;
+409:             border-radius: 5px;
+410:             display: flex;
+411:             align-items: center;
+412:             justify-content: center;
+413:             text-align: center;
+414:             padding: 8px 10px;
+415:             font-size: 10px;
+416:             font-weight: 900;
+417:             letter-spacing: .3px;
+418:         }
+419: 
+420:         .btn-outline {
+421:             border: 1px solid var(--navy);
+422:             color: var(--navy);
+423:             background: #fff;
+424:         }
+425: 
+426:         .btn-outline:hover {
+427:             background: var(--navy);
+428:             color: #fff;
+429:         }
+430: 
+431:         .btn-orange {
+432:             background: var(--orange);
+433:             border: 1px solid var(--orange);
+434:             color: #fff;
+435:         }
+436: 
+437:         .btn-orange:hover {
+438:             background: var(--orange-dark);
+439:             border-color: var(--orange-dark);
+440:         }
+441: 
+442:         .empty-state {
+443:             background: #fff;
+444:             border: 1px solid var(--border);
+445:             border-radius: 12px;
+446:             text-align: center;
+447:             padding: 65px 25px;
+448:         }
+449: 
+450:         .empty-state h2 {
+451:             margin: 0 0 8px;
+452:             color: var(--navy);
+453:         }
+454: 
+455:         .empty-state p {
+456:             color: var(--muted);
+457:             margin-bottom: 22px;
+458:         }
+459: 
+460:         .empty-state a {
+461:             display: inline-flex;
+462:             padding: 12px 20px;
+463:             background: var(--orange);
+464:             color: #fff;
+465:             border-radius: 5px;
+466:             font-size: 12px;
+467:             font-weight: 800;
+468:         }
+469: 
+470:         .site-footer {
+471:             background: var(--navy-dark);
+472:             color: #fff;
+473:             padding: 35px 24px 20px;
+474:         }
+475: 
+476:         .footer-inner {
+477:             max-width: 1250px;
+478:             margin: auto;
+479:             display: flex;
+480:             justify-content: space-between;
+481:             align-items: flex-start;
+482:             gap: 25px;
+483:             flex-wrap: wrap;
+484:         }
+485: 
+486:         .footer-brand {
+487:             font-size: 18px;
+488:             font-weight: 900;
+489:         }
+490: 
+491:         .footer-brand span {
+492:             display: block;
+493:             margin-top: 7px;
+494:             font-size: 10px;
+495:             color: #aeb9c9;
+496:             letter-spacing: 1.2px;
+497:         }
+498: 
+499:         .footer-links {
+500:             display: flex;
+501:             gap: 18px;
+502:             flex-wrap: wrap;
+503:             font-size: 11px;
+504:             font-weight: 700;
+505:         }
+506: 
+507:         .footer-links a:hover {
+508:             color: #ffad6d;
+509:         }
+510: 
+511:         .copyright {
+512:             max-width: 1250px;
+513:             margin: 24px auto 0;
+514:             padding-top: 16px;
+515:             border-top: 1px solid rgba(255,255,255,.15);
+516:             color: #aeb9c9;
+517:             font-size: 11px;
+518:         }
+519: 
+520:         @media (max-width: 1050px) {
+521:             .product-grid {
+522:                 grid-template-columns: repeat(3, minmax(0, 1fr));
+523:             }
+524: 
+525:             .categories {
+526:                 grid-template-columns: repeat(3, minmax(0, 1fr));
+527:             }
+528: 
+529:             .header-inner {
+530:                 flex-direction: column;
+531:                 align-items: stretch;
+532:                 gap: 12px;
+533:             }
+534: 
+535:             .brand {
+536:                 justify-content: center;
+537:             }
+538: 
+539:             .main-nav {
+540:                 justify-content: center;
+541:             }
+542:         }
+543: 
+544:         @media (max-width: 720px) {
+545:             .catalogue-toolbar {
+546:                 flex-direction: column;
+547:                 align-items: stretch;
+548:             }
+549: 
+550:             .search-form {
+551:                 width: 100%;
+552:             }
+553: 
+554:             .product-grid {
+555:                 grid-template-columns: repeat(2, minmax(0, 1fr));
+556:                 gap: 12px;
+557:             }
+558: 
+559:             .categories {
+560:                 grid-template-columns: repeat(2, minmax(0, 1fr));
+561:             }
+562: 
+563:             .product-image {
+564:                 height: 285px;
+565:             }
+566: 
+567:             .catalogue-hero {
+568:                 padding: 42px 20px;
+569:             }
+570: 
+571:             .catalogue-shell {
+572:                 padding: 24px 16px 45px;
+573:             }
+574: 
+575:             .results-heading {
+576:                 align-items: flex-start;
+577:                 flex-direction: column;
+578:             }
+579: 
+580:             .results-heading span {
+581:                 text-align: left;
+582:             }
+583:         }
+584: 
+585:         @media (max-width: 480px) {
+586:             .product-grid {
+587:                 grid-template-columns: 1fr;
+588:             }
+589: 
+590:             .product-image {
+591:                 height: 300px;
+592:             }
+593: 
+594:             .categories {
+595:                 grid-template-columns: repeat(2, minmax(0, 1fr));
+596:             }
+597: 
+598:             .product-actions {
+599:                 grid-template-columns: 1fr 1fr;
+600:             }
+601: 
+602:             .main-nav {
+603:                 gap: 2px;
+604:             }
+605: 
+606:             .main-nav a {
+607:                 font-size: 10px;
+608:                 padding: 8px;
+609:             }
+610: 
+611:             .brand img {
+612:                 width: 190px;
+613:             }
+614: 
+615:             .footer-links {
+616:                 gap: 12px;
+617:             }
+618:         }
+619:     
+620: /* The Label Group contact strip */
+621: .tlg-contact-strip {
+622:     display: flex;
+623:     align-items: center;
+624:     justify-content: center;
+625:     flex-wrap: wrap;
+626:     gap: 8px 14px;
+627:     padding: 10px 16px;
+628:     background: #f4f7fb;
+629:     color: #0b1f3a;
+630:     border-bottom: 1px solid #dce3ec;
+631:     font-size: 13px;
+632:     text-align: center;
+633: }
+634: .tlg-contact-strip a {
+635:     color: #0b1f3a;
+636:     font-weight: 600;
+637:     text-decoration: none;
+638: }
+639: .tlg-contact-strip a:hover {
+640:     color: #d9620d;
+641:     text-decoration: underline;
+642: }
+643: .tlg-contact-separator {
+644:     color: #f47b20;
+645: }
+646: @media (max-width: 480px) {
+647:     .tlg-contact-strip {
+648:         gap: 7px 10px;
+649:         font-size: 12px;
+650:     }
+651: }
+652: 
+653: /* ===== THE LABEL GROUP: PROFESSIONAL HOMEPAGE POLISH ===== */
+654: :root {
+655:     --tlg-navy: #0b1f3a;
+656:     --tlg-navy-dark: #06152a;
+657:     --tlg-orange: #f47b20;
+658:     --tlg-orange-dark: #d9620d;
+659:     --tlg-text: #172334;
+660:     --tlg-muted: #657286;
+661:     --tlg-border: #e3e8ef;
+662:     --tlg-surface: #f5f7fa;
+663:     --tlg-white: #ffffff;
+664: }
+665: 
+666: html {
+667:     scroll-behavior: smooth;
+668:     scroll-padding-top: 110px;
+669: }
+670: 
+671: body {
+672:     margin: 0;
+673:     background: #ffffff;
+674:     color: var(--tlg-text);
+675:     font-family: Arial, Helvetica, sans-serif;
+676:     line-height: 1.55;
+677:     -webkit-font-smoothing: antialiased;
+678: }
+679: 
+680: img {
+681:     max-width: 100%;
+682: }
+683: 
+684: a {
+685:     transition: color .18s ease, background-color .18s ease,
+686:                 border-color .18s ease, box-shadow .18s ease;
+687: }
+688: 
+689: /* Top message bar */
+690: .topbar {
+691:     background: var(--tlg-navy-dark);
+692:     color: #ffffff;
+693:     padding: 9px 20px;
+694:     text-align: center;
+695:     font-size: 12px;
+696:     font-weight: 600;
+697:     letter-spacing: .035em;
+698: }
+699: 
+700: /* Main header and brand */
+701: header.header,
+702: header {
+703:     background: #ffffff;
+704: }
+705: 
+706: header.header {
+707:     position: relative;
+708:     z-index: 20;
+709:     border-bottom: 1px solid var(--tlg-border);
+710: }
+711: 
+712: header .brand {
+713:     display: inline-flex;
+714:     align-items: center;
+715:     flex-shrink: 0;
+716:     text-decoration: none;
+717: }
+718: 
+719: header .brand img {
+720:     display: block;
+721:     width: auto;
+722:     max-width: 250px;
+723:     max-height: 76px;
+724:     object-fit: contain;
+725: }
+726: 
+727: /* Navigation */
+728: header nav {
+729:     display: flex;
+730:     align-items: center;
+731:     justify-content: center;
+732:     flex-wrap: wrap;
+733:     gap: 5px;
+734: }
+735: 
+736: header nav a {
+737:     display: inline-flex;
+738:     align-items: center;
+739:     justify-content: center;
+740:     padding: 12px 14px;
+741:     color: var(--tlg-navy);
+742:     font-size: 12px;
+743:     font-weight: 700;
+744:     letter-spacing: .035em;
+745:     text-decoration: none;
+746:     border-radius: 5px;
+747: }
+748: 
+749: header nav a:hover {
+750:     background: #f1f4f8;
+751:     color: var(--tlg-orange-dark);
+752: }
+753: 
+754: header nav a.quote-link,
+755: header nav a.nav-cta {
+756:     background: var(--tlg-orange);
+757:     color: #ffffff;
+758:     border-radius: 5px;
+759:     padding-left: 17px;
+760:     padding-right: 17px;
+761: }
+762: 
+763: header nav a.quote-link:hover,
+764: header nav a.nav-cta:hover {
+765:     background: var(--tlg-orange-dark);
+766:     color: #ffffff;
+767: }
+768: 
+769: /* Page width and headings */
+770: main {
+771:     min-width: 0;
+772: }
+773: 
+774: main > section,
+775: main > .section,
+776: main > div.section {
+777:     box-sizing: border-box;
+778: }
+779: 
+780: h1, h2, h3, h4 {
+781:     color: var(--tlg-navy);
+782:     line-height: 1.2;
+783:     overflow-wrap: anywhere;
+784: }
+785: 
+786: h1 {
+787:     letter-spacing: -.035em;
+788: }
+789: 
+790: h2 {
+791:     letter-spacing: -.025em;
+792: }
+793: 
+794: p {
+795:     overflow-wrap: anywhere;
+796: }
+797: 
+798: /* Catalogue title and introductory copy */
+799: #catalogue {
+800:     scroll-margin-top: 110px;
+801: }
+802: 
+803: #catalogue h1,
+804: #catalogue h2,
+805: .catalogue h1,
+806: .catalogue h2,
+807: .catalogue-header h1,
+808: .catalogue-header h2,
+809: .catalogue-intro h1,
+810: .catalogue-intro h2 {
+811:     margin-top: 0;
+812:     margin-bottom: 12px;
+813:     color: var(--tlg-navy);
+814: }
+815: 
+816: #catalogue p,
+817: .catalogue-intro p {
+818:     color: var(--tlg-muted);
+819:     max-width: 760px;
+820: }
+821: 
+822: /* Catalogue and industry filters */
+823: .catalogue-button {
+824:     margin: 28px auto 10px;
+825:     text-align: center;
+826: }
+827: 
+828: button,
+829: input,
+830: select,
+831: textarea {
+832:     font: inherit;
+833: }
+834: 
+835: input[type="search"],
+836: input[type="text"],
+837: select {
+838:     min-height: 44px;
+839:     box-sizing: border-box;
+840:     border: 1px solid #d6dde7;
+841:     border-radius: 6px;
+842:     background: #ffffff;
+843:     color: var(--tlg-text);
+844: }
+845: 
+846: input[type="search"]:focus,
+847: input[type="text"]:focus,
+848: select:focus,
+849: textarea:focus {
+850:     outline: 3px solid rgba(244, 123, 32, .18);
+851:     border-color: var(--tlg-orange);
+852: }
+853: 
+854: button,
+855: .btn,
+856: .product-btn,
+857: a.btn,
+858: a.quote-link {
+859:     cursor: pointer;
+860: }
+861: 
+862: .btn,
+863: button[type="submit"],
+864: .product-btn,
+865: a.product-btn {
+866:     border-radius: 5px;
+867:     font-weight: 700;
+868:     text-decoration: none;
+869: }
+870: 
+871: .btn-orange,
+872: button[type="submit"] {
+873:     background: var(--tlg-orange);
+874:     color: #ffffff;
+875:     border: 1px solid var(--tlg-orange);
+876: }
+877: 
+878: .btn-orange:hover,
+879: button[type="submit"]:hover {
+880:     background: var(--tlg-orange-dark);
+881:     border-color: var(--tlg-orange-dark);
+882: }
+883: 
+884: /* Product catalogue grid */
+885: .product-grid,
+886: .products-grid,
+887: .catalogue-grid,
+888: .product-list {
+889:     display: grid;
+890:     grid-template-columns: repeat(4, minmax(0, 1fr));
+891:     align-items: stretch;
+892:     gap: 22px;
+893:     width: 100%;
+894:     box-sizing: border-box;
+895: }
+896: 
+897: /* Individual product cards */
+898: .product-card,
+899: .product-item,
+900: .product-grid > article,
+901: .products-grid > article,
+902: .catalogue-grid > article {
+903:     min-width: 0;
+904:     height: 100%;
+905:     box-sizing: border-box;
+906:     overflow: hidden;
+907:     background: #ffffff;
+908:     border: 1px solid var(--tlg-border);
+909:     border-radius: 9px;
+910:     box-shadow: 0 3px 12px rgba(11, 31, 58, .045);
+911:     transition: transform .18s ease, box-shadow .18s ease,
+912:                 border-color .18s ease;
+913: }
+914: 
+915: .product-card:hover,
+916: .product-item:hover,
+917: .product-grid > article:hover,
+918: .products-grid > article:hover,
+919: .catalogue-grid > article:hover {
+920:     transform: translateY(-3px);
+921:     border-color: #cbd5e1;
+922:     box-shadow: 0 10px 25px rgba(11, 31, 58, .09);
+923: }
+924: 
+925: /* Product image areas */
+926: .product-image,
+927: .product-card .product-image,
+928: .product-item .product-image {
+929:     display: flex;
+930:     align-items: center;
+931:     justify-content: center;
+932:     min-height: 190px;
+933:     max-height: 245px;
+934:     padding: 16px;
+935:     box-sizing: border-box;
+936:     overflow: hidden;
+937:     background: #f7f8fa;
+938:     border-bottom: 1px solid #edf0f4;
+939: }
+940: 
+941: .product-image img,
+942: .product-card img,
+943: .product-item img {
+944:     display: block;
+945:     width: 100%;
+946:     max-width: 100%;
+947:     height: 190px;
+948:     object-fit: contain;
+949:     object-position: center;
+950: }
+951: 
+952: .product-card > a,
+953: .product-item > a {
+954:     text-decoration: none;
+955: }
+956: 
+957: /* Product information */
+958: .product-body,
+959: .product-info,
+960: .product-details,
+961: .product-content {
+962:     min-width: 0;
+963:     padding: 16px;
+964:     box-sizing: border-box;
+965: }
+966: 
+967: .product-code {
+968:     margin-bottom: 6px;
+969:     color: #7b8797;
+970:     font-size: 11px;
+971:     font-weight: 700;
+972:     letter-spacing: .04em;
+973:     text-transform: uppercase;
+974: }
+975: 
+976: .product-industry,
+977: .product-category,
+978: .product-type {
+979:     display: inline-block;
+980:     margin-bottom: 8px;
+981:     color: #59677a;
+982:     font-size: 11px;
+983:     font-weight: 700;
+984:     letter-spacing: .035em;
+985:     text-transform: uppercase;
+986: }
+987: 
+988: .product-card h3,
+989: .product-item h3,
+990: .product-body h3,
+991: .product-info h3,
+992: .product-details h3 {
+993:     margin: 0 0 10px;
+994:     color: var(--tlg-navy);
+995:     font-size: 15px;
+996:     line-height: 1.4;
+997:     font-weight: 700;
+998: }
+999: 
+1000: .product-price,
+1001: .price {
+1002:     margin: 10px 0 14px;
+1003:     color: var(--tlg-navy);
+1004:     font-size: 17px;
+1005:     font-weight: 800;
+1006: }
+1007: 
+1008: .product-btn,
+1009: .product-card .btn,
+1010: .product-card a,
+1011: .product-item .btn {
+1012:     overflow-wrap: anywhere;
+1013: }
+1014: 
+1015: .product-btn,
+1016: a.product-btn {
+1017:     display: flex;
+1018:     align-items: center;
+1019:     justify-content: center;
+1020:     width: 100%;
+1021:     min-height: 42px;
+1022:     padding: 10px 12px;
+1023:     box-sizing: border-box;
+1024:     background: var(--tlg-navy);
+1025:     border: 1px solid var(--tlg-navy);
+1026:     color: #ffffff;
+1027:     text-align: center;
+1028:     font-size: 11px;
+1029:     letter-spacing: .035em;
+1030: }
+1031: 
+1032: .product-btn:hover,
+1033: a.product-btn:hover {
+1034:     background: var(--tlg-orange);
+1035:     border-color: var(--tlg-orange);
+1036:     color: #ffffff;
+1037: }
+1038: 
+1039: /* Quote actions inside cards */
+1040: .product-card form,
+1041: .product-item form {
+1042:     margin-top: 8px;
+1043: }
+1044: 
+1045: .product-card form button,
+1046: .product-item form button,
+1047: .product-card .add-to-quote,
+1048: .product-item .add-to-quote {
+1049:     width: 100%;
+1050:     min-height: 40px;
+1051:     padding: 9px 12px;
+1052:     border: 1px solid var(--tlg-orange);
+1053:     border-radius: 5px;
+1054:     background: #ffffff;
+1055:     color: var(--tlg-orange-dark);
+1056:     font-size: 11px;
+1057:     font-weight: 700;
+1058: }
+1059: 
+1060: .product-card form button:hover,
+1061: .product-item form button:hover,
+1062: .product-card .add-to-quote:hover,
+1063: .product-item .add-to-quote:hover {
+1064:     background: var(--tlg-orange);
+1065:     color: #ffffff;
+1066: }
+1067: 
+1068: /* Main catalogue breathing room */
+1069: #catalogue,
+1070: .catalogue,
+1071: .catalogue-section {
+1072:     padding-top: 34px;
+1073:     padding-bottom: 44px;
+1074: }
+1075: 
+1076: #catalogue .section-header,
+1077: .catalogue .section-header {
+1078:     margin-bottom: 24px;
+1079: }
+1080: 
+1081: /* Call to action and footer */
+1082: .cta,
+1083: section.cta {
+1084:     background: var(--tlg-navy);
+1085:     color: #ffffff;
+1086: }
+1087: 
+1088: .cta h2,
+1089: .cta h3,
+1090: .cta p {
+1091:     color: #ffffff;
+1092: }
+1093: 
+1094: footer {
+1095:     background: var(--tlg-navy-dark);
+1096:     color: #d5deea;
+1097: }
+1098: 
+1099: footer a {
+1100:     color: #d5deea;
+1101:     text-decoration: none;
+1102: }
+1103: 
+1104: footer a:hover {
+1105:     color: #ffffff;
+1106: }
+1107: 
+1108: footer .copyright {
+1109:     border-top-color: rgba(255,255,255,.12);
+1110: }
+1111: 
+1112: /* Prevent long product names and buttons from breaking the layout */
+1113: .product-card *,
+1114: .product-item * {
+1115:     min-width: 0;
+1116:     max-width: 100%;
+1117:     box-sizing: border-box;
+1118: }
+1119: 
+1120: .product-card img,
+1121: .product-item img {
+1122:     max-width: 100%;
+1123: }
+1124: 
+1125: /* Tablet */
+1126: @media (max-width: 1100px) {
+1127:     .product-grid,
+1128:     .products-grid,
+1129:     .catalogue-grid,
+1130:     .product-list {
+1131:         grid-template-columns: repeat(3, minmax(0, 1fr));
+1132:         gap: 18px;
+1133:     }
+1134: 
+1135:     header .brand img {
+1136:         max-width: 220px;
+1137:         max-height: 68px;
+1138:     }
+1139: 
+1140:     header nav {
+1141:         gap: 2px;
+1142:     }
+1143: 
+1144:     header nav a {
+1145:         padding: 10px;
+1146:         font-size: 11px;
+1147:     }
+1148: }
+1149: 
+1150: /* Small tablet and large phone */
+1151: @media (max-width: 760px) {
+1152:     .product-grid,
+1153:     .products-grid,
+1154:     .catalogue-grid,
+1155:     .product-list {
+1156:         grid-template-columns: repeat(2, minmax(0, 1fr));
+1157:         gap: 14px;
+1158:     }
+1159: 
+1160:     header .brand img {
+1161:         max-width: 190px;
+1162:         max-height: 62px;
+1163:     }
+1164: 
+1165:     header nav {
+1166:         justify-content: flex-start;
+1167:         gap: 4px;
+1168:     }
+1169: 
+1170:     header nav a {
+1171:         padding: 10px;
+1172:         font-size: 10px;
+1173:     }
+1174: 
+1175:     .product-image,
+1176:     .product-card .product-image,
+1177:     .product-item .product-image {
+1178:         min-height: 150px;
+1179:         padding: 10px;
+1180:     }
+1181: 
+1182:     .product-image img,
+1183:     .product-card img,
+1184:     .product-item img {
+1185:         height: 145px;
+1186:     }
+1187: 
+1188:     .product-body,
+1189:     .product-info,
+1190:     .product-details,
+1191:     .product-content {
+1192:         padding: 12px;
+1193:     }
+1194: 
+1195:     .product-card h3,
+1196:     .product-item h3,
+1197:     .product-body h3,
+1198:     .product-info h3 {
+1199:         font-size: 13px;
+1200:     }
+1201: }
+1202: 
+1203: /* Phone */
+1204: @media (max-width: 480px) {
+1205:     .topbar {
+1206:         padding: 9px 12px;
+1207:         font-size: 11px;
+1208:     }
+1209: 
+1210:     .product-grid,
+1211:     .products-grid,
+1212:     .catalogue-grid,
+1213:     .product-list {
+1214:         grid-template-columns: repeat(2, minmax(0, 1fr));
+1215:         gap: 10px;
+1216:     }
+1217: 
+1218:     header .brand img {
+1219:         max-width: 165px;
+1220:         max-height: 55px;
+1221:     }
+1222: 
+1223:     header nav a {
+1224:         padding: 9px 8px;
+1225:         font-size: 9px;
+1226:     }
+1227: 
+1228:     .product-image,
+1229:     .product-card .product-image,
+1230:     .product-item .product-image {
+1231:         min-height: 125px;
+1232:         padding: 8px;
+1233:     }
+1234: 
+1235:     .product-image img,
+1236:     .product-card img,
+1237:     .product-item img {
+1238:         height: 120px;
+1239:     }
+1240: 
+1241:     .product-body,
+1242:     .product-info,
+1243:     .product-details,
+1244:     .product-content {
+1245:         padding: 10px;
+1246:     }
+1247: 
+1248:     .product-card h3,
+1249:     .product-item h3,
+1250:     .product-body h3,
+1251:     .product-info h3 {
+1252:         font-size: 12px;
+1253:     }
+1254: 
+1255:     .product-price,
+1256:     .price {
+1257:         font-size: 15px;
+1258:     }
+1259: 
+1260:     .product-btn,
+1261:     a.product-btn,
+1262:     .product-card form button,
+1263:     .product-item form button {
+1264:         min-height: 38px;
+1265:         padding: 8px 6px;
+1266:         font-size: 10px;
+1267:     }
+1268: }
+1269: 
+1270: /* Accessibility: avoid forced animation for users who request less motion */
+1271: @media (prefers-reduced-motion: reduce) {
+1272:     *,
+1273:     *::before,
+1274:     *::after {
+1275:         scroll-behavior: auto !important;
+1276:         transition-duration: .01ms !important;
+1277:         animation-duration: .01ms !important;
+1278:     }
+1279: }
+1280: /* ===== END THE LABEL GROUP HOMEPAGE POLISH ===== */
+1281: </style>
+1282: 
+1283: <style>
+1284: /* TLG-CONTACT-INDUSTRY-IMAGES-SPACING-FIX */
+1285: .tlg-business-contact-strip {
+1286:   display:flex !important;
+1287:   align-items:center;
+1288:   justify-content:center;
+1289:   flex-wrap:wrap;
+1290:   gap:8px 14px;
+1291:   padding:10px 16px;
+1292:   margin:0;
+1293:   background:#0b1f3a;
+1294:   color:#fff;
+1295:   font-size:14px;
+1296:   line-height:1.5;
+1297:   position:relative;
+1298:   z-index:20;
+1299: }
+1300: .tlg-business-contact-strip strong {
+1301:   color:#f47b20;
+1302:   letter-spacing:.04em;
+1303: }
+1304: .tlg-business-contact-strip a {
+1305:   color:#fff !important;
+1306:   font-weight:700;
+1307:   text-decoration:none;
+1308:   overflow-wrap:anywhere;
+1309: }
+1310: .tlg-business-contact-strip a:hover {
+1311:   color:#f47b20 !important;
+1312:   text-decoration:underline;
+1313: }
+1314: 
+1315: /* Make the five existing category images visible and consistently sized. */
+1316: a:has(img[src*="truck"]),
+1317: a:has(img[src*="waste"]),
+1318: a:has(img[src*="construction"]),
+1319: a:has(img[src*="pool"]),
+1320: a:has(img[src*="government"]) {
+1321:   display:block !important;
+1322:   width:100%;
+1323:   max-width:100%;
+1324:   margin:10px 0 0;
+1325:   overflow:hidden;
+1326: }
+1327: a:has(img[src*="truck"]) img,
+1328: a:has(img[src*="waste"]) img,
+1329: a:has(img[src*="construction"]) img,
+1330: a:has(img[src*="pool"]) img,
+1331: a:has(img[src*="government"]) img {
+1332:   display:block !important;
+1333:   visibility:visible !important;
+1334:   opacity:1 !important;
+1335:   width:100% !important;
+1336:   height:220px !important;
+1337:   max-height:220px !important;
+1338:   object-fit:cover !important;
+1339:   object-position:center;
+1340: }
+1341: 
+1342: /* Reduce excessive vertical gaps while keeping sections readable. */
+1343: section {
+1344:   scroll-margin-top:120px;
+1345: }
+1346: section h2 {
+1347:   margin-top:8px;
+1348:   margin-bottom:12px;
+1349: }
+1350: section p {
+1351:   margin-top:8px;
+1352:   margin-bottom:14px;
+1353: }
+1354: @media (min-width:700px) {
+1355:   section {
+1356:     padding-top:32px;
+1357:     padding-bottom:32px;
+1358:   }
+1359: }
+1360: @media (max-width:699px) {
+1361:   .tlg-business-contact-strip {
+1362:     gap:6px 10px;
+1363:     padding:10px 12px;
+1364:     font-size:13px;
+1365:   }
+1366:   .tlg-business-contact-strip span {
+1367:     display:none;
+1368:   }
+1369:   a:has(img[src*="truck"]) img,
+1370:   a:has(img[src*="waste"]) img,
+1371:   a:has(img[src*="construction"]) img,
+1372:   a:has(img[src*="pool"]) img,
+1373:   a:has(img[src*="government"]) img {
+1374:     height:190px !important;
+1375:     max-height:190px !important;
+1376:   }
+1377: }
+1378: /* END TLG-CONTACT-INDUSTRY-IMAGES-SPACING-FIX */
+1379: </style>
+1380: 
+1381: <style>
+1382: <style>
+1383: <style>
+1384: /* THE LABEL GROUP brand header */
+1385: a.brand {
+1386:     display: inline-flex !important;
+1387:     align-items: center !important;
+1388:     gap: 12px !important;
+1389:     text-decoration: none;
+1390:     max-width: 100%;
+1391: }
+1392: a.brand img {
+1393:     display: block !important;
+1394:     width: auto;
+1395:     max-width: 170px;
+1396:     max-height: 72px;
+1397:     height: auto;
+1398:     object-fit: contain;
+1399: }
+1400: .tlg-company-name {
+1401:     display: inline-block !important;
+1402:     visibility: visible !important;
+1403:     opacity: 1 !important;
+1404:     color: #0b1f3a !important;
+1405:     font-size: clamp(18px, 2vw, 27px) !important;
+1406:     font-weight: 900 !important;
+1407:     line-height: 1.2;
+1408:     letter-spacing: .4px;
+1409:     white-space: nowrap;
+1410: }
+1411: @media (max-width: 480px) {
+1412:     a.brand {
+1413:         gap: 8px !important;
+1414:     }
+1415:     a.brand img {
+1416:         max-width: 105px;
+1417:         max-height: 55px;
+1418:     }
+1419:     .tlg-company-name {
+1420:         font-size: 16px !important;
+1421:         white-space: normal;
+1422:     }
+1423: }
+1424: </style>
+1425: <style>
+1426: /* THE LABEL GROUP hero name */
+1427: .tlg-hero-brand {
+1428:     display: block !important;
+1429:     visibility: visible !important;
+1430:     opacity: 1 !important;
+1431:     margin: 0 0 12px !important;
+1432:     color: #f47b20 !important;
+1433:     font-size: clamp(22px, 3vw, 36px) !important;
+1434:     font-weight: 900 !important;
+1435:     line-height: 1.15 !important;
+1436:     letter-spacing: 1.2px !important;
+1437: }
+1438: </style>
+1439: </head>
+1440: 
+1441: <body>
+1442: 
+1443: <div class="topbar">
+1444:     Free quote consultation â€¢ Durable custom printing â€¢ Built for business
+1445: </div>
+1446: 
+1447: <header class="site-header">
+1448: <div class="tlg-business-contact-strip">
+1449:   <strong>CONTACT THE LABEL GROUP</strong>
+1450:   <a href="tel:+14132766427">+1 (413) 276-6427</a>
+1451:   <span aria-hidden="true">|</span>
+1452:   <a href="mailto:labelgroup@comcast.net">labelgroup@comcast.net</a>
+1453: </div>
+1454: 
+1455:     <div class="header-inner">
+1456:         <a href="{% url 'home' %}" class="brand" aria-label="The Label Group home">
+1457:             <img src="{% static 'logo 2 (1).png' %}"
+1458:                  alt="THE LABEL GROUP"
+1459:                  decoding="async"><span class="tlg-company-name">THE LABEL GROUP</span>
+1460:         </a>
+1461: 
+1462:         <nav class="main-nav" aria-label="Main navigation">
+1463:             <a href="{% url 'home' %}">HOME</a>
+1464:             <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+1465:             <a href="{% url 'shipping' %}">SHIPPING</a>
+1466:             <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+1467:             <a href="{% url 'custom_order' %}" class="quote-link">REQUEST A QUOTE</a>
+1468:             <a href="/staff/login/">STAFF LOGIN</a>
+1469:         </nav>
+1470:     </div>
+1471: </header>
+1472: <div class="tlg-contact-strip">
+1473:     <span>Contact The Label Group</span>
+1474:     <a href="tel:+14132766427" style="display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-weight:700;white-space:nowrap;">☎ +1 (413) 276-6427</a>
+1475: <a href="mailto:labelgroup@comcast.net" style="display:inline-flex;align-items:center;gap:6px;color:inherit;text-decoration:none;font-weight:700;">✉ labelgroup@comcast.net</a>
+1476:     <span class="tlg-contact-separator" aria-hidden="true">|</span>
+1477:     <a href="tel:+14137316700">413-731-6700</a>
+1478: </div>
+1479: 
+1480: <section class="catalogue-hero">
+1481:     <div class="hero-inner">
+1482:         <div class="eyebrow">Industrial Prints &amp; Decals</div>
+1483:         <div class="tlg-hero-brand">THE LABEL GROUP</div>
+1484: <h1>Shop The Label Group Catalogue</h1>
+1485:         <p>
+1486:             Explore durable identification, warning, compliance and
+1487:             commercial printing products built for demanding working environments.
+1488:         </p>
+1489:     </div>
+1490: </section>
+1491: 
+1492: <main class="catalogue-shell" id="catalogue">
+1493: 
+1494:     <div class="catalogue-toolbar">
+1495:         <div class="catalogue-count">
+1496:             <strong>{{ products|length }} products</strong><br>
+1497:             <span>
+1498:                 {% if search_query %}
+1499:                     Results for "{{ search_query }}"
+1500:                 {% elif selected_industry %}
+1501:                     Showing selected category
+1502:                 {% else %}
+1503:                     Browse the complete catalogue
+1504:                 {% endif %}
+1505:             </span>
+1506:         </div>
+1507: 
+1508:         <form method="get" action="{% url 'product_list' %}" class="search-form">
+1509:             {% if selected_industry %}
+1510:                 <input type="hidden" name="industry" value="{{ selected_industry }}">
+1511:             {% endif %}
+1512: 
+1513:             <input
+1514:                 type="search"
+1515:                 name="search"
+1516:                 value="{{ search_query|default:'' }}"
+1517:                 placeholder="Search products, codes or brands..."
+1518:                 aria-label="Search products"
+1519:             >
+1520:             <button type="submit">SEARCH</button>
+1521:         </form>
+1522:     </div>
+1523: 
+1524:     <section class="category-panel" aria-label="Product industries">
+1525:         <div class="category-title">Browse by industry</div>
+1526: 
+1527:         <div class="categories">
+1528:             <a class="category {% if selected_industry == 'motor' %}active{% endif %}"
+1529:                href="{% url 'product_list' %}?industry=motor">TRUCK &amp; MOTOR</a>
+1530: 
+1531:             <a class="category {% if selected_industry == 'waste' %}active{% endif %}"
+1532:                href="{% url 'product_list' %}?industry=waste">WASTE COMPANIES</a>
+1533: 
+1534:             <a class="category {% if selected_industry == 'construction' %}active{% endif %}"
+1535:                href="{% url 'product_list' %}?industry=construction">CONSTRUCTION</a>
+1536: 
+1537:             <a class="category {% if selected_industry == 'pool' %}active{% endif %}"
+1538:                href="{% url 'product_list' %}?industry=pool">POOL COMPANIES</a>
+1539: 
+1540:             <a class="category {% if selected_industry == 'government' %}active{% endif %}"
+1541:                href="{% url 'product_list' %}?industry=government">GOVERNMENT CONTRACTORS</a>
+1542: 
+1543:             <a class="category {% if selected_industry == 'other' %}active{% endif %}"
+1544:                href="{% url 'product_list' %}?industry=other">OTHER PRODUCTS</a>
+1545:         </div>
+1546:     </section>
+1547: 
+1548:     <div class="results-heading">
+1549:         <h2>
+1550:             {% if selected_industry %}
+1551:                 {{ selected_industry|title }} Products
+1552:             {% else %}
+1553:                 All Products
+1554:             {% endif %}
+1555:         </h2>
+1556:         <span>Professional industrial printing &amp; identification</span>
+1557:     </div>
+1558: 
+1559:     {% if products %}
+1560:         <section class="product-grid" aria-label="Products">
+1561:             {% for product in products %}
+1562:                 <article class="product-card">
+1563: 
+1564:                     <a href="{% url 'product_detail' product.id %}"
+1565:                        class="product-image"
+1566:                        aria-label="View {{ product.name }}">
+1567: 
+1568:                         {% if product.image %}
+1569:                             <img src="{{ product.image.url }}"
+1570:                                  alt="{{ product.name }}"
+1571:                                  loading="lazy"
+1572:                                  decoding="async">
+1573: 
+1574: 
+1575: 
+1576: 
+1577: 
+1578: 
+1579:                         {% else %}
+1580:                             <div class="image-placeholder">
+1581:                                 Product Image<br>Coming Soon
+1582:                             </div>
+1583:                         {% endif %}
+1584:                     </a>
+1585: 
+1586:                     <div class="product-content">
+1587:                         <div class="product-category">
+1588:                             {{ product.category|default:"Industrial Product" }}
+1589:                         </div>
+1590: 
+1591:                         <h3 class="product-name">{{ product.name }}</h3>
+1592: 
+1593:                         {% if product.product_code %}
+1594:                             <div class="product-code">
+1595:                                 Product Code: {{ product.product_code }}
+1596:                             </div>
+1597:                         {% endif %}
+1598: 
+1599:                         <div class="product-price">
+1600:                             {% if product.discount_price %}
+1601:                                 ${{ product.discount_price|floatformat:2 }}
+1602:                                 {% if product.price %}
+1603:                                     <span class="old-price">
+1604:                                         ${{ product.price|floatformat:2 }}
+1605:                                     </span>
+1606:                                 {% endif %}
+1607:                             {% elif product.price %}
+1608:                                 ${{ product.price|floatformat:2 }}
+1609:                             {% else %}
+1610:                                 Request a Quote
+1611:                             {% endif %}
+1612:                         </div>
+1613: 
+1614:                         {% if not product.price and not product.discount_price %}
+1615:                             <div class="quote-note">
+1616:                                 Contact us for product pricing.
+1617:                             </div>
+1618:                         {% endif %}
+1619: 
+1620:                         <div class="product-actions">
+1621:                             <a href="{% url 'product_detail' product.id %}"
+1622:                                class="btn btn-outline">
+1623:                                 VIEW PRODUCT
+1624:                             </a>
+1625: 
+1626:                             <form method="post" action="{% url 'add_to_cart' product.id %}" class="tlg-cart-form">{% csrf_token %}<input type="hidden" name="quantity" value="1"><button type="submit" class="btn btn-orange tlg-add-cart">ADD TO CART</button></form>
+1627:                         </div>
+1628:                     </div>
+1629:                 </article>
+1630:             {% endfor %}
+1631:         </section>
+1632:     {% else %}
+1633:         <section class="empty-state">
+1634:             <h2>No products found</h2>
+1635:             <p>
+1636:                 We couldn't find products matching your search or selected category.
+1637:             </p>
+1638:             <a href="{% url 'product_list' %}">VIEW ALL PRODUCTS</a>
+1639:         </section>
+1640:     {% endif %}
+1641: 
+1642:     <section style="margin-top:32px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:26px;">
+1643:         <h2 style="color:var(--navy);margin:0 0 8px;">
+1644:             Need a custom print or decal?
+1645:         </h2>
+1646:         <p style="color:var(--muted);line-height:1.7;margin:0 0 18px;">
+1647:             Tell us what your business needs and request a quote from The Label Group.
+1648:         </p>
+1649:         <a href="{% url 'custom_order' %}"
+1650:            class="btn btn-orange"
+1651:            style="display:inline-flex;padding:12px 20px;">
+1652:             REQUEST A QUOTE
+1653:         </a>
+1654:     </section>
+1655: 
+1656: </main>
+1657: 
+1658: <footer class="site-footer">
+1659:     <div class="footer-inner">
+1660:         <div class="footer-brand">
+1661:             THE LABEL GROUP
+1662:             <span>INDUSTRIAL PRINTS &amp; DECALS</span>
+1663:         </div>
+1664: 
+1665:         <nav class="footer-links" aria-label="Footer navigation">
+1666:             <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+1667:             <a href="{% url 'shipping' %}">SHIPPING</a>
+1668:             <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+1669:             <a href="{% url 'custom_order' %}">REQUEST A QUOTE</a>
+1670:         </nav>
+1671:     </div>
+1672: 
+1673:     <div class="copyright">
+1674:         &copy; {% now "Y" %} The Label Group Â· Industrial Prints &amp; Decals
+1675:     </div>
+1676: </footer>
+1677: 
+1678: </body>
+1679: </html>
+1680: 
+1681: 
+1682: 
+1683: <style id="TLG-PROFESSIONAL-CART-FIX">
+1684: .tlg-cart-form {
+1685:     display: flex;
+1686:     flex: 1 1 145px;
+1687:     min-width: 0;
+1688:     margin: 0;
+1689: }
+1690: .tlg-add-cart {
+1691:     display: inline-flex;
+1692:     justify-content: center;
+1693:     align-items: center;
+1694:     width: 100%;
+1695:     min-height: 44px;
+1696:     padding: 11px 14px;
+1697:     border: 0;
+1698:     border-radius: 7px;
+1699:     background: #f47b20;
+1700:     color: #fff;
+1701:     font: inherit;
+1702:     font-size: 12px;
+1703:     font-weight: 800;
+1704:     letter-spacing: .035em;
+1705:     cursor: pointer;
+1706:     transition: background .2s ease, transform .2s ease;
+1707: }
+1708: .tlg-add-cart:hover {
+1709:     background: #d9620d;
+1710:     transform: translateY(-1px);
+1711: }
+1712: .tlg-cart-form button:focus-visible {
+1713:     outline: 3px solid #0b1f3a;
+1714:     outline-offset: 3px;
+1715: }
+1716: </style>
+1717: 
+1718: 
+1719: 
+1720: 
+
+======================================================================
+FILE: templates/products/catalogue.html
+======================================================================
+NOT FOUND

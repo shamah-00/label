@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -577,7 +577,7 @@ footer {
     <nav class="top-links">
         <a href="/">Website</a>
         <a href="{% url 'staff_dashboard' %}">Dashboard</a>
-        <a href="{% url 'staff_product_list' %}">Products</a>
+        <a href="{% url 'staff_products' %}">Products</a>
         <a href="{% url 'staff_logout' %}">Logout</a>
     </nav>
 
@@ -960,7 +960,7 @@ footer {
             <div class="buttons">
 
                 <a
-                    href="{% url 'staff_product_list' %}"
+                    href="{% url 'staff_products' %}"
                     class="btn btn-secondary"
                 >
                     Cancel

@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 
 <!DOCTYPE html>
 
@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+```
 <title>THE LABEL GROUP | Industrial Prints & Decals</title>
 
 <style>
@@ -371,12 +372,12 @@
     }
 
     /* INDUSTRIES */
-
     .industry-grid {
         display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr;
-        grid-auto-rows: 260px;
-        gap: 14px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-auto-rows: minmax(220px, auto);
+        gap: 18px;
+        align-items: stretch;
     }
 
     .industry-card {
@@ -384,24 +385,29 @@
         overflow: hidden;
         background: var(--navy);
         color: #fff;
-        padding: 28px;
+        padding: 30px;
+        min-height: 220px;
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 10px;
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
-        transition: .2s;
+        justify-content: center;
+        text-decoration: none;
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
     }
 
     .industry-card:first-child {
-        grid-row: span 2;
+        grid-row: auto;
     }
 
     .industry-card::before {
         content: "";
         position: absolute;
         inset: 0;
+        pointer-events: none;
         background:
-            linear-gradient(135deg, rgba(244,123,32,.25), transparent 55%),
-            linear-gradient(180deg, transparent, rgba(0,0,0,.72));
+            linear-gradient(135deg, rgba(244,123,32,.16), transparent 60%),
+            linear-gradient(180deg, rgba(6,21,42,.04), rgba(6,21,42,.35));
     }
 
     .industry-card-content {
@@ -411,32 +417,52 @@
 
     .industry-number {
         color: var(--orange);
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 900;
         letter-spacing: 2px;
-        margin-bottom: 8px;
+        margin-bottom: 14px;
     }
 
     .industry-card h3 {
-        font-size: 25px;
-        line-height: 1.15;
-        margin-bottom: 8px;
+        font-size: clamp(20px, 2vw, 25px);
+        line-height: 1.2;
+        margin-bottom: 12px;
+        color: #fff;
     }
 
     .industry-card p {
         color: #dce4ee;
-        font-size: 13px;
-        margin-bottom: 15px;
+        font-size: 14px;
+        line-height: 1.65;
+        margin-bottom: 20px;
+        max-width: 36ch;
     }
 
     .industry-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         color: #fff;
         font-size: 12px;
         font-weight: 900;
+        letter-spacing: .8px;
+    }
+
+    .industry-link::after {
+        content: "→";
+        color: var(--orange);
+        font-size: 17px;
+        transition: transform .2s ease;
     }
 
     .industry-card:hover {
-        transform: translateY(-3px);
+        transform: translateY(-4px);
+        border-color: var(--orange);
+        box-shadow: 0 14px 30px rgba(6,21,42,.16);
+    }
+
+    .industry-card:hover .industry-link::after {
+        transform: translateX(4px);
     }
 
     /* STATS */
@@ -946,405 +972,8 @@
         }
     }
 </style>
+```
 
-<style id="tlg-mobile-optimization">
-/* =========================================================
-   THE LABEL GROUP - MOBILE & PERFORMANCE OPTIMIZATION
-   ========================================================= */
-
-html {
-    width: 100%;
-    max-width: 100%;
-    overflow-x: hidden;
-}
-
-body {
-    width: 100%;
-    max-width: 100%;
-    margin: 0;
-    overflow-x: hidden;
-}
-
-img {
-    max-width: 100%;
-    height: auto;
-}
-
-section,
-header,
-footer,
-nav,
-main,
-div {
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-@media (max-width: 768px) {
-
-    body {
-        font-size: 15px;
-        overflow-x: hidden;
-    }
-
-    /* Header */
-    header {
-        width: 100%;
-        overflow: hidden;
-    }
-
-    nav {
-        width: 100%;
-        padding-left: 16px !important;
-        padding-right: 16px !important;
-    }
-
-    .nav,
-    .navbar,
-    .nav-inner,
-    .header-inner {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
-    }
-
-    /* Logo */
-    .logo img,
-    .brand img,
-    .site-logo,
-    .header-logo {
-        max-width: 180px !important;
-        height: auto !important;
-    }
-
-    /* Navigation links */
-    .navlinks,
-    .nav-links,
-    .nav-menu {
-        gap: 8px !important;
-        flex-wrap: wrap !important;
-    }
-
-    .navlinks a,
-    .nav-links a,
-    .nav-menu a {
-        font-size: 12px !important;
-        white-space: nowrap;
-    }
-
-    /* Hero */
-    .hero {
-        width: 100% !important;
-        min-height: auto !important;
-        padding: 42px 18px !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    .hero h1 {
-        font-size: clamp(30px, 9vw, 46px) !important;
-        line-height: 1.05 !important;
-        word-break: normal !important;
-    }
-
-    .hero h2 {
-        font-size: clamp(24px, 7vw, 36px) !important;
-    }
-
-    .hero p {
-        font-size: 15px !important;
-        line-height: 1.6 !important;
-    }
-
-    .hero img {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        object-fit: contain !important;
-    }
-
-    /* Buttons */
-    .btn,
-    button,
-    .button,
-    .cta,
-    .cart-btn {
-        max-width: 100%;
-        box-sizing: border-box;
-    }
-
-    /* Sections */
-    .section,
-    .about,
-    .services,
-    .products,
-    .catalogue,
-    .featured,
-    .why,
-    .custom,
-    .shipping {
-        width: 100% !important;
-        padding-left: 18px !important;
-        padding-right: 18px !important;
-        box-sizing: border-box !important;
-    }
-
-    /* Grids become single-column on small screens */
-    .grid,
-    .product-grid,
-    .products-grid,
-    .category-grid,
-    .industry-grid,
-    .services-grid,
-    .why-grid,
-    .testimonial-grid,
-    .footer-grid {
-        grid-template-columns: 1fr !important;
-        width: 100% !important;
-    }
-
-    /* Two-column layouts */
-    .why,
-    .about-inner,
-    .hero-inner,
-    .custom-inner,
-    .section-header {
-        display: block !important;
-        width: 100% !important;
-    }
-
-    /* Cards */
-    .card,
-    .product-card,
-    .category-card,
-    .industry-card,
-    .service-card,
-    .why-item,
-    .testimonial {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-    }
-
-    /* Product images */
-    .product-card img,
-    .card img,
-    .category-card img,
-    .industry-card img {
-        width: 100% !important;
-        max-width: 100% !important;
-        height: auto !important;
-        max-height: 280px !important;
-        object-fit: contain !important;
-    }
-
-    /* Tables / wide content */
-    table {
-        display: block;
-        width: 100%;
-        max-width: 100%;
-        overflow-x: auto;
-    }
-
-    /* Forms */
-    input,
-    select,
-    textarea {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-    }
-
-    /* Footer */
-    footer {
-        width: 100% !important;
-        overflow: hidden !important;
-    }
-
-    .footer-inner {
-        width: 100% !important;
-        padding: 32px 18px !important;
-        box-sizing: border-box !important;
-    }
-
-    .footer-logo {
-        max-width: 180px !important;
-        height: auto !important;
-    }
-
-    .copyright {
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        text-align: center !important;
-    }
-
-    /* Prevent long product names/text from breaking the layout */
-    h1,
-    h2,
-    h3,
-    h4,
-    p,
-    a,
-    span {
-        overflow-wrap: anywhere;
-    }
-
-    /* Reduce excessive desktop spacing */
-    .section {
-        padding-top: 42px !important;
-        padding-bottom: 42px !important;
-    }
-}
-
-/* Very small phones */
-@media (max-width: 480px) {
-
-    .hero {
-        padding: 32px 15px !important;
-    }
-
-    .hero h1 {
-        font-size: 30px !important;
-    }
-
-    .hero h2 {
-        font-size: 24px !important;
-    }
-
-    .hero p {
-        font-size: 14px !important;
-    }
-
-    .section,
-    .about,
-    .services,
-    .products,
-    .catalogue,
-    .featured,
-    .why,
-    .custom,
-    .shipping {
-        padding-left: 15px !important;
-        padding-right: 15px !important;
-    }
-
-    .btn,
-    .button,
-    .cta {
-        width: 100% !important;
-        text-align: center !important;
-    }
-}
-</style>
-
-
-<style id="TLG-HOMEPAGE-IMAGE-CLEANUP">
-/* The Label Group: consistent product image sizing */
-.products-section .product-image {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: hidden !important;
-    background: #ffffff !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    line-height: 0 !important;
-}
-
-.products-section .product-image img {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    max-width: 100% !important;
-    max-height: none !important;
-    aspect-ratio: auto !important;
-    object-fit: contain !important;
-    object-position: center !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-}
-</style>
-
-<style id="TLG-HOMEPAGE-IMAGE-CLEANUP">
-/* THE LABEL GROUP — clean, consistent product image presentation */
-.products-section .product-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: #fff;
-    box-shadow: none;
-    overflow: hidden;
-    line-height: 0;
-}
-
-.products-section .product-image img {
-    display: block;
-    width: 100%;
-    height: auto;
-    min-width: 0;
-    min-height: 0;
-    max-width: 100%;
-    max-height: none;
-    aspect-ratio: auto;
-    object-fit: contain;
-    object-position: center;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    box-shadow: none;
-}
-</style>
-<style id="TLG-CARD-IMAGE-TARGETED-FIX">
-/* The Label Group: consistent product-card image sizing */
-.product-card .product-image,
-.tlg-product-card .product-image {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    aspect-ratio: auto !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 0 !important;
-    overflow: hidden !important;
-    background: #fff !important;
-    line-height: 0 !important;
-}
-
-.product-card .product-image img,
-.tlg-product-card .product-image img {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    min-height: 0 !important;
-    max-height: none !important;
-    max-width: 100% !important;
-    object-fit: contain !important;
-    object-position: center !important;
-    aspect-ratio: auto !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    border: 0 !important;
-}
-</style>
 </head>
 
 <body>
@@ -1354,6 +983,7 @@ div {
 <div class="topbar">
     <div class="topbar-inner">
 
+```
     <div class="topbar-left">
         <a href="{% url 'shipping_quote' %}">Request a Catalog</a>
         <a href="{% url 'shipping_quote' %}">Request a Quote</a>
@@ -1365,6 +995,7 @@ div {
     </div>
 
 </div>
+```
 
 </div>
 
@@ -1372,6 +1003,7 @@ div {
 
 <header class="header">
 
+```
 <div class="header-main">
 
     <a href="{% url 'home' %}" class="logo">
@@ -1379,7 +1011,7 @@ div {
             src="{% static 'products/logo 2 (1).png' %}"
             alt="THE LABEL GROUP"
             class="logo-image"
-         loading="lazy" decoding="async">
+        >
     </a>
 
     <form class="search" method="get" action="{% url 'home' %}">
@@ -1403,6 +1035,7 @@ div {
     </a>
 
 </div>
+```
 
 </header>
 
@@ -1410,6 +1043,7 @@ div {
 
 <nav class="nav">
 
+```
 <div class="nav-inner">
 
     <div class="nav-item">
@@ -1468,6 +1102,7 @@ div {
     </div>
 
 </div>
+```
 
 </nav>
 
@@ -1475,12 +1110,13 @@ div {
 
 <section class="hero">
 
+```
 <div class="hero-inner">
 
     <div>
 
         <div class="eyebrow">
-            Industrial Prints Ã¢â‚¬Â¢ Decals Ã¢â‚¬Â¢ Identification
+            Industrial Prints â€¢ Decals â€¢ Identification
         </div>
 
         <h1>
@@ -1534,6 +1170,7 @@ div {
     </div>
 
 </div>
+```
 
 </section>
 
@@ -1541,6 +1178,7 @@ div {
 
 <section class="section" id="catalogue">
 
+```
 <div class="section-header">
 
     <div class="section-kicker">Shop by industry</div>
@@ -1663,6 +1301,7 @@ div {
     </a>
 
 </div>
+```
 
 </section>
 
@@ -1670,6 +1309,7 @@ div {
 
 <div class="stats">
 
+```
 <div class="stats-inner">
 
     <div class="stat">
@@ -1693,6 +1333,7 @@ div {
     </div>
 
 </div>
+```
 
 </div>
 
@@ -1700,6 +1341,7 @@ div {
 
 <section class="section">
 
+```
 <div class="section-header">
 
     <div class="section-kicker">Product families</div>
@@ -1780,6 +1422,7 @@ div {
     </div>
 
 </div>
+```
 
 </section>
 
@@ -1787,6 +1430,7 @@ div {
 
 <section class="products-section" id="featured">
 
+```
 <div class="section">
 
     <div class="section-header">
@@ -1817,11 +1461,9 @@ div {
                             {% if product.image %}
 
                                 <img
-                                    src="{% with trimmed_path=product.image.url|slice:":-4" %}{{ trimmed_path }}_trimmed.webp{% endwith %}"
+                                    src="{{ product.image.url }}"
                                     alt="{{ product.name }}"
-                                    loading="lazy"
-                                    decoding="async"
-                                    onerror="if(!this.dataset.fallback){this.dataset.fallback='1';this.src='{{ product.image.url }}';}">
+                                >
 
                             {% else %}
 
@@ -1862,7 +1504,7 @@ div {
 
                             {% elif product.price %}
 
-                                ${{ product.price|floatformat:2 }}
+                                ${{ product.price }}
 
                             {% else %}
 
@@ -1915,6 +1557,7 @@ div {
     </div>
 
 </div>
+```
 
 </section>
 
@@ -1922,6 +1565,7 @@ div {
 
 <section class="cta">
 
+```
 <div class="cta-inner">
 
     <div>
@@ -1945,6 +1589,7 @@ div {
     </a>
 
 </div>
+```
 
 </section>
 
@@ -1952,6 +1597,7 @@ div {
 
 <section class="section" id="why">
 
+```
 <div class="why">
 
     <div class="why-text">
@@ -2026,6 +1672,7 @@ div {
     </div>
 
 </div>
+```
 
 </section>
 
@@ -2033,6 +1680,7 @@ div {
 
 <section class="about" id="about">
 
+```
 <div class="about-inner">
 
     <div>
@@ -2065,6 +1713,7 @@ div {
     </div>
 
 </div>
+```
 
 </section>
 
@@ -2072,6 +1721,7 @@ div {
 
 <section class="section" id="shipping">
 
+```
 <div class="section-header">
 
     <div class="section-kicker">
@@ -2089,6 +1739,7 @@ div {
     </p>
 
 </div>
+```
 
 </section>
 
@@ -2096,6 +1747,7 @@ div {
 
 <footer id="contact">
 
+```
 <div class="footer-inner">
 
     <div class="footer-grid">
@@ -2106,7 +1758,7 @@ div {
                 src="{% static 'products/logo 2 (1).png' %}"
                 alt="THE LABEL GROUP"
                 class="footer-logo"
-             loading="lazy" decoding="async">
+            >
 
             <p>
                 Professional industrial labels, stickers and
@@ -2204,23 +1856,11 @@ div {
     </div>
 
 </div>
+```
 
 </footer>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

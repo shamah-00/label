@@ -1,0 +1,431 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} | THE LABEL GROUP</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #222;
+            background: #f5f7fa;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .topbar {
+            background: #06152a;
+            color: white;
+            text-align: center;
+            padding: 10px 15px;
+            font-size: 13px;
+        }
+
+        .header {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .logo {
+            height: 55px;
+            width: auto;
+            max-width: 220px;
+            object-fit: contain;
+        }
+
+        .nav {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 18px;
+        }
+
+        .nav a {
+            color: #0b1f3a;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .nav a:hover {
+            color: #f47b20;
+        }
+
+        .page {
+            max-width: 1200px;
+            margin: auto;
+            padding: 35px 20px 70px;
+        }
+
+        .breadcrumbs {
+            font-size: 13px;
+            margin-bottom: 25px;
+            color: #64748b;
+        }
+
+        .breadcrumbs a {
+            color: #f47b20;
+            font-weight: 700;
+        }
+
+        .product-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 45px;
+            background: white;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.07);
+        }
+
+        .product-image-box {
+            min-height: 480px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border-radius: 14px;
+            padding: 25px;
+        }
+
+        .product-image {
+            width: 100%;
+            max-height: 520px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .category {
+            color: #f47b20;
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin-bottom: 10px;
+        }
+
+        .product-title {
+            color: #0b1f3a;
+            font-size: 38px;
+            line-height: 1.1;
+            margin: 0 0 12px;
+        }
+
+        .product-code {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 22px;
+        }
+
+        .price {
+            color: #f47b20;
+            font-size: 30px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .availability {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #047857;
+            border-radius: 999px;
+            padding: 7px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .product-button {
+            border: 0;
+            border-radius: 8px;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .cart-button {
+            background: #f47b20;
+            color: white;
+        }
+
+        .cart-button:hover {
+            background: #d9620d;
+        }
+
+        .quote-button {
+            background: #0b1f3a;
+            color: white;
+        }
+
+        .quote-button:hover {
+            background: #06152a;
+        }
+
+        .description-section {
+            margin-top: 35px;
+            background: white;
+            border-radius: 18px;
+            padding: 35px;
+            box-shadow: 0 8px 30px rgba(0,0,0,.06);
+        }
+
+        .description-section h2 {
+            color: #0b1f3a;
+            margin: 0 0 22px;
+            font-size: 28px;
+        }
+
+        .description-content {
+            color: #374151;
+            font-size: 16px;
+            line-height: 1.8;
+            white-space: pre-line;
+        }
+
+        .trust-strip {
+            margin-top: 35px;
+            background: #0b1f3a;
+            color: white;
+            border-radius: 14px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .footer {
+            background: #06152a;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .footer strong {
+            color: #f47b20;
+        }
+
+        @media (max-width: 800px) {
+            .header-inner {
+                flex-direction: column;
+            }
+
+            .nav {
+                justify-content: center;
+            }
+
+            .product-layout {
+                grid-template-columns: 1fr;
+                padding: 20px;
+                gap: 25px;
+            }
+
+            .product-image-box {
+                min-height: 300px;
+            }
+
+            .product-title {
+                font-size: 30px;
+            }
+
+            .description-section {
+                padding: 25px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page {
+                padding: 20px 12px 50px;
+            }
+
+            .logo {
+                max-width: 190px;
+            }
+
+            .nav {
+                gap: 10px;
+            }
+
+            .nav a {
+                font-size: 11px;
+            }
+
+            .product-layout {
+                border-radius: 12px;
+            }
+
+            .product-image-box {
+                min-height: 240px;
+                padding: 15px;
+            }
+
+            .product-title {
+                font-size: 26px;
+            }
+
+            .price {
+                font-size: 26px;
+            }
+
+            .actions {
+                flex-direction: column;
+            }
+
+            .product-button {
+                width: 100%;
+                text-align: center;
+            }
+
+            .description-section h2 {
+                font-size: 24px;
+            }
+
+            .description-content {
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="topbar">
+    Free quote consultation • Durable custom printing • Built for business
+</div>
+
+<header class="header">
+    <div class="header-inner">
+
+        <a href="{% url 'home' %}">
+            <img src="{% static 'logo 2 (1).png' %}" alt="THE LABEL GROUP" class="logo">
+        </a>
+
+        <nav class="nav">
+            <a href="{% url 'home' %}">HOME</a>
+            <a href="{% url 'product_list' %}">SHOP PRODUCTS</a>
+            <a href="{% url 'custom_order' %}">CUSTOM ORDERS</a>
+            <a href="{% url 'shipping' %}">SHIPPING</a>
+            <a href="{% url 'quote_cart' %}">QUOTE CART</a>
+            <a href="{% url 'staff_login' %}">STAFF LOGIN</a>
+        </nav>
+
+    </div>
+</header>
+
+<main class="page">
+
+    <div class="breadcrumbs">
+        <a href="{% url 'home' %}">Home</a>
+        &nbsp; / &nbsp;
+        <a href="{% url 'product_list' %}">Products</a>
+        &nbsp; / &nbsp;
+        {{ product.name }}
+    </div>
+
+    <section class="product-layout">
+
+        <div class="product-image-box">
+            {% if product.image %}
+                <img
+                    src="{{ product.image.url|slice:':-4' }}.webp"
+                    alt="{{ product.name }}"
+                    class="product-image"
+                    loading="eager">
+            {% endif %}
+        </div>
+
+        <div class="product-information">
+
+            <div class="category">
+                {{ product.category|default:"Industrial Labels" }}
+            </div>
+
+            <h1 class="product-title">
+                {{ product.name }}
+            </h1>
+
+            <div class="product-code">
+                Product Code: {{ product.product_code }}
+            </div>
+
+            <div class="price">
+                From ${{ product.price|floatformat:2 }}
+            </div>
+
+            {% if product.is_available %}
+                <div class="availability">
+                    Available
+                </div>
+            {% endif %}
+
+            <div class="actions">
+
+                <form method="post" action="{% url 'add_to_cart' product.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" class="product-button cart-button">
+                        ADD TO CART
+                    </button>
+                </form>
+
+                <a href="{% url 'quote_cart' %}" class="product-button quote-button">
+                    REQUEST A QUOTE
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="description-section">
+
+        <h2>Product Description</h2>
+
+        <div class="description-content">
+{{ product.description|default:"Professional industrial identification product from THE LABEL GROUP." }}
+        </div>
+
+    </section>
+
+    <div class="trust-strip">
+        Durable industrial printing • Professional identification products • Built for business
+    </div>
+
+</main>
+
+<footer class="footer">
+    <strong>THE LABEL GROUP</strong><br>
+    Industrial Prints &amp; Decals
+</footer>
+
+</body>
+</html>
+

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invoice Payment | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--navy-dark:#06152a;--orange:#f47b20;--orange-dark:#d9620d;--light:#f4f7fb;--text:#172338;--muted:#64748b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--light);color:var(--text)}
+header{background:var(--navy);color:white;padding:22px max(20px,calc((100% - 1100px)/2));border-bottom:4px solid var(--orange)}
+.brand{font-size:22px;font-weight:800;letter-spacing:1px}
+.tagline{font-size:12px;letter-spacing:2px;margin-top:6px;color:#dbe5f2}
+main{max-width:1100px;margin:38px auto;padding:0 20px}
+.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:24px;align-items:start}
+.panel{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:30px;box-shadow:0 8px 25px #0b1f3a0b}
+h1{margin:0 0 10px;font-size:30px;color:var(--navy)}
+h2{margin-top:0;color:var(--navy);font-size:19px}
+.intro{color:var(--muted);line-height:1.7;margin-bottom:26px}
+label{display:block;font-weight:700;font-size:13px;margin:18px 0 8px}
+input{width:100%;padding:13px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:16px}
+input:focus{outline:2px solid #f47b2055;border-color:var(--orange)}
+button{margin-top:22px;width:100%;border:0;border-radius:8px;padding:14px;background:var(--orange);color:#fff;font-size:14px;font-weight:800;cursor:pointer}
+button:hover{background:var(--orange-dark)}
+.notice{background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:14px;line-height:1.6;margin-top:18px}
+ul{padding-left:20px;line-height:1.9;color:var(--muted)}
+a{color:var(--navy);font-weight:700}
+footer{text-align:center;padding:25px;color:var(--muted);font-size:12px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.panel{padding:22px}main{margin-top:22px}h1{font-size:26px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">THE LABEL GROUP</div>
+  <div class="tagline">INDUSTRIAL PRINTS &amp; DECALS</div>
+</header>
+<main>
+  <div class="layout">
+    <section class="panel">
+      <h1>Invoice Payment</h1>
+      <p class="intro">Enter the invoice details provided by our team. All invoice amounts are in US dollars (USD).</p>
+      <form method="post">
+        {% csrf_token %}
+        <label for="invoice_number">Invoice Number</label>
+        <input id="invoice_number" name="invoice_number" value="{{ invoice_number }}" required placeholder="e.g. TLG-2026-001">
+        <label for="amount">Invoice Amount (USD)</label>
+        <input id="amount" name="amount" type="number" min="0.01" step="0.01" value="{{ amount }}" required placeholder="0.00">
+        <button type="submit">CONTINUE</button>
+      </form>
+      {% if message %}
+      <div class="notice" role="status">{{ message }}</div>
+      {% endif %}
+    </section>
+    <aside class="panel">
+      <h2>Payment Information</h2>
+      <ul>
+        <li>Use the invoice number supplied by THE LABEL GROUP.</li>
+        <li>Confirm the amount against your invoice before paying.</li>
+        <li>Keep your invoice and payment confirmation for your records.</li>
+      </ul>
+      <div class="notice"><strong>Secure payment notice</strong><br>Card payments are not enabled on this page yet. Do not enter card details here. Contact our team to arrange payment until an approved payment provider is connected.</div>
+      <p><a href="{% url 'home' %}">Return to homepage</a></p>
+    </aside>
+  </div>
+</main>
+<footer>&copy; 2026 THE LABEL GROUP. All Rights Reserved.</footer>
+</body>
+</html>
