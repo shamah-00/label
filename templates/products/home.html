@@ -326,7 +326,7 @@
         }
 
         .hero-note span::before {
-            content: "✓";
+            content: "Ã¢Å“â€œ";
             margin-right: 8px;
             color: var(--orange);
         }
@@ -1332,7 +1332,7 @@
                 transition-duration: .01ms !important;
             }
         }
-    
+
         /* Clean, spacious homepage navigation */
         .site-header .header-inner {
             display: flex;
@@ -1444,8 +1444,8 @@
 <body>
 
     <div class="topbar">
-        Free quote consultation <span>•</span>
-        Durable custom printing <span>•</span>
+        Free quote consultation <span>&bull;</span>
+        Durable custom printing <span>&bull;</span>
         Built for business
     </div>
 
@@ -1491,18 +1491,18 @@
 
                     <div class="hero-buttons">
                         <a href="{% url 'shipping_quote' %}" class="button button-orange">
-                            REQUEST A QUOTE <span aria-hidden="true">→</span>
+                            REQUEST A QUOTE <span aria-hidden="true">&rarr;</span>
                         </a>
 
                         <a href="{% url 'product_list' %}" class="button button-outline-light">
-                            EXPLORE PRODUCTS <span aria-hidden="true">→</span>
+                            EXPLORE PRODUCTS <span aria-hidden="true">&rarr;</span>
                         </a>
                     </div>
 
                     <div class="hero-note">
-                        <span>Commercial printing solutions</span>
-                        <span>Custom project support</span>
-                        <span>Products for working industries</span>
+
+
+
                     </div>
 
                 </div>
@@ -1564,7 +1564,7 @@
                                 graphics for motor-related businesses.
                             </p>
                             <span class="industry-link">
-                                EXPLORE PRODUCTS <span>→</span>
+                                EXPLORE PRODUCTS <span>&rarr;</span>
                             </span>
                         </div>
                     </a>
@@ -1585,7 +1585,7 @@
                                 identification graphics for waste services.
                             </p>
                             <span class="industry-link">
-                                EXPLORE PRODUCTS <span>→</span>
+                                EXPLORE PRODUCTS <span>&rarr;</span>
                             </span>
                         </div>
                     </a>
@@ -1606,7 +1606,7 @@
                                 and job-site labeling solutions.
                             </p>
                             <span class="industry-link">
-                                EXPLORE PRODUCTS <span>→</span>
+                                EXPLORE PRODUCTS <span>&rarr;</span>
                             </span>
                         </div>
                     </a>
@@ -1627,7 +1627,7 @@
                                 service businesses and equipment.
                             </p>
                             <span class="industry-link">
-                                EXPLORE PRODUCTS <span>→</span>
+                                EXPLORE PRODUCTS <span>&rarr;</span>
                             </span>
                         </div>
                     </a>
@@ -1648,7 +1648,7 @@
                                 solutions for contractor requirements.
                             </p>
                             <span class="industry-link">
-                                EXPLORE PRODUCTS <span>→</span>
+                                EXPLORE PRODUCTS <span>&rarr;</span>
                             </span>
                         </div>
                     </a>
@@ -1671,7 +1671,7 @@
                         professional appearance.
                     </p>
                     <a href="{% url 'shipping_quote' %}" class="button button-orange">
-                        DISCUSS YOUR REQUIREMENTS <span aria-hidden="true">→</span>
+                        DISCUSS YOUR REQUIREMENTS <span aria-hidden="true">&rarr;</span>
                     </a>
                 </div>
 
@@ -1729,7 +1729,7 @@
                     </div>
 
                     <a href="{% url 'product_list' %}" class="text-link">
-                        VIEW FULL CATALOGUE <span aria-hidden="true">→</span>
+                        VIEW FULL CATALOGUE <span aria-hidden="true">&rarr;</span>
                     </a>
                 </div>
 
@@ -1788,7 +1788,7 @@
                                 href="{% url 'product_detail' product.id %}"
                                 class="product-button"
                             >
-                                VIEW PRODUCT <span aria-hidden="true">→</span>
+                                VIEW PRODUCT <span aria-hidden="true">&rarr;</span>
                             </a>
 
                         </div>
@@ -1814,7 +1814,7 @@
                         </p>
                     </div>
                     <a href="{% url 'product_list' %}" class="button button-orange">
-                        SHOP ALL PRODUCTS <span aria-hidden="true">→</span>
+                        SHOP ALL PRODUCTS <span aria-hidden="true">&rarr;</span>
                     </a>
                 </div>
 
@@ -1845,7 +1845,7 @@
                             information to request a commercial quotation.
                         </p>
                         <a href="{% url 'shipping_quote' %}" class="button button-outline">
-                            REQUEST A QUOTE <span aria-hidden="true">→</span>
+                            REQUEST A QUOTE <span aria-hidden="true">&rarr;</span>
                         </a>
                     </article>
 
@@ -1857,7 +1857,7 @@
                             Submit your custom requirements for review.
                         </p>
                         <a href="{% url 'custom_order' %}" class="button button-outline">
-                            START CUSTOM ORDER <span aria-hidden="true">→</span>
+                            START CUSTOM ORDER <span aria-hidden="true">&rarr;</span>
                         </a>
                     </article>
 
@@ -1869,7 +1869,19 @@
                             about the order and shipping process.
                         </p>
                         <a href="{% url 'shipping' %}" class="button button-outline">
-                            SHIPPING INFORMATION <span aria-hidden="true">→</span>
+                            SHIPPING INFORMATION <span aria-hidden="true">&rarr;</span>
+                        </a>
+                    </article>
+                    <article class="service-card">
+                        <div class="service-icon" aria-hidden="true">04</div>
+                        <h3>Company Orders</h3>
+                        <p>
+                            Submit your company order request with product
+                            requirements, quantity and requested unit price in USD.
+                            All requested prices are subject to staff approval.
+                        </p>
+                        <a href="{% url 'company_orders:order' %}" class="button button-outline">
+                            START COMPANY ORDER
                         </a>
                     </article>
 
@@ -1893,7 +1905,7 @@
 
                     <div class="custom-actions">
                         <a href="{% url 'custom_order' %}" class="button button-orange">
-                            START A CUSTOM ORDER <span aria-hidden="true">→</span>
+                            START A CUSTOM ORDER <span aria-hidden="true">&rarr;</span>
                         </a>
                         <a href="{% url 'shipping_quote' %}" class="button button-white">
                             REQUEST A QUOTE
@@ -1970,13 +1982,12 @@
 
             <div class="footer-bottom">
                 <span>
-                    © 2026 <strong>THE LABEL GROUP</strong>. All rights reserved.
+                    &copy; 2026 <strong>THE LABEL GROUP</strong>. All rights reserved.
                 </span>
                 <span>Industrial Prints &amp; Decals</span>
             </div>
 
         </div>
     </footer>
-
 </body>
 </html>

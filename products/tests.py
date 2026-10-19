@@ -98,6 +98,7 @@ class CheckoutShippoWorkflowTests(TestCase):
 
         self.checkout_data = {
             "action": "ajax_get_rates",
+            "payment_method": "check",
             "customer_name": "Checkout Test Customer",
             "customer_email": "checkout-test@example.com",
             "customer_phone": "5550100300",

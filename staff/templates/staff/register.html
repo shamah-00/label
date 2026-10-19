@@ -1,12 +1,295 @@
 {% extends "staff/base.html" %}
+{% load static %}
+
+{% block title %}Staff Registration | THE LABEL GROUP{% endblock %}
+
 {% block content %}
-<div style="max-width: 400px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-    <h2>Staff Registration</h2>
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" style="width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px;">Register Staff</button>
-    </form>
-    <p style="margin-top: 15px; text-align: center;"><a href="{% url 'staff_login' %}">Already have an account? Login</a></p>
-</div>
+<style>
+.registration-page {
+    min-height: 78vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 44px 18px 56px;
+    background:
+        radial-gradient(circle at 10% 10%, rgba(244,123,32,.10), transparent 30%),
+        radial-gradient(circle at 90% 90%, rgba(11,31,58,.08), transparent 35%),
+        #f4f7fb;
+}
+.registration-shell {
+    width: 100%;
+    max-width: 1020px;
+    display: grid;
+    grid-template-columns: .88fr 1.12fr;
+    overflow: hidden;
+    border: 1px solid #e3e9f1;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 24px 70px rgba(11,31,58,.12);
+}
+.registration-intro {
+    position: relative;
+    overflow: hidden;
+    padding: 46px 36px;
+    color: #fff;
+    background: linear-gradient(145deg, #0b1f3a 0%, #102e50 70%, #17395d 100%);
+}
+.registration-intro:after {
+    content: "";
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    right: -115px;
+    bottom: -115px;
+    border: 38px solid rgba(244,123,32,.20);
+    border-radius: 50%;
+}
+.registration-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 27px;
+    border-radius: 14px;
+    background: #f47b20;
+    color: #fff;
+    font-size: 25px;
+    font-weight: 900;
+}
+.registration-eyebrow {
+    margin: 0 0 12px;
+    color: #ffb77d;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+.registration-intro h1 {
+    margin: 0 0 16px;
+    color: #fff;
+    font-size: clamp(27px, 3vw, 36px);
+    font-weight: 850;
+    line-height: 1.15;
+    letter-spacing: -.7px;
+}
+.registration-intro > p {
+    color: #d4deeb;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.registration-points {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 17px;
+    margin-top: 35px;
+}
+.registration-point {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: #e8eef6;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.registration-check {
+    display: inline-flex;
+    flex: 0 0 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 8px;
+    background: rgba(255,255,255,.08);
+    color: #ffb77d;
+    font-weight: 800;
+}
+.registration-form-side {
+    padding: 42px clamp(22px, 4vw, 48px);
+}
+.registration-form-side h2 {
+    margin: 0 0 8px;
+    color: #0b1f3a;
+    font-size: 25px;
+    font-weight: 850;
+    letter-spacing: -.4px;
+}
+.registration-subtitle {
+    margin: 0 0 27px;
+    color: #68778a;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.registration-form {
+    display: grid;
+    gap: 17px;
+}
+.registration-form p {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+.registration-form label {
+    color: #24354b;
+    font-size: 12px;
+    font-weight: 800;
+}
+.registration-form input,
+.registration-form select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 14px;
+    border: 1px solid #d9e1eb;
+    border-radius: 10px;
+    outline: none;
+    background: #fbfcfe;
+    color: #182b43;
+    font: inherit;
+    font-size: 14px;
+    transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.registration-form input:focus,
+.registration-form select:focus {
+    border-color: #f47b20;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(244,123,32,.12);
+}
+.registration-form input::placeholder {
+    color: #9aa6b5;
+}
+.registration-form .helptext,
+.registration-form p span.helptext {
+    color: #738197;
+    font-size: 11px;
+    line-height: 1.65;
+}
+.registration-form ul {
+    margin: 3px 0 0;
+    padding-left: 18px;
+    color: #718096;
+    font-size: 11px;
+    line-height: 1.8;
+}
+.registration-form .errorlist {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px solid #fecaca;
+    border-radius: 9px;
+    background: #fff1f2;
+    color: #b42318;
+    font-size: 12px;
+    list-style: none;
+}
+.registration-error {
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fff1f2;
+    color: #b42318;
+    font-size: 13px;
+}
+.registration-submit {
+    width: 100%;
+    min-height: 48px;
+    margin-top: 4px;
+    border: 0;
+    border-radius: 10px;
+    background: #f47b20;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 7px 16px rgba(244,123,32,.18);
+    transition: transform .18s ease, background .18s ease;
+}
+.registration-submit:hover {
+    transform: translateY(-1px);
+    background: #d9620d;
+}
+.registration-login {
+    margin: 23px 0 0;
+    padding-top: 19px;
+    border-top: 1px solid #edf0f5;
+    color: #6c7b8e;
+    font-size: 13px;
+    text-align: center;
+}
+.registration-login a {
+    color: #0b1f3a;
+    font-weight: 800;
+    text-decoration: none;
+}
+.registration-login a:hover {
+    color: #d9620d;
+    text-decoration: underline;
+}
+@media (max-width: 760px) {
+    .registration-page { padding: 22px 12px 35px; }
+    .registration-shell { grid-template-columns: 1fr; border-radius: 16px; }
+    .registration-intro { padding: 29px 25px; }
+    .registration-mark { margin-bottom: 18px; }
+    .registration-points { grid-template-columns: 1fr; gap: 11px; margin-top: 22px; }
+    .registration-form-side { padding: 30px 24px; }
+}
+</style>
+
+<section class="registration-page">
+    <div class="registration-shell">
+        <aside class="registration-intro">
+            <div class="registration-mark" aria-hidden="true">L</div>
+            <p class="registration-eyebrow">THE LABEL GROUP</p>
+            <h1>Build great work together.</h1>
+            <p>
+                Staff access for our industrial printing and identification
+                operations. Create an account to begin the staff onboarding process.
+            </p>
+            <div class="registration-points">
+                <div class="registration-point">
+                    <span class="registration-check">?</span>
+                    <span><strong>One company workspace</strong><br>Keep daily operations organised in one place.</span>
+                </div>
+                <div class="registration-point">
+                    <span class="registration-check">?</span>
+                    <span><strong>Secure account credentials</strong><br>Choose a unique username and strong password.</span>
+                </div>
+                <div class="registration-point">
+                    <span class="registration-check">?</span>
+                    <span><strong>Controlled staff access</strong><br>Access may require approval from your administrator.</span>
+                </div>
+            </div>
+        </aside>
+
+        <div class="registration-form-side">
+            <h2>Staff registration</h2>
+            <p class="registration-subtitle">
+                Create your account using the details below. Complete every required field.
+            </p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="registration-error" role="status">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="registration-error" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="registration-form" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="registration-submit">Register staff account &rarr;</button>
+            </form>
+
+            <p class="registration-login">
+                Already have an account?
+                <a href="{% url 'staff_login' %}">Sign in here</a>
+            </p>
+        </div>
+    </div>
+</section>
 {% endblock %}

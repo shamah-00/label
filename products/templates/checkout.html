@@ -1348,7 +1348,222 @@
                         Placing an order submits it for processing. It does not charge a payment method or buy a shipping label.
                     </p>
                 </section>
+
+<section class="tlg-payment-panel" id="tlg-payment-panel">
+    <style>
+        .tlg-payment-panel {
+            margin-top: 24px;
+            padding: 24px;
+            border: 1px solid #dce4ee;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(11,31,58,.05);
+        }
+        .tlg-payment-panel h2 {
+            margin: 0 0 8px;
+            color: #0b1f3a;
+            font-size: 21px;
+        }
+        .tlg-payment-intro {
+            margin: 0 0 20px;
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .tlg-payment-options {
+            display: grid;
+            gap: 10px;
+        }
+        .tlg-payment-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px;
+            border: 1px solid #dce4ee;
+            border-radius: 11px;
+            background: #fbfcfe;
+            cursor: pointer;
+            transition: border-color .18s ease, background .18s ease;
+        }
+        .tlg-payment-option:has(input:checked) {
+            border-color: #f47b20;
+            background: #fff7f0;
+            box-shadow: 0 0 0 2px rgba(244,123,32,.08);
+        }
+        .tlg-payment-option input {
+            margin-top: 4px;
+            accent-color: #f47b20;
+        }
+        .tlg-payment-option strong {
+            display: block;
+            color: #0b1f3a;
+            font-size: 14px;
+        }
+        .tlg-payment-option small {
+            display: block;
+            margin-top: 4px;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .tlg-instruction-card {
+            margin-top: 17px;
+            padding: 17px;
+            border: 1px solid #dce4ee;
+            border-radius: 11px;
+            background: #f8fafc;
+        }
+        .tlg-instruction-card[hidden] {
+            display: none !important;
+        }
+        .tlg-instruction-card h3 {
+            margin: 0 0 10px;
+            color: #0b1f3a;
+            font-size: 15px;
+        }
+        .tlg-instruction-copy {
+            color: #334155;
+            font-size: 13px;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+        }
+        .tlg-instruction-copy p:last-child {
+            margin-bottom: 0;
+        }
+        .tlg-instruction-empty {
+            color: #64748b;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+        .tlg-payment-terms {
+            margin-top: 16px;
+            padding-top: 14px;
+            border-top: 1px solid #e5eaf1;
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+    </style>
+
+    <h2>Choose your payment method</h2>
+    <p class="tlg-payment-intro">
+        Select a method below to view The Label Group's payment instructions.
+        Your order submission does not charge you automatically.
+    </p>
+
+    {% if payment_methods %}
+        <div class="tlg-payment-options">
+            {% for method, label in payment_methods %}
+                <label class="tlg-payment-option">
+                    <input
+                        type="radio"
+                        name="payment_method"
+                        value="{{ method }}"
+                        required
+                        {% if forloop.first %}checked{% endif %}
+                    >
+                    <span>
+                        <strong>{{ label }}</strong>
+                        <small>View instructions for this payment method.</small>
+                    </span>
+                </label>
+            {% endfor %}
+        </div>
+
+        <div class="tlg-instruction-card"
+             data-payment-instructions="check"
+             {% if payment_methods.0.0 != "check" %}hidden{% endif %}>
+            <h3>Check / Invoice instructions</h3>
+            <div class="tlg-instruction-copy">
+                {% if "check" in payment_settings.enabled_methods and payment_settings.check_instructions %}
+                    {{ payment_settings.check_instructions|linebreaks }}
+                {% else %}
+                    <p class="tlg-instruction-empty">
+                        Check or invoice instructions have not yet been provided.
+                        Please contact The Label Group for guidance.
+                    </p>
+                {% endif %}
             </div>
+        </div>
+
+        <div class="tlg-instruction-card"
+             data-payment-instructions="ach"
+             {% if payment_methods.0.0 != "ach" %}hidden{% endif %}>
+            <h3>ACH Bank Transfer instructions</h3>
+            <div class="tlg-instruction-copy">
+                {% if "ach" in payment_settings.enabled_methods and payment_settings.ach_instructions %}
+                    {{ payment_settings.ach_instructions|linebreaks }}
+                {% else %}
+                    <p class="tlg-instruction-empty">
+                        ACH transfer instructions have not yet been provided.
+                        Please contact The Label Group for guidance.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="tlg-instruction-card"
+             data-payment-instructions="wire"
+             {% if payment_methods.0.0 != "wire" %}hidden{% endif %}>
+            <h3>Wire Transfer instructions</h3>
+            <div class="tlg-instruction-copy">
+                {% if "wire" in payment_settings.enabled_methods and payment_settings.wire_instructions %}
+                    {{ payment_settings.wire_instructions|linebreaks }}
+                {% else %}
+                    <p class="tlg-instruction-empty">
+                        Wire transfer instructions have not yet been provided.
+                        Please contact The Label Group for guidance.
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <script>
+        (function () {
+            "use strict";
+            var panel = document.getElementById("tlg-payment-panel");
+            if (!panel) return;
+
+            var radios = panel.querySelectorAll('input[name="payment_method"]');
+            var instructionCards = panel.querySelectorAll("[data-payment-instructions]");
+
+            function updatePaymentInstructions() {
+                var selected = panel.querySelector('input[name="payment_method"]:checked');
+                var method = selected ? selected.value : "";
+
+                instructionCards.forEach(function (card) {
+                    card.hidden = card.getAttribute("data-payment-instructions") !== method;
+                });
+            }
+
+            radios.forEach(function (radio) {
+                radio.addEventListener("change", updatePaymentInstructions);
+            });
+
+            updatePaymentInstructions();
+        })();
+        </script>
+    {% else %}
+        <p class="tlg-instruction-empty">
+            Payment options are currently unavailable. Please contact The Label Group.
+        </p>
+    {% endif %}
+
+    <div class="tlg-payment-terms">
+        <p>
+            <strong>Payment timing:</strong>
+            {{ payment_settings.get_payment_timing_display }}
+        </p>
+        <p>
+            <strong>Default invoice terms:</strong>
+            {{ payment_settings.get_default_terms_days_display }}.
+            Invoice terms are defaults and do not guarantee credit approval.
+        </p>
+        <p>Payment is not collected automatically at checkout.</p>
+    </div>
+</section>
+
+</div>
 
             <aside class="side-column">
                 <section class="panel order-panel">

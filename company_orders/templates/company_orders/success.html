@@ -1,0 +1,11 @@
+﻿{% extends "base.html" %}
+{% block title %}Request Received | THE LABEL GROUP{% endblock %}
+{% block content %}
+<div style="max-width:760px;margin:60px auto;padding:32px 20px;text-align:center;color:#10233f">
+  <h1>Request received</h1>
+  <p>Your company order request has been submitted for staff review.</p>
+  <p>Your requested price is not confirmed until The Label Group approves it.</p>
+  <p><a href="{% url 'company_orders:order' %}" style="display:inline-block;background:#f47b20;color:white;padding:13px 20px;border-radius:8px;text-decoration:none;font-weight:700">Submit another request</a></p>
+  <p><a href="/">Return to Home</a></p>
+</div>
+{% endblock %}

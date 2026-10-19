@@ -449,7 +449,7 @@
     }
 
     .industry-link::after {
-        content: "→";
+        content: "â†’";
         color: var(--orange);
         font-size: 17px;
         transition: transform .2s ease;
@@ -1116,7 +1116,7 @@
     <div>
 
         <div class="eyebrow">
-            Industrial Prints â€¢ Decals â€¢ Identification
+            Industrial Prints Ã¢â‚¬Â¢ Decals Ã¢â‚¬Â¢ Identification
         </div>
 
         <h1>
@@ -1717,6 +1717,24 @@
 
 </section>
 
+<!-- COMPANY ORDERS -->
+<section class="section" id="company-orders">
+    <div class="section-header">
+        <div class="section-kicker">Business Ordering</div>
+        <h2>Ordering for your company?</h2>
+        <p class="section-intro">
+            Request multiple products in one place, provide your quantities and
+            requested USD prices, and let our team review the details with you.
+            All requested prices remain subject to staff approval.
+        </p>
+        <p style="margin-top:22px">
+            <a href="{% url 'company_orders:order' %}"
+               style="display:inline-block;background:#f47b20;color:#fff;text-decoration:none;font-weight:800;padding:13px 22px;border-radius:9px">
+                Start a Company Order
+            </a>
+        </p>
+    </div>
+</section>
 <!-- SHIPPING -->
 
 <section class="section" id="shipping">
@@ -1846,7 +1864,7 @@
     <div class="copyright">
 
         <span>
-            Â© 2026 THE LABEL GROUP. All rights reserved.
+            Ã‚Â© 2026 THE LABEL GROUP. All rights reserved.
         </span>
 
         <span>
@@ -1862,5 +1880,3 @@
 
 </body>
 </html>
-
-

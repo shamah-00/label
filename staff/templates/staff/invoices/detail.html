@@ -1,0 +1,67 @@
+{% extends "staff/base.html" %}
+{% block content %}
+<style>
+.invoice-page{max-width:1000px;margin:28px auto;padding:0 18px 40px;color:#0b1f3a}
+.invoice-card{background:#fff;border:1px solid #e1e7ef;border-radius:12px;padding:24px;box-shadow:0 3px 12px #0b1f3a0a}
+.invoice-top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.invoice-muted{color:#68778a;font-size:13px}
+.invoice-table{width:100%;border-collapse:collapse;margin-top:24px}
+.invoice-table th,.invoice-table td{padding:12px;text-align:left;border-bottom:1px solid #e1e7ef}
+.invoice-table th{background:#f5f7fa}
+.invoice-number{font-size:24px;font-weight:850}
+.invoice-total{max-width:360px;margin:20px 0 0 auto}
+.invoice-total p{display:flex;justify-content:space-between;gap:20px}
+.invoice-btn{display:inline-block;padding:10px 15px;border-radius:7px;background:#f47b20;color:white;text-decoration:none;font-weight:750;border:0;cursor:pointer}
+@media print{.no-print{display:none!important}.invoice-page{margin:0;max-width:none}.invoice-card{box-shadow:none;border:0}}
+</style>
+<div class="invoice-page">
+  <div class="invoice-top">
+    <div>
+      <h1 style="margin:0 0 8px">THE LABEL GROUP</h1>
+      <div class="invoice-muted">Industrial Prints &amp; Decals</div>
+      <p class="invoice-muted">580 St. James Avenue, Springfield, MA 01109<br>
+      (413) 276-6427 ? labelgroup@comcast.net</p>
+    </div>
+    <div>
+      <div class="invoice-number">INVOICE</div>
+      <strong>{{ invoice.invoice_number }}</strong>
+      <p>Order #{{ invoice.order_id }}</p>
+      <p>Invoice date: {{ invoice.invoice_date|date:"F j, Y" }}</p>
+      <p>Due date: {{ invoice.due_date|date:"F j, Y" }}</p>
+      <p>Status: <strong>{{ invoice.get_status_display }}</strong></p>
+    </div>
+  </div>
+  <div class="invoice-card">
+    <h2>Bill To</h2>
+    <strong>{{ invoice.order.customer_name }}</strong><br>
+    {{ invoice.order.customer_email }}<br>
+    {{ invoice.order.shipping_address }}<br>
+    {{ invoice.order.shipping_city }}, {{ invoice.order.shipping_state }}
+    {{ invoice.order.shipping_postal_code }}<br>
+    {{ invoice.order.shipping_country }}
+    <table class="invoice-table">
+      <thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Line Total</th></tr></thead>
+      <tbody>
+      {% for item in invoice.items.all %}
+        <tr>
+          <td>{{ item.description }}</td>
+          <td>{{ item.quantity }}</td>
+          <td>{{ invoice.currency }} {{ item.unit_price|floatformat:2 }}</td>
+          <td>{{ invoice.currency }} {{ item.line_total|floatformat:2 }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No line items were captured for this invoice.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="invoice-total">
+      <p><span>Invoice total</span><strong>{{ invoice.currency }} {{ invoice.total|floatformat:2 }}</strong></p>
+      <p><span>Amount paid</span><strong>{{ invoice.currency }} {{ invoice.amount_paid|floatformat:2 }}</strong></p>
+      <p><span>Balance due</span><strong>{{ invoice.currency }} {{ invoice.balance_due|floatformat:2 }}</strong></p>
+      <p><span>Payment terms</span><strong>{% if invoice.terms_days %}Net {{ invoice.terms_days }} days{% else %}Due on receipt{% endif %}</strong></p>
+    </div>
+    <p class="invoice-muted">Payment should be arranged using the payment method agreed with The Label Group. This invoice page does not process payments.</p>
+  </div>
+  <p class="no-print" style="margin-top:18px"><button class="invoice-btn" onclick="window.print()">Print / Save PDF</button></p>
+</div>
+{% endblock %}

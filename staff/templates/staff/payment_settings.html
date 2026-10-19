@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Payment Settings | The Label Group</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f3f6fa;color:#172538;font:16px/1.55 Arial,sans-serif}
+main{max-width:850px;margin:36px auto;padding:28px;background:#fff;border-radius:14px;box-shadow:0 8px 28px #0b1f3a12}
+h1,h2{color:#0b1f3a}
+a{color:#0b1f3a}
+.hint{color:#526173}
+fieldset{border:1px solid #d8e0e8;border-radius:10px;padding:18px;margin:22px 0}
+legend{font-weight:700;color:#0b1f3a;padding:0 6px}
+label{display:block;margin:12px 0 6px;font-weight:600}
+textarea,select{width:100%;padding:11px;border:1px solid #bfcbd8;border-radius:7px;font:inherit;background:#fff}
+textarea{min-height:90px}
+.method{display:flex;gap:10px;align-items:center;font-weight:400}
+.method input{width:auto}
+button{background:#0b1f3a;color:#fff;border:0;border-radius:8px;padding:13px 20px;font-weight:700;cursor:pointer}
+.notice{padding:13px;background:#fff5e9;border-left:4px solid #f47b20;margin:18px 0}
+.message{padding:10px 14px;background:#edf7ee;border-radius:7px;margin:10px 0}
+@media(max-width:600px){main{margin:12px;padding:18px}}
+</style>
+</head>
+<body>
+<main>
+<p><a href="/staff/">&#8592; Back to staff dashboard</a></p>
+<h1>Payment Settings</h1>
+<p class="hint">Choose the payment methods The Label Group is prepared to offer customers.</p>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="message">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="notice">
+  <strong>Important:</strong> These settings do not collect payments.
+  Enter only payment instructions and account details that The Label Group
+  has explicitly approved for customers to receive. Never enter passwords,
+  API secrets, card security codes, or private login credentials here.
+  Card processing is not available until an approved Square or QuickBooks
+  integration is configured and tested.
+</div>
+
+<form method="post">
+{% csrf_token %}
+
+<fieldset>
+<legend>Enabled payment methods</legend>
+<p class="hint">Only selected methods will be offered at checkout.</p>
+<label class="method">
+<input type="checkbox" name="enabled_methods" value="check"
+{% if "check" in payment_settings.enabled_methods %}checked{% endif %}>
+Check / Invoice
+</label>
+<label class="method">
+<input type="checkbox" name="enabled_methods" value="ach"
+{% if "ach" in payment_settings.enabled_methods %}checked{% endif %}>
+ACH Bank Transfer
+</label>
+<label class="method">
+<input type="checkbox" name="enabled_methods" value="wire"
+{% if "wire" in payment_settings.enabled_methods %}checked{% endif %}>
+Wire Transfer
+</label>
+</fieldset>
+
+<fieldset>
+<legend>Payment timing</legend>
+<label for="payment_timing">When should payment be requested?</label>
+<select name="payment_timing" id="payment_timing" required>
+<option value="upfront" {% if payment_settings.payment_timing == "upfront" %}selected{% endif %}>
+Request payment before processing
+</option>
+<option value="invoice_after_delivery" {% if payment_settings.payment_timing == "invoice_after_delivery" %}selected{% endif %}>
+Invoice after delivery
+</option>
+</select>
+
+<label for="default_terms_days">Default invoice terms</label>
+<select name="default_terms_days" id="default_terms_days" required>
+<option value="0" {% if payment_settings.default_terms_days == 0 %}selected{% endif %}>Due on Receipt</option>
+<option value="30" {% if payment_settings.default_terms_days == 30 %}selected{% endif %}>Net 30 Days</option>
+<option value="45" {% if payment_settings.default_terms_days == 45 %}selected{% endif %}>Net 45 Days</option>
+<option value="60" {% if payment_settings.default_terms_days == 60 %}selected{% endif %}>Net 60 Days</option>
+<option value="90" {% if payment_settings.default_terms_days == 90 %}selected{% endif %}>Net 90 Days</option>
+</select>
+<p class="hint">Invoice terms are defaults, not automatic credit approval.</p>
+</fieldset>
+
+<fieldset>
+<legend>Customer-facing instructions</legend>
+<label for="check_instructions">Check / invoice instructions</label>
+<textarea id="check_instructions" name="check_instructions">{{ payment_settings.check_instructions }}</textarea>
+
+<label for="ach_instructions">ACH instructions</label>
+<textarea id="ach_instructions" name="ach_instructions">{{ payment_settings.ach_instructions }}</textarea>
+
+<label for="wire_instructions">Wire transfer instructions</label>
+<textarea id="wire_instructions" name="wire_instructions">{{ payment_settings.wire_instructions }}</textarea>
+<p class="hint">Only enter instructions approved for customers. Never enter credentials or secrets.</p>
+</fieldset>
+
+<button type="submit">Save Payment Settings</button>
+</form>
+</main>
+</body>
+</html>

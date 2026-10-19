@@ -1,3 +1,4 @@
+from django.conf import settings as django_conf_settings
 from django.utils.text import slugify
 from django.db import models
 from django.contrib.auth.models import User
@@ -328,6 +329,38 @@ class Order(models.Model):
         default="USD"
     )
 
+    PAYMENT_METHOD_CHOICES = [
+        ("upfront", "Pay Upfront"),
+        ("check", "Check / Invoice"),
+        ("card", "Credit Card"),
+        ("ach", "ACH Bank Transfer"),
+        ("wire", "Wire Transfer"),
+    ]
+
+    PAYMENT_TERMS_CHOICES = [
+        (0, "Due on Receipt"),
+        (30, "Net 30 Days"),
+        (45, "Net 45 Days"),
+        (60, "Net 60 Days"),
+        (90, "Net 90 Days"),
+    ]
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PAYMENT_METHOD_CHOICES,
+        default="upfront",
+    )
+
+    payment_terms_days = models.PositiveSmallIntegerField(
+        choices=PAYMENT_TERMS_CHOICES,
+        default=0,
+    )
+
+    credit_terms_approved = models.BooleanField(
+        default=False,
+        help_text="Enable only for customers approved for business credit terms.",
+    )
+
     status = models.CharField(
         max_length=30,
         choices=STATUS_CHOICES,
@@ -471,6 +504,82 @@ class Shipment(models.Model):
     def __str__(self):
         return f"Shipment for Order #{self.order.id}"
 
+
+
+
+class Invoice(models.Model):
+    STATUS_CHOICES = [
+        ("unpaid", "Unpaid"),
+        ("partial", "Partially Paid"),
+        ("paid", "Paid"),
+        ("overdue", "Overdue"),
+    ]
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.PROTECT,
+        related_name="invoice",
+    )
+    invoice_number = models.CharField(max_length=40, unique=True, blank=True)
+    invoice_date = models.DateField()
+    due_date = models.DateField()
+    currency = models.CharField(max_length=3, default="USD")
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="unpaid",
+    )
+    terms_days = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-invoice_date", "-id"]
+
+    @property
+    def balance_due(self):
+        return max(self.total - self.amount_paid, 0)
+
+    def save(self, *args, **kwargs):
+        from django.utils import timezone
+
+        if self.order_id and not self.invoice_number:
+            year = self.invoice_date.year if self.invoice_date else timezone.localdate().year
+            self.invoice_number = f"TLG-{year}-{self.order_id:06d}"
+
+        if self.total > 0 and self.amount_paid >= self.total:
+            self.status = "paid"
+        elif self.amount_paid > 0:
+            self.status = "partial"
+        elif self.due_date and self.due_date < timezone.localdate():
+            self.status = "overdue"
+        else:
+            self.status = "unpaid"
+
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.invoice_number or f"Invoice for Order #{self.order_id}"
+
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey(
+        Invoice,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+    description = models.CharField(max_length=250)
+    quantity = models.PositiveIntegerField(default=1)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    line_total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+
+    class Meta:
+        ordering = ["id"]
+
+    def __str__(self):
+        return f"{self.description} x {self.quantity}"
 
 class StaffProfile(models.Model):
 
@@ -923,3 +1032,72 @@ class ShippingSystemSettings(models.Model):
         if obj is None:
             obj = cls.objects.create()
         return obj
+
+
+def _tlg_default_payment_methods():
+    return ["check", "ach", "wire"]
+
+
+class PaymentSystemSettings(models.Model):
+    """Business-controlled payment preferences. No card or bank credentials stored."""
+
+    PAYMENT_TIMING_CHOICES = [
+        ("upfront", "Request payment before processing"),
+        ("invoice_after_delivery", "Invoice after delivery"),
+    ]
+
+    TERMS_CHOICES = [
+        (0, "Due on Receipt"),
+        (30, "Net 30 Days"),
+        (45, "Net 45 Days"),
+        (60, "Net 60 Days"),
+        (90, "Net 90 Days"),
+    ]
+
+    enabled_methods = models.JSONField(default=_tlg_default_payment_methods)
+    payment_timing = models.CharField(
+        max_length=30,
+        choices=PAYMENT_TIMING_CHOICES,
+        default="invoice_after_delivery",
+    )
+    default_terms_days = models.PositiveSmallIntegerField(
+        choices=TERMS_CHOICES,
+        default=30,
+    )
+    check_instructions = models.TextField(
+        blank=True,
+        default="Contact The Label Group for approved check and invoice instructions.",
+    )
+    ach_instructions = models.TextField(
+        blank=True,
+        default="Contact The Label Group for verified ACH payment instructions.",
+    )
+    wire_instructions = models.TextField(
+        blank=True,
+        default="Contact The Label Group for verified wire transfer instructions.",
+    )
+    updated_by = models.ForeignKey(
+        django_conf_settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="tlg_payment_settings_updates",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Payment System Settings"
+        verbose_name_plural = "Payment System Settings"
+
+    def __str__(self):
+        return "The Label Group payment settings"
+
+    @classmethod
+    def get_settings(cls):
+        obj = cls.objects.order_by("pk").first()
+        if obj is None:
+            obj = cls.objects.create()
+        return obj
+
+# QuickBooks OAuth connection model.
+from .quickbooks_models import QuickBooksConnection

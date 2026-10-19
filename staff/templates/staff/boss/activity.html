@@ -584,9 +584,7 @@ footer {
 
         </div>
 
-        <a class="back-button" href="{% url 'boss_staff_management' %}">
-            ← Back to Staff Management
-        </a>
+        {% if request.user.is_superuser %}{% endif %}
 
     </div>
 
@@ -645,12 +643,12 @@ footer {
             </button>
 
 
-            <a
+            {% if request.user.is_superuser %}<a
                 class="clear-button"
                 href="{% url 'staff_activity_log' %}"
             >
                 Clear
-            </a>
+            </a>{% endif %}
 
         </form>
 

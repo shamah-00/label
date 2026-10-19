@@ -432,9 +432,7 @@ footer {
             Dashboard
         </a>
 
-        <a href="{% url 'boss_staff_management' %}">
-            Staff Management
-        </a>
+        {% if request.user.is_superuser %}{% endif %}
 
     </div>
 
@@ -443,12 +441,7 @@ footer {
 
 <div class="container">
 
-    <a
-        class="back"
-        href="{% url 'boss_staff_management' %}"
-    >
-        ← Back to Staff Management
-    </a>
+    {% if request.user.is_superuser %}{% endif %}
 
 
     <div class="section">

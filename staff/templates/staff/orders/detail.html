@@ -40,6 +40,21 @@
             <div class="order-muted">Submitted {{ order.created_at|date:"F j, Y H:i" }}</div>
         </div>
         <a class="order-btn order-back" href="{% url 'staff_orders' %}">&larr; Back to Orders</a>
+
+        {% if request.user.is_superuser %}
+        <form method="post"
+              action="{% url 'boss_delete_order' order.pk %}"
+              onsubmit="return confirm('Permanently delete Order #{{ order.pk }}? Related order items and shipment records may also be deleted. This cannot be undone.');"
+              style="display:inline">
+            {% csrf_token %}
+            <button class="order-btn"
+                    type="submit"
+                    style="background:#b91c1c;color:#fff">
+                Delete Order
+            </button>
+        </form>
+        {% endif %}
+
     </header>
 
     {% if messages %}

@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickBooks Connection | The Label Group</title>
+  <style>
+    body { margin:0; background:#f3f6fa; color:#172337; font:16px/1.55 Arial,sans-serif; }
+    main { max-width:760px; margin:48px auto; padding:28px; }
+    section { background:#fff; border:1px solid #dce3ec; border-radius:14px; padding:28px; }
+    h1 { margin-top:0; color:#0b1f3a; }
+    .status { padding:12px 15px; border-radius:8px; background:#edf5ef; margin:18px 0; }
+    .warning { padding:12px 15px; border-radius:8px; background:#fff5e8; margin:18px 0; }
+    .button { display:inline-block; padding:12px 17px; border:0; border-radius:8px; background:#0b1f3a; color:white; text-decoration:none; cursor:pointer; font-size:15px; }
+    .secondary { background:#5a6675; }
+    .messages { padding-left:20px; }
+    small { color:#5d6978; }
+  </style>
+</head>
+<body>
+<main>
+  <section>
+    <h1>QuickBooks Connection</h1>
+    <p>Connect The Label Group's QuickBooks Payments account through Intuit's secure authorization page.</p>
+
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <p><strong>Environment:</strong> {{ environment|title }}</p>
+
+    {% if connection %}
+      <div class="status">
+        <strong>Connected</strong><br>
+        QuickBooks company reference: {{ connection.realm_id }}<br>
+        Connected by: {{ connection.connected_by|default:"Staff user" }}<br>
+        <small>Access tokens are encrypted in the database. No card numbers are stored.</small>
+      </div>
+
+      <div class="warning">
+        <strong>Payment processing is not active yet.</strong>
+        This page confirms account authorization only. Customer card payments and invoice
+        synchronization must be implemented and tested separately before use.
+      </div>
+
+      <form method="post" action="{% url 'quickbooks_disconnect' %}">
+        {% csrf_token %}
+        <button class="button secondary" type="submit"
+          onclick="return confirm('Disconnect QuickBooks from this website?');">
+          Disconnect QuickBooks
+        </button>
+      </form>
+    {% else %}
+      <div class="warning">
+        {% if configured %}
+          Credentials detected. The connection will use the configured Intuit app.
+        {% else %}
+          Intuit sandbox Client ID and Client Secret have not been configured on this server.
+        {% endif %}
+        Register the exact callback URL in the Intuit Developer Portal before connecting.
+      </div>
+
+      {% if configured %}
+        <a class="button" href="{% url 'quickbooks_connect' %}">Connect QuickBooks</a>
+      {% else %}
+        <button class="button" type="button" disabled>Connect QuickBooks</button>
+      {% endif %}
+    {% endif %}
+
+    <p><small>Staff access only. Existing checkout payment methods and Shippo shipping are unchanged.</small></p>
+  </section>
+</main>
+</body>
+</html>

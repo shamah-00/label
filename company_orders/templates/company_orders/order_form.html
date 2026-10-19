@@ -1,0 +1,362 @@
+﻿{% extends "base.html" %}
+{% block title %}Company Orders | THE LABEL GROUP{% endblock %}
+{% block content %}
+<style>
+.company-page{max-width:1000px;margin:32px auto;padding:0 18px 48px;color:#10233f}
+.company-hero{background:linear-gradient(120deg,#06152a,#0b1f3a);color:white;padding:36px;border-radius:16px;margin-bottom:24px}
+.company-hero h1{margin:0 0 12px;font-size:clamp(28px,4vw,42px)}
+.company-hero p{line-height:1.7;margin:0;color:#e8eef7}
+.company-card{background:white;border:1px solid #dce3ec;border-radius:16px;padding:28px;box-shadow:0 10px 30px #10233f0c}
+.company-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.company-field label{display:block;font-weight:700;margin-bottom:7px}
+.company-field input,.company-field select,.company-field textarea{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font:inherit;background:white}
+.company-field textarea{resize:vertical}
+.company-field .helptext{font-size:13px;color:#64748b}
+.company-field .errorlist{color:#b42318;padding-left:18px}
+.company-full{grid-column:1/-1}
+.company-notice{background:#fff7ed;border-left:4px solid #f47b20;padding:14px 16px;border-radius:8px;line-height:1.6;margin:20px 0}
+.company-submit,.company-add{background:#f47b20;color:#fff;border:0;border-radius:9px;padding:13px 20px;font-weight:800;cursor:pointer}
+.company-cart{background:#f47b20;color:#fff;border:0;border-radius:9px;padding:10px 16px;font-weight:800;cursor:pointer;margin-top:12px}
+.company-cart:hover{background:#d9620d}
+.company-cart:disabled{opacity:.55;cursor:not-allowed}
+.company-cart-status{font-size:13px;margin-top:8px;color:#0b1f3a}
+
+.company-submit:hover,.company-add:hover{background:#d9620d}
+.company-add{background:#0b1f3a}
+.company-message{background:#ecfdf3;border-radius:8px;padding:12px 16px;margin-bottom:16px}
+.company-item{border:1px solid #dce3ec;border-radius:12px;padding:18px;margin:14px 0;background:#fbfcfe}
+.company-item-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.company-remove{background:#fff;border:1px solid #d92d20;color:#b42318;border-radius:8px;padding:8px 12px;cursor:pointer}
+.company-error{color:#b42318;font-weight:700;margin:10px 0}
+@media(max-width:680px){.company-grid{grid-template-columns:1fr}.company-full{grid-column:auto}.company-card{padding:18px}.company-hero{padding:25px}}
+</style>
+
+<div class="company-page">
+  <section class="company-hero">
+    <h1>Company Orders</h1>
+    <p>Request multiple industrial labels, decals and identification products in one business order request. Tell us your requested unit price in USD for each product.</p>
+  </section>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="company-message">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <section class="company-card">
+    <h2>Submit a company order request</h2>
+    <p>Add every product you need, with its own quantity and requested unit price.</p>
+
+    <div class="company-notice">
+      <strong>Private pricing:</strong> This form does not show other companies' prices or historical averages. Your requested prices are confidential from other customers and are not confirmed until staff approves them. Submitting this form does not take payment or purchase a shipping label.
+    </div>
+
+    <form method="post" id="company-order-form">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      <div class="company-grid">
+        {% for field in form %}
+          <div class="company-field {% if field.name == 'notes' %}company-full{% endif %}">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<div class="helptext">{{ field.help_text }}</div>{% endif %}
+            {{ field.errors }}
+          </div>
+        {% endfor %}
+      </div>
+
+      <hr style="border:0;border-top:1px solid #e2e8f0;margin:24px 0">
+
+      <h3>Requested products</h3>
+      <p class="helptext">You can add up to {{ max_items }} different product lines.</p>
+
+      {% if product_errors.general %}
+        <div class="company-error">{{ product_errors.general }}</div>
+      {% endif %}
+
+      <input type="hidden" name="item_count" id="item-count" value="{{ submitted_items|length }}">
+
+      <div id="company-items">
+        {% for item in submitted_items %}
+          <div class="company-item" data-item-row>
+            <div class="company-item-heading">
+              <strong>Product <span data-row-number>{{ forloop.counter }}</span></strong>
+              <button class="company-remove" type="button" data-remove-row>Remove</button>
+            </div>
+            {% if item.error %}<div class="company-error">{{ item.error }}</div>{% endif %}
+            <div class="company-grid">
+              <div class="company-field">
+                <label>Product</label>
+                <select name="product_{{ forloop.counter0 }}" required>
+                  <option value="">Choose a product</option>
+                  {% for product in products %}
+                    <option value="{{ product.pk }}" {% if item.product_id|stringformat:"s" == product.pk|stringformat:"s" %}selected{% endif %}>
+                      {{ product.name }}{% if product.product_code %} ({{ product.product_code }}){% endif %}
+                    </option>
+                  {% endfor %}
+                  <option value="CUSTOM" {% if item.product_id == "CUSTOM" %}selected{% endif %}>CUSTOM / Other (Please Specify)</option>
+                </select>
+              </div>
+              <div class="company-field company-full" data-custom-field hidden>
+                <label>Describe your custom product</label>
+                <textarea data-name="custom_description" rows="3" maxlength="10000" placeholder="Describe the product, size, material, use, artwork, or other specifications.">{{ item.custom_description }}</textarea>
+                <div class="helptext">Required when CUSTOM / Other is selected.</div>
+              </div>
+              <div class="company-field">
+                <label>Quantity</label>
+                <input type="number" name="quantity_{{ forloop.counter0 }}" min="1" max="1000000" step="1" value="{{ item.quantity|default:'1' }}" required>
+              </div>
+              <div class="company-field">
+                <label>Requested unit price (USD)</label>
+                <input type="number" name="price_{{ forloop.counter0 }}" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" value="{{ item.price }}" required>
+              </div>
+              <div class="company-line-total" aria-live="polite">
+                Line total: $<span data-line-total>0.00</span>
+              </div>
+            </div>
+            <button class="company-cart" type="button" data-add-to-cart>
+              Add to Cart
+            </button>
+            <div class="company-cart-status" data-cart-status aria-live="polite"></div>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="company-grand-total" aria-live="polite"
+           style="margin-top:16px;padding:16px;border:1px solid #d7dee8;border-radius:8px;font-weight:700">
+        Requested grand total: $<span id="company-grand-total">0.00</span> USD
+        <p style="font-size:12px;font-weight:400;margin:6px 0 0">
+          Calculated from the requested unit prices and quantities.
+        </p>
+      </div>
+
+      <div class="company-full" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:16px">
+        <button class="company-add" type="button" id="add-company-item">+ Add another product</button>
+        <button class="company-submit" type="submit" id="submit-custom-request" hidden>Submit Custom Request for Staff Review</button>
+      </div>
+    </form>
+  </section>
+</div>
+
+<template id="company-item-template">
+  <div class="company-item" data-item-row>
+    <div class="company-item-heading">
+      <strong>Product <span data-row-number></span></strong>
+      <button class="company-remove" type="button" data-remove-row>Remove</button>
+    </div>
+    <div class="company-grid">
+      <div class="company-field">
+        <label>Product</label>
+        <select data-name="product" required>
+          <option value="">Choose a product</option>
+          {% for product in products %}
+            <option value="{{ product.pk }}">{{ product.name }}{% if product.product_code %} ({{ product.product_code }}){% endif %}</option>
+          {% endfor %}
+          <option value="CUSTOM">CUSTOM / Other (Please Specify)</option>
+        </select>
+      </div>
+      <div class="company-field company-full" data-custom-field hidden>
+        <label>Describe your custom product</label>
+        <textarea data-name="custom_description" rows="3" maxlength="10000" placeholder="Describe the product, size, material, use, artwork, or other specifications."></textarea>
+        <div class="helptext">Required when CUSTOM / Other is selected.</div>
+      </div>
+      <div class="company-field">
+        <label>Quantity</label>
+        <input data-name="quantity" type="number" min="1" max="1000000" step="1" value="1" required>
+      </div>
+      <div class="company-field">
+        <label>Requested unit price (USD)</label>
+        <input data-name="price" type="number" min="0.01" max="9999999999.99" step="0.01" placeholder="0.00" required>
+      </div>
+    </div>
+    <button class="company-cart" type="button" data-add-to-cart>
+      Add to Cart
+    </button>
+    <div class="company-cart-status" data-cart-status aria-live="polite"></div>
+  </div>
+</template>
+
+<script>
+(function () {
+  const container = document.getElementById("company-items");
+  const template = document.getElementById("company-item-template");
+  const countField = document.getElementById("item-count");
+  const addButton = document.getElementById("add-company-item");
+  const maxItems = {{ max_items|default:25 }};
+
+  function rows() {
+    return Array.from(container.querySelectorAll("[data-item-row]"));
+  }
+
+  function updateTotals() {
+    let grandTotal = 0;
+
+    rows().forEach((row) => {
+      const quantityField = row.querySelector("input[name^='quantity_'], input[data-name='quantity']");
+      const priceField = row.querySelector("input[name^='price_'], input[data-name='price']");
+      const output = row.querySelector("[data-line-total]");
+
+      const quantity = Number(quantityField ? quantityField.value : 0);
+      const price = Number(priceField ? priceField.value : 0);
+      const lineTotal = Number.isFinite(quantity * price) && quantity > 0 && price > 0
+        ? quantity * price
+        : 0;
+
+      grandTotal += lineTotal;
+      if (output) output.textContent = lineTotal.toFixed(2);
+    });
+
+    const grandOutput = document.getElementById("company-grand-total");
+    if (grandOutput) grandOutput.textContent = grandTotal.toFixed(2);
+  }
+
+  function renumber() {
+    const allRows = rows();
+    allRows.forEach((row, index) => {
+      row.querySelector("[data-row-number]").textContent = String(index + 1);
+      row.querySelectorAll("[data-name]").forEach((field) => {
+        field.name = field.dataset.name + "_" + index;
+      });
+      row.querySelectorAll("select[name^='product_']").forEach((field) => {
+        field.name = "product_" + index;
+      });
+      row.querySelectorAll("input[name^='quantity_']").forEach((field) => {
+        field.name = "quantity_" + index;
+      });
+      row.querySelectorAll("input[name^='price_']").forEach((field) => {
+        field.name = "price_" + index;
+      });
+      row.querySelector("[data-remove-row]").disabled = allRows.length === 1;
+      updateCustomField(row);
+    });
+    countField.value = String(allRows.length);
+    addButton.disabled = allRows.length >= maxItems;
+    addButton.textContent = allRows.length >= maxItems
+      ? "Maximum product lines reached"
+      : "+ Add another product";
+  }
+
+
+  function updateCustomField(row) {
+    const productField = row.querySelector(
+      "select[name^='product_'], select[data-name='product']"
+    );
+    const customField = row.querySelector("[data-custom-field]");
+    const description = customField
+      ? customField.querySelector("textarea[name^='custom_description_'], textarea[data-name='custom_description']")
+      : null;
+    const isCustom = !!productField && productField.value === "CUSTOM";
+
+    if (customField) customField.hidden = !isCustom;
+    if (description) description.required = isCustom;
+
+    const submitButton = document.getElementById("submit-custom-request");
+    if (submitButton) {
+      submitButton.hidden = !rows().some((itemRow) => {
+        const select = itemRow.querySelector(
+          "select[name^='product_'], select[data-name='product']"
+        );
+        return !!select && select.value === "CUSTOM";
+      });
+    }
+  }
+
+  container.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-add-to-cart]");
+    if (!button) return;
+
+    const row = button.closest("[data-item-row]");
+    if (!row) return;
+
+    const productField = row.querySelector(
+      "select[name^='product_'], select[data-name='product']"
+    );
+    const quantityField = row.querySelector(
+      "input[name^='quantity_'], input[data-name='quantity']"
+    );
+    const status = row.querySelector("[data-cart-status]");
+    const productId = productField ? productField.value : "";
+    if (productId === "CUSTOM") {
+      if (status) {
+        status.textContent = "Custom products cannot be added to the standard cart. Describe the item and use Submit Custom Request for Staff Review.";
+      }
+      return;
+    }
+    const quantity = Number(quantityField ? quantityField.value : 0);
+    const csrfField = document.querySelector(
+      "#company-order-form input[name='csrfmiddlewaretoken']"
+    );
+
+    if (!productId) {
+      if (status) status.textContent = "Choose a product first.";
+      if (productField) productField.focus();
+      return;
+    }
+
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 1000000) {
+      if (status) status.textContent = "Enter a valid whole-number quantity.";
+      if (quantityField) quantityField.focus();
+      return;
+    }
+
+    if (!csrfField) {
+      if (status) status.textContent = "Security token missing. Refresh the page and try again.";
+      return;
+    }
+
+    const cartForm = document.createElement("form");
+    cartForm.method = "POST";
+    cartForm.action = "/cart/add/" + encodeURIComponent(productId) + "/";
+    cartForm.style.display = "none";
+
+    const csrf = document.createElement("input");
+    csrf.type = "hidden";
+    csrf.name = "csrfmiddlewaretoken";
+    csrf.value = csrfField.value;
+
+    const quantityInput = document.createElement("input");
+    quantityInput.type = "hidden";
+    quantityInput.name = "quantity";
+    quantityInput.value = String(quantity);
+
+    cartForm.appendChild(csrf);
+    cartForm.appendChild(quantityInput);
+    document.body.appendChild(cartForm);
+
+    button.disabled = true;
+    if (status) status.textContent = "Adding product to your cart?";
+    cartForm.submit();
+  });
+
+  addButton.addEventListener("click", function () {
+    if (rows().length >= maxItems) return;
+    container.appendChild(template.content.cloneNode(true));
+    renumber();
+    updateTotals();
+  });
+
+  container.addEventListener("click", function (event) {
+    const button = event.target.closest("[data-remove-row]");
+    if (!button || rows().length <= 1) return;
+    button.closest("[data-item-row]").remove();
+    renumber();
+    updateTotals();
+  });
+
+  container.addEventListener("input", updateTotals);
+  container.addEventListener("change", function (event) {
+    if (event.target.matches("select[name^='product_'], select[data-name='product']")) {
+      updateCustomField(event.target.closest("[data-item-row]"));
+    }
+    updateTotals();
+  });
+
+  document.getElementById("company-order-form").addEventListener("submit", function () {
+    renumber();
+  });
+
+  renumber();
+  updateTotals();
+})();
+</script>
+{% endblock %}

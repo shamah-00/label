@@ -6,8 +6,6 @@ urlpatterns = [
     path("", views.staff_dashboard, name="staff_dashboard"),
     path("login/", views.staff_login, name="staff_login"),
     path("logout/", views.staff_logout, name="staff_logout"),
-    path("register/", views.staff_register, name="staff_register"),
-    path("register/success/", views.staff_registration_success, name="staff_registration_success"),
     path("profile/", views.staff_profile, name="staff_profile"),
     
     # Products
@@ -21,7 +19,9 @@ urlpatterns = [
     
     # Orders
     path("orders/", views.staff_orders, name="staff_orders"),
+    path("orders/<int:pk>/delete/", views.boss_delete_order, name="boss_delete_order"),
     path("orders/<int:pk>/", views.staff_order_detail, name="staff_order_detail"),
+    path("invoices/<int:pk>/", views.staff_invoice_detail, name="staff_invoice_detail"),
     
     # Quotes
     path("quotes/", views.staff_quotes, name="staff_quotes"),
@@ -32,17 +32,10 @@ urlpatterns = [
     path("calendar-orders/<int:pk>/", views.staff_calendar_order_detail, name="staff_calendar_order_detail"),
     
     # Boss / Staff Management paths
-    path("boss/staff/", views.boss_staff_management, name="boss_staff_management"),
-    path("staff-management/", views.boss_staff_management),
     
-    path("boss/staff/create/", views.owner_create_staff, name="owner_create_staff"),
-    path("staff-management/create/", views.owner_create_staff),
     
-    path("boss/staff/<int:pk>/approve/", views.approve_staff, name="approve_staff"),
-    path("boss/staff/<int:pk>/reject/", views.reject_staff, name="reject_staff"),
-    path("boss/staff/<int:pk>/deactivate/", views.deactivate_staff, name="deactivate_staff"),
-    path("boss/staff/<int:pk>/reactivate/", views.reactivate_staff, name="reactivate_staff"),
-    path("boss/staff/<int:pk>/remove/", views.remove_staff, name="remove_staff"),
+    path("staff-management/", views.boss_staff_management, name="boss_staff_management"),
     path("boss/activity/", views.staff_activity_log, name="staff_activity_log"),
     path("boss/site-settings/", views.boss_site_settings, name="boss_site_settings"),
+    path("boss/payment-settings/", views.boss_payment_settings, name="boss_payment_settings"),
 ]

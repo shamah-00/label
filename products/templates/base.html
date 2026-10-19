@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -199,7 +199,8 @@
                 {% else %}
                     <a href="/staff/login/">Staff Login</a>
                 {% endif %}
-            </nav>
+            <a href="{% url 'company_orders:order' %}">Company Orders</a>
+</nav>
         </div>
     </header>
 

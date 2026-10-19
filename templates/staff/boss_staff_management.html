@@ -292,8 +292,8 @@
         <a href="{% url 'staff_calendar_orders' %}">Calendar Orders</a>
 
         <div class="menu-section">Boss Portal</div>
-        <a href="{% url 'boss_staff_management' %}" class="active">Staff Management</a>
-        <a href="{% url 'staff_activity_log' %}">Activity Log</a>
+        {% if request.user.is_superuser %}{% endif %}
+        {% if request.user.is_superuser %}<a href="{% url 'staff_activity_log' %}">Activity Log</a>{% endif %}
 
         <div class="menu-section">Account</div>
         <a href="{% url 'staff_profile' %}">Staff Profile</a>
@@ -364,7 +364,7 @@
         <div class="card">
             <div class="card-header">
                 <h2>Approved Staff Members</h2>
-                <a href="{% url 'staff_activity_log' %}" style="font-size: 0.85rem; color: var(--accent); text-decoration: none; font-weight: 600;">View Activity Log &rarr;</a>
+                {% if request.user.is_superuser %}<a href="{% url 'staff_activity_log' %}" style="font-size: 0.85rem; color: var(--accent); text-decoration: none; font-weight: 600;">View Activity Log &rarr;</a>{% endif %}
             </div>
             <p class="card-desc">Staff members with active authorized access. Deactivating blocks login while preserving historical records.</p>
             <table>

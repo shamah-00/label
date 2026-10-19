@@ -90,24 +90,8 @@ def boss_required(view_func):
             logout(request)
             return redirect("staff_login")
 
-        if request.user.is_superuser:
-            return view_func(request, *args, **kwargs)
-
-        profile = get_staff_profile(request.user)
-
-        if not profile:
-            messages.error(request, "Staff profile not found.")
-            return redirect("staff_dashboard")
-
-        if not profile.approved or profile.status != "approved":
-            messages.error(request, "Your account is not approved.")
-            return redirect("staff_dashboard")
-
-        if profile.role != "manager":
-            messages.error(
-                request,
-                "Boss access is required for this section.",
-            )
+        if not request.user.is_superuser:
+            messages.error(request, "Boss access is required for this section.")
             return redirect("staff_dashboard")
 
         return view_func(request, *args, **kwargs)
@@ -1036,18 +1020,24 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import AuthenticationForm
 
 def staff_login(request):
+    from django.contrib.auth import authenticate, login
+
     if request.method == "POST":
+        username = request.POST.get("username", "").strip()
+        password = request.POST.get("password", "")
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None and user.is_active and user.is_staff:
+            login(request, user)
+            return redirect("staff_dashboard")
+
         form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            if user.is_staff:
-                login(request, user)
-                return redirect("staff_dashboard")
-            else:
-                form.add_error(None, "You do not have staff permissions.")
+        form.add_error(None, "Invalid login details or this account does not have staff access.")
     else:
-        form = AuthenticationForm()
+        form = AuthenticationForm(request)
+
     return render(request, "staff/login.html", {"form": form})
+
 
 from django.contrib.auth import logout
 
@@ -1062,7 +1052,7 @@ def staff_register(request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.is_staff = True
+            user.is_staff = False
             user.save()
             return redirect("staff_login")
     else:
@@ -1367,6 +1357,103 @@ def boss_staff_management(request):
         "staff/boss/staff_management.html",
         context
     )
+
+
+def create_invoice_for_delivered_shipment(shipment):
+    """
+    Create one invoice for a delivered shipment.
+    The Invoice.order OneToOneField prevents duplicate invoices.
+    No payment is collected or recorded by this function.
+    """
+    from datetime import timedelta
+    from django.db import transaction
+    from products.models import Invoice, InvoiceItem, OrderItem
+
+    with transaction.atomic():
+        order = shipment.order
+        terms = int(getattr(order, "payment_terms_days", 0) or 0)
+
+        # Credit terms must be explicitly approved. Otherwise invoice is due on receipt.
+        if terms not in (0, 30, 45, 60, 90):
+            terms = 0
+        if terms and not getattr(order, "credit_terms_approved", False):
+            terms = 0
+
+        delivered_at = shipment.delivered_at or timezone.now()
+        invoice_date = timezone.localdate(delivered_at)
+        due_date = invoice_date + timedelta(days=terms)
+
+        invoice, created = Invoice.objects.get_or_create(
+            order=order,
+            defaults={
+                "invoice_date": invoice_date,
+                "due_date": due_date,
+                "currency": (order.currency or "USD").upper()[:3],
+                "total": order.total or 0,
+                "amount_paid": 0,
+                "terms_days": terms,
+            },
+        )
+
+        if created:
+            order_items = OrderItem.objects.filter(order=order).order_by("id")
+            InvoiceItem.objects.bulk_create([
+                InvoiceItem(
+                    invoice=invoice,
+                    description=(item.product_name or str(item.product))[:250],
+                    quantity=item.quantity,
+                    unit_price=item.unit_price or 0,
+                    line_total=item.total_price or 0,
+                )
+                for item in order_items
+            ])
+        return invoice, created
+
+
+@staff_required
+
+
+@login_required
+@boss_required
+def boss_delete_order(request, pk):
+    """Delete an order only through a CSRF-protected Boss POST request."""
+    from django.contrib import messages
+    from django.views.decorators.http import require_POST
+    from django.shortcuts import redirect
+    from products.models import Order
+
+    if request.method != "POST":
+        messages.error(request, "Orders can only be deleted using the confirmation form.")
+        return redirect("staff_orders")
+
+    order = get_object_or_404(Order, pk=pk)
+    order_number = order.pk
+
+    # Keep the action in the existing staff activity log before deletion.
+    try:
+        profile = get_staff_profile(request.user)
+        log_staff_activity(
+            request,
+            profile,
+            "delete",
+            f"Boss deleted Order #{order_number}",
+            f"Order #{order_number}",
+        )
+    except Exception:
+        # Do not delete if the activity log cannot be recorded.
+        messages.error(
+            request,
+            "The order was not deleted because the action could not be logged."
+        )
+        return redirect("staff_order_detail", pk=order_number)
+
+    order.delete()
+    messages.success(
+        request,
+        f"Order #{order_number} was deleted. Related order items and shipment records "
+        "may also have been deleted by the database relationship rules."
+    )
+    return redirect("staff_orders")
 
 
 @staff_required
@@ -1819,3 +1906,58 @@ def staff_shipping_dashboard(request):
         "status_choices": Shipment.STATUS_CHOICES,
     })
 
+
+
+@staff_required
+def staff_invoice_detail(request, pk):
+    from products.models import Invoice
+
+    invoice = get_object_or_404(
+        Invoice.objects.select_related("order").prefetch_related("items"),
+        pk=pk,
+    )
+    return render(request, "staff/invoices/detail.html", {"invoice": invoice})
+
+
+@login_required
+@boss_required
+def boss_payment_settings(request):
+    from products.models import PaymentSystemSettings
+
+    settings_obj = PaymentSystemSettings.get_settings()
+    allowed_methods = {"check", "ach", "wire"}
+    allowed_terms = {0, 30, 45, 60, 90}
+    allowed_timing = {"upfront", "invoice_after_delivery"}
+
+    if request.method == "POST":
+        selected = set(request.POST.getlist("enabled_methods"))
+        if not selected.issubset(allowed_methods):
+            messages.error(request, "Invalid payment method selection.")
+            return redirect("boss_payment_settings")
+
+        timing = request.POST.get("payment_timing", "").strip()
+        try:
+            terms = int(request.POST.get("default_terms_days", "30"))
+        except (TypeError, ValueError):
+            terms = -1
+
+        if timing not in allowed_timing or terms not in allowed_terms:
+            messages.error(request, "Choose valid payment timing and invoice terms.")
+            return redirect("boss_payment_settings")
+
+        settings_obj.enabled_methods = sorted(selected)
+        settings_obj.payment_timing = timing
+        settings_obj.default_terms_days = terms
+        settings_obj.check_instructions = request.POST.get("check_instructions", "").strip()
+        settings_obj.ach_instructions = request.POST.get("ach_instructions", "").strip()
+        settings_obj.wire_instructions = request.POST.get("wire_instructions", "").strip()
+        settings_obj.updated_by = request.user
+        settings_obj.save()
+        messages.success(request, "Payment settings saved.")
+        return redirect("boss_payment_settings")
+
+    return render(
+        request,
+        "staff/payment_settings.html",
+        {"payment_settings": settings_obj},
+    )

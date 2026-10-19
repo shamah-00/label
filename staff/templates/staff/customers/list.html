@@ -58,8 +58,8 @@ tbody tr:hover{background:#fff5ed}
 <div class="nav-title">Account</div>
 <a class="nav-link" href="{% url 'staff_profile' %}">Staff Profile</a>
 {% if user.is_superuser %}
-<a class="nav-link" href="{% url 'boss_staff_management' %}">Staff Management</a>
-<a class="nav-link" href="{% url 'staff_activity_log' %}">Activity Log</a>
+{% if request.user.is_superuser %}{% endif %}
+{% if request.user.is_superuser %}<a class="nav-link" href="{% url 'staff_activity_log' %}">Activity Log</a>{% endif %}
 {% endif %}
 <a class="nav-link" href="{% url 'staff_logout' %}">Logout</a>
 </aside>

@@ -697,7 +697,19 @@ def checkout(request):
     from django.db import transaction
     from django.shortcuts import render, redirect
 
-    from .models import Product, Order, OrderItem
+    from .models import Product, Order, OrderItem, PaymentSystemSettings
+    payment_settings = PaymentSystemSettings.get_settings()
+    method_labels = {
+        "check": "Check / Invoice",
+        "ach": "ACH Bank Transfer",
+        "wire": "Wire Transfer",
+    }
+    payment_methods = [
+        (key, label)
+        for key, label in method_labels.items()
+        if key in (payment_settings.enabled_methods or [])
+    ]
+
 
     ZERO = Decimal("0.00")
     SESSION_RATES = "shippo_checkout_rates"
@@ -718,6 +730,8 @@ def checkout(request):
             "shipping_rates": rates or [],
             "shipping_rate_error": error,
             "rate_error": error,
+            "payment_settings": payment_settings,
+            "payment_methods": payment_methods,
         }
         return render(request, "checkout.html", context)
 
@@ -1355,6 +1369,20 @@ def checkout(request):
         )
 
     total = subtotal + shipping_cost
+    payment_method = request.POST.get("payment_method", "").strip().lower()
+    enabled_method_keys = {key for key, label in payment_methods}
+    if not enabled_method_keys:
+        return render_checkout(
+            items, subtotal, rates=cached_rates,
+            error="No payment methods are enabled. Please contact The Label Group.",
+        )
+    if payment_method not in enabled_method_keys:
+        return render_checkout(
+            items, subtotal, rates=cached_rates,
+            error="Select an enabled payment method.",
+        )
+    terms_days = payment_settings.default_terms_days
+    payment_label = dict(payment_methods).get(payment_method, payment_method)
     service_note = (
         "Shipping provider: {}. Service: {}. "
         "Rate reference: {}. Shipping amount: ${} USD."
@@ -1381,7 +1409,15 @@ def checkout(request):
                 shipping_cost=shipping_cost,
                 total=total,
                 currency="USD",
-                notes=combined_notes,
+                payment_method=payment_method,
+                payment_terms_days=terms_days,
+                credit_terms_approved=False,
+                notes=(
+                    combined_notes
+                    + "\nPayment method requested: " + payment_label
+                    + ". Payment timing: " + payment_settings.payment_timing
+                    + ". Payment has not been collected by checkout."
+                ),
             )
 
             for item in items:

@@ -68,3 +68,43 @@ class ShippingRuleAdmin(admin.ModelAdmin):
 @admin.register(ShippingSystemSettings)
 class ShippingSystemSettingsAdmin(admin.ModelAdmin):
     list_display = ("enabled", "default_flat_fee", "default_per_lb_fee", "updated_at")
+
+
+from .models import Invoice, InvoiceItem
+
+
+class InvoiceItemInline(admin.TabularInline):
+    model = InvoiceItem
+    extra = 0
+    readonly_fields = ("description", "quantity", "unit_price", "line_total")
+
+
+@admin.register(Invoice)
+class InvoiceAdmin(admin.ModelAdmin):
+    list_display = (
+        "invoice_number", "order", "invoice_date", "due_date",
+        "total", "amount_paid", "status",
+    )
+    list_filter = ("status", "invoice_date", "due_date", "terms_days")
+    search_fields = (
+        "invoice_number", "order__customer_name", "order__customer_email",
+    )
+    readonly_fields = (
+        "invoice_number", "order", "invoice_date", "due_date",
+        "currency", "total", "terms_days", "created_at", "updated_at",
+    )
+    fields = (
+        "invoice_number", "order", "invoice_date", "due_date",
+        "currency", "total", "amount_paid", "status", "terms_days",
+        "created_at", "updated_at",
+    )
+    inlines = [InvoiceItemInline]
+
+    def save_model(self, request, obj, form, change):
+        if obj.amount_paid < 0:
+            from django.core.exceptions import ValidationError
+            raise ValidationError("Amount paid cannot be negative.")
+        if obj.amount_paid > obj.total:
+            from django.core.exceptions import ValidationError
+            raise ValidationError("Amount paid cannot exceed the invoice total.")
+        super().save_model(request, obj, form, change)

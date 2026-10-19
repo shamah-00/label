@@ -1,7 +1,13 @@
 from django.urls import path
+from . import quickbooks_integration
 from . import views
 
 urlpatterns = [
+    path("quickbooks/connection/", quickbooks_integration.quickbooks_connection_page, name="quickbooks_connection"),
+    path("quickbooks/connect/", quickbooks_integration.quickbooks_connect, name="quickbooks_connect"),
+    path("quickbooks/callback/", quickbooks_integration.quickbooks_callback, name="quickbooks_callback"),
+    path("quickbooks/disconnect/", quickbooks_integration.quickbooks_disconnect, name="quickbooks_disconnect"),
+
     path('cart/update/<int:product_id>/', views.update_cart, name='update_cart'),
     path('cart/remove/<int:product_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('cart/clear/', views.clear_cart, name='clear_cart'),
