@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 
 
 from dotenv import load_dotenv
@@ -25,6 +25,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 
 INSTALLED_APPS = [
+    'company_orders',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -124,4 +125,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
+
+
+
+# Production static-file collection destination
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 

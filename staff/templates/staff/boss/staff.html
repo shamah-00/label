@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="en">
 
@@ -651,9 +651,9 @@ footer {
         Dashboard
     </a>
 
-    <a href="{% url 'staff_activity_log' %}">
+    {% if request.user.is_superuser %}<a href="{% url 'staff_activity_log' %}">
         Activity Log
-    </a>
+    </a>{% endif %}
 
     <a href="{% url 'staff_logout' %}">
         Logout
@@ -680,13 +680,7 @@ footer {
         </div>
 
 
-        <a
-            href="{% url 'owner_create_staff' %}"
-            class="create-button">
 
-            + Create Staff Account
-
-        </a>
 
     </div>
 
@@ -984,13 +978,13 @@ footer {
             </div>
 
 
-            <a
+            {% if request.user.is_superuser %}<a
                 href="{% url 'staff_activity_log' %}"
                 class="activity-link">
 
                 View Activity Log
 
-            </a>
+            </a>{% endif %}
 
         </div>
 

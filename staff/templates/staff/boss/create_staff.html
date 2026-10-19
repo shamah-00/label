@@ -580,12 +580,7 @@ footer {
 
 <main class="container">
 
-    <a href="{% url 'boss_staff_management' %}"
-       class="back-link">
-
-        ← Back to Staff Management
-
-    </a>
+    {% if request.user.is_superuser %}{% endif %}
 
 
     <div class="card">
@@ -841,13 +836,7 @@ footer {
                 </button>
 
 
-                <a
-                    href="{% url 'boss_staff_management' %}"
-                    class="button secondary">
-
-                    Cancel
-
-                </a>
+                {% if request.user.is_superuser %}{% endif %}
 
             </div>
 

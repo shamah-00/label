@@ -461,9 +461,9 @@ footer {
             Dashboard
         </a>
 
-        <a href="{% url 'staff_activity_log' %}">
+        {% if request.user.is_superuser %}<a href="{% url 'staff_activity_log' %}">
             Activity Log
-        </a>
+        </a>{% endif %}
 
     </div>
 

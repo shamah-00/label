@@ -162,9 +162,9 @@ h3{color:var(--navy);font-size:15px;margin:0}
         <div class="portal-label">WORKSPACE</div>
         <nav class="nav-group">
             <a class="nav-link active" href="/staff/"><span class="ico">▦</span> Dashboard</a>
-            <a class="nav-link" href="{% url 'staff_products' %}"><span class="ico">▤</span> Products</a>
+            <a class="nav-link" href="{% url 'staff_products' %}"><span class="ico">◇</span> Products</a>
             <a class="nav-link" href="{% url 'staff_orders' %}"><span class="ico">▣</span> Orders</a>
-            <a class="nav-link" href="{% url 'staff_quotes' %}"><span class="ico">▧</span> Quote requests</a>
+            <a class="nav-link" href="{% url 'staff_quotes' %}"><span class="ico">✉</span> Quote requests</a>
             <a class="nav-link" href="{% url 'staff_customers' %}"><span class="ico">♙</span> Customers</a>
             <a class="nav-link" href="/staff/calendar-orders/"><span class="ico">▦</span> Order calendar</a>
         </nav>
@@ -174,8 +174,8 @@ h3{color:var(--navy);font-size:15px;margin:0}
     <div>
         <div class="portal-label">ADMINISTRATION</div>
         <nav class="nav-group">
-            <a class="nav-link" href="{% url 'boss_staff_management' %}"><span class="ico">♧</span> Staff management</a>
-            <a class="nav-link" href="{% url 'staff_activity_log' %}"><span class="ico">◷</span> Activity log</a>
+            <a class="nav-link" href="{% url 'boss_staff_management' %}"><span class="ico">⚙</span> Staff management</a>
+            <a class="nav-link" href="{% url 'staff_activity_log' %}"><span class="ico">Γù╖</span> Activity log</a>
         </nav>
     </div>
     {% endif %}
@@ -216,7 +216,7 @@ h3{color:var(--navy);font-size:15px;margin:0}
                     <h2>Business at a glance</h2>
                     <p>Your catalogue and customer workflow, all in one place.</p>
                 </div>
-                <a class="btn btn-light" href="{% url 'staff_products' %}">＋ Open catalogue</a>
+                <a class="btn btn-light" href="{% url 'staff_products' %}">▦ Open catalogue</a>
             </div>
 
             <div class="stats">
@@ -233,7 +233,7 @@ h3{color:var(--navy);font-size:15px;margin:0}
                     <a class="text-link" href="{% url 'staff_products' %}">Review availability →</a>
                 </article>
                 <article class="stat orange">
-                    <div class="stat-top"><span class="stat-label">Quote requests</span><span class="stat-icon">▤</span></div>
+                    <div class="stat-top"><span class="stat-label">Quote requests</span><span class="stat-icon">◇</span></div>
                     <div class="stat-number">{{ total_quotes|default:quotes_count|default:0 }}</div>
                     <div class="stat-note">{{ new_quotes|default:0 }} new requests awaiting review</div>
                     <a class="text-link" href="{% url 'staff_quotes' %}">Review requests →</a>
@@ -276,7 +276,7 @@ h3{color:var(--navy);font-size:15px;margin:0}
                         <div class="round-icon">Q{{ quote.id }}</div>
                         <div class="item-main">
                             <div class="item-title">{{ quote.company_name|default:quote.customer_name }}</div>
-                            <div class="item-sub">Request #{{ quote.id }} · {{ quote.created_at|date:"M d, Y" }}<br>{{ quote.customer_name }}</div>
+                            <div class="item-sub">Request #{{ quote.id }} • {{ quote.created_at|date:"M d, Y" }}<br>{{ quote.customer_name }}</div>
                         </div>
                         <span class="pill">{{ quote.get_status_display }}</span>
                         <a class="text-link" href="/staff/quotes/{{ quote.id }}/">Open →</a>
@@ -298,7 +298,7 @@ h3{color:var(--navy);font-size:15px;margin:0}
                         <div class="activity-mark">↗</div>
                         <div class="item-main">
                             <div class="item-title">{% if activity.staff and activity.staff.user %}{{ activity.staff.user.username }}{% else %}Staff member{% endif %}</div>
-                            <div class="item-sub">{{ activity.description|default:activity.action }}<br>{{ activity.created_at|date:"M d, Y · H:i" }}</div>
+                            <div class="item-sub">{{ activity.description|default:activity.action }}<br>{{ activity.created_at|date:"M d, Y • H:i" }}</div>
                         </div>
                     </div>
                     {% empty %}
@@ -338,8 +338,8 @@ h3{color:var(--navy);font-size:15px;margin:0}
                 <div class="admin-stat"><span>Quotes prepared</span><strong>{{ quoted_quotes|default:0 }}</strong></div>
             </div>
             <div class="admin-links">
-                <a class="btn btn-orange" href="{% url 'boss_staff_management' %}">♧ Manage staff &amp; approvals</a>
-                <a class="btn btn-navy" href="{% url 'staff_activity_log' %}">◷ Review activity log</a>
+                <a class="btn btn-orange" href="{% url 'boss_staff_management' %}">⚙ Manage staff &amp; approvals</a>
+                <a class="btn btn-navy" href="{% url 'staff_activity_log' %}">Γù╖ Review activity log</a>
                 <a class="btn btn-light" href="/staff/calendar-orders/">▦ Open order calendar</a>
             </div>
         </section>
