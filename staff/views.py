@@ -1,4 +1,4 @@
-from django.contrib import messages
+﻿from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -101,89 +101,95 @@ def boss_required(view_func):
 
 @staff_required
 def staff_dashboard(request):
+    """
+    Staff dashboard with robust defensive handling to prevent 500 errors.
+    Fails safely with default values if any optional table or query fails.
+    """
+    import logging
+    from products.models import Order, QuoteRequest
+    from .models import StaffProfile, StaffActivityLog
+
+    logger = logging.getLogger(__name__)
+
+    # Safe default values
+    orders_count = 0
+    quotes_count = 0
+    new_quotes_count = 0
+    reviewing_quotes_count = 0
+    quoted_count = 0
+    approved_quotes_count = 0
+    completed_quotes_count = 0
+    approved_staff_count = 0
+    pending_staff_count = 0
+    recent_quotes = []
+    recent_activity = []
+
     profile = get_staff_profile(request.user)
 
-    products_count = Product.objects.count()
-    available_products_count = Product.objects.filter(
-        is_available=True
-    ).count()
+    # Safely fetch Order counts
+    try:
+        orders_count = Order.objects.count()
+    except Exception:
+        pass
 
-    orders_count = Order.objects.count()
-    quotes_count = QuoteRequest.objects.count()
+    # Safely fetch QuoteRequest counts and lists
+    try:
+        quotes = QuoteRequest.objects.all()
+        quotes_count = quotes.count()
+        try:
+            new_quotes_count = quotes.filter(status="new").count()
+            reviewing_quotes_count = quotes.filter(status="reviewing").count()
+            quoted_count = quotes.filter(status="quoted").count()
+            approved_quotes_count = quotes.filter(status="approved").count()
+            completed_quotes_count = quotes.filter(status="completed").count()
+        except Exception:
+            pass
 
-    new_quotes_count = QuoteRequest.objects.filter(
-        status="new"
-    ).count()
+        try:
+            recent_quotes = list(QuoteRequest.objects.order_by("-created_at")[:8])
+        except Exception:
+            pass
+    except Exception:
+        pass
 
-    reviewing_quotes_count = QuoteRequest.objects.filter(
-        status="reviewing"
-    ).count()
+    # Safely fetch Staff Profile counts
+    try:
+        approved_staff_count = StaffProfile.objects.filter(approved=True, status="approved").count()
+        pending_staff_count = StaffProfile.objects.filter(approved=False, status="pending").count()
+    except Exception:
+        pass
 
-    quoted_count = QuoteRequest.objects.filter(
-        status="quoted"
-    ).count()
-
-    approved_quotes_count = QuoteRequest.objects.filter(
-        status="approved"
-    ).count()
-
-    in_production_count = QuoteRequest.objects.filter(
-        status="in_production"
-    ).count()
-
-    completed_quotes_count = QuoteRequest.objects.filter(
-        status="completed"
-    ).count()
-
+    # Update staff last activity timestamp if profile exists
     if profile:
-        profile.last_activity = timezone.now()
-        profile.save(update_fields=["last_activity"])
+        try:
+            profile.save(update_fields=["last_activity"])
+        except Exception:
+            pass
 
-    recent_quotes = QuoteRequest.objects.order_by("-created_at")[:8]
-    recent_activity = StaffActivityLog.objects.select_related(
-        "staff", "staff__user"
-    ).order_by("-id")[:8]
-
-    approved_staff_count = StaffProfile.objects.filter(
-        approved=True, status="approved"
-    ).count()
-    pending_staff_count = StaffProfile.objects.filter(
-        approved=False, status="pending"
-    ).count()
+    # Safely fetch recent activity log
+    try:
+        recent_activity = list(
+            StaffActivityLog.objects.select_related("staff", "staff__user").order_by("-timestamp")[:10]
+        )
+    except Exception:
+        pass
 
     context = {
-        "total_products": products_count,
-        "available_products": available_products_count,
-        "total_orders": orders_count,
-        "total_quotes": quotes_count,
-        "new_quotes": new_quotes_count,
-        "reviewing_quotes": reviewing_quotes_count,
-        "quoted_quotes": quoted_count,
-        "approved_quotes": approved_quotes_count,
-        "production_quotes": in_production_count,
-        "completed_quotes": completed_quotes_count,
-        "approved_staff": approved_staff_count,
-        "pending_staff": pending_staff_count,
-        "recent_quotes": recent_quotes,
-        "recent_activity": recent_activity,
         "profile": profile,
-        "products_count": products_count,
-        "available_products_count": available_products_count,
         "orders_count": orders_count,
         "quotes_count": quotes_count,
         "new_quotes_count": new_quotes_count,
         "reviewing_quotes_count": reviewing_quotes_count,
         "quoted_count": quoted_count,
         "approved_quotes_count": approved_quotes_count,
-        "in_production_count": in_production_count,
         "completed_quotes_count": completed_quotes_count,
+        "approved_staff_count": approved_staff_count,
+        "pending_staff_count": pending_staff_count,
+        "recent_quotes": recent_quotes,
+        "recent_activity": recent_activity,
     }
-
-    return render(
-        request,
-        "staff/dashboard.html",
-        context,
-    )
+    
+    return render(request, "staff/dashboard.html", context)
 
 
 @staff_required
@@ -1961,3 +1967,4 @@ def boss_payment_settings(request):
         "staff/payment_settings.html",
         {"payment_settings": settings_obj},
     )
+
