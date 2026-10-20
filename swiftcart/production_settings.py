@@ -106,3 +106,6 @@ SECURE_HSTS_PRELOAD = False
 # Public product uploads are served by the Django media URL route.
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# Trusted HTTPS origin for The Label Group Railway deployment.
+CSRF_TRUSTED_ORIGINS = list(globals().get("CSRF_TRUSTED_ORIGINS", [])) + ["https://web-production-d1e74.up.railway.app"]
