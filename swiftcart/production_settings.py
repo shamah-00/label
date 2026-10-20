@@ -101,3 +101,8 @@ SECURE_HSTS_SECONDS = int(
 )
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
+
+
+# Public product uploads are served by the Django media URL route.
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"

@@ -14,6 +14,7 @@ urlpatterns = [
         {"document_root": django_settings.MEDIA_ROOT},
     ),
 
+
     path('company-orders/', include('company_orders.urls')),
     path("admin/", admin.site.urls),
     path("staff/", include("staff.urls")),
