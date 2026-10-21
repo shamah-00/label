@@ -1,4 +1,5 @@
-﻿from pathlib import Path
+﻿import os
+from pathlib import Path
 
 
 from dotenv import load_dotenv
@@ -13,14 +14,23 @@ DEBUG = True
 
 
 ALLOWED_HOSTS = [
-    "localhost",
-    "127.0.0.1",
-    "germicidal-brigida-obtuse.ngrok-free.dev",
+    host.strip()
+    for host in os.environ.get(
+        "DJANGO_ALLOWED_HOSTS",
+        "127.0.0.1,localhost,thelabelgroup.us.com,web-production-d1e74.up.railway.app,web-production-74ca41.up.railway.app"
+    ).split(",")
+    if host.strip()
 ]
 
 
+
 CSRF_TRUSTED_ORIGINS = [
-    "https://germicidal-brigida-obtuse.ngrok-free.dev",
+    origin.strip()
+    for origin in os.environ.get(
+        "DJANGO_CSRF_TRUSTED_ORIGINS",
+        "https://thelabelgroup.us.com,https://web-production-d1e74.up.railway.app,https://web-production-74ca41.up.railway.app"
+    ).split(",")
+    if origin.strip()
 ]
 
 
@@ -130,4 +140,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Production static-file collection destination
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
