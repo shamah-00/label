@@ -17,21 +17,24 @@ ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
         "DJANGO_ALLOWED_HOSTS",
-        "127.0.0.1,localhost,thelabelgroup.us.com,web-production-d1e74.up.railway.app,web-production-74ca41.up.railway.app"
+        "127.0.0.1,localhost,web-production-d1e74.up.railway.app,web-production-74ca41.up.railway.app"
     ).split(",")
     if host.strip()
 ]
-
+if "thelabelgroup.us.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("thelabelgroup.us.com")
 
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.environ.get(
         "DJANGO_CSRF_TRUSTED_ORIGINS",
-        "https://thelabelgroup.us.com,https://web-production-d1e74.up.railway.app,https://web-production-74ca41.up.railway.app"
+        "https://web-production-d1e74.up.railway.app,https://web-production-74ca41.up.railway.app"
     ).split(",")
     if origin.strip()
 ]
+if "https://thelabelgroup.us.com" not in CSRF_TRUSTED_ORIGINS:
+    CSRF_TRUSTED_ORIGINS.append("https://thelabelgroup.us.com")
 
 
 INSTALLED_APPS = [
@@ -140,5 +143,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Production static-file collection destination
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 
