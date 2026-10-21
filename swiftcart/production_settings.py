@@ -1,4 +1,4 @@
-﻿"""
+"""
 Production settings for The Label Group on Railway.
 
 Required Railway variables:
@@ -35,6 +35,10 @@ if not ALLOWED_HOSTS:
     raise RuntimeError(
         "Production requires DJANGO_ALLOWED_HOSTS with the actual hostname."
     )
+
+# Allow the public custom domain on Railway.
+if "thelabelgroup.us.com" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append("thelabelgroup.us.com")
 
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 
@@ -109,3 +113,9 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # Trusted HTTPS origin for The Label Group Railway deployment.
 CSRF_TRUSTED_ORIGINS = list(globals().get("CSRF_TRUSTED_ORIGINS", [])) + ["https://web-production-d1e74.up.railway.app"]
+
+
+# Trust HTTPS requests from the public custom domain.
+CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(
+    list(CSRF_TRUSTED_ORIGINS) + ["https://thelabelgroup.us.com"]
+))
