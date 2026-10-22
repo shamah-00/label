@@ -1,4 +1,5 @@
-﻿"""
+﻿from .settings import *
+"""
 Production settings for The Label Group on Railway.
 """
 
