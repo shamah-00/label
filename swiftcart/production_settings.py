@@ -31,6 +31,11 @@ for domain in ["thelabelgroup.us.com", "www.thelabelgroup.us.com"]:
     if domain not in ALLOWED_HOSTS:
         ALLOWED_HOSTS.append(domain)
 
+
+# Ensure Django's static-file management commands are available in production.
+INSTALLED_APPS = list(globals().get("INSTALLED_APPS", []))
+if "django.contrib.staticfiles" not in INSTALLED_APPS:
+    INSTALLED_APPS.append("django.contrib.staticfiles")
 DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is missing or empty in production.")
@@ -57,3 +62,4 @@ for domain in ["thelabelgroup.us.com", "www.thelabelgroup.us.com"]:
         CSRF_TRUSTED_ORIGINS.append(origin)
 
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
+
