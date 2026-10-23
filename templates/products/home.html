@@ -1439,6 +1439,121 @@
             }
         }
     </style>
+<style>
+/* TLG CURRENT HOMEPAGE RESPONSIVE FIX START */
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-deep: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-text: #18263a;
+    --tlg-muted: #5d6878;
+    --tlg-border: #e2e7ed;
+    --tlg-soft: #f4f7fb;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 130px;
+}
+
+body {
+    margin: 0;
+    max-width: 100%;
+    overflow-x: hidden;
+    color: var(--tlg-text);
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img {
+    max-width: 100%;
+}
+
+button, input, select, textarea {
+    max-width: 100%;
+    font: inherit;
+}
+
+a {
+    overflow-wrap: anywhere;
+}
+
+h1, h2, h3, h4 {
+    color: var(--tlg-navy);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+p {
+    line-height: 1.7;
+}
+
+section {
+    scroll-margin-top: 130px;
+}
+
+main {
+    min-width: 0;
+    width: 100%;
+}
+
+main > section {
+    max-width: 100%;
+}
+
+main img {
+    height: auto;
+}
+
+main a:focus-visible,
+main button:focus-visible,
+nav a:focus-visible {
+    outline: 3px solid var(--tlg-orange);
+    outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+    main {
+        width: 100%;
+        min-width: 0;
+    }
+
+    main > section {
+        padding-left: clamp(16px, 4vw, 30px);
+        padding-right: clamp(16px, 4vw, 30px);
+    }
+
+    img {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    h1 {
+        font-size: clamp(2rem, 8vw, 2.7rem);
+    }
+
+    h2 {
+        font-size: clamp(1.5rem, 6vw, 2rem);
+    }
+
+    p {
+        overflow-wrap: anywhere;
+    }
+
+    main > section {
+        padding-top: 28px;
+        padding-bottom: 28px;
+    }
+}
+/* TLG CURRENT HOMEPAGE RESPONSIVE FIX END */
+</style>
 </head>
 
 <body>
