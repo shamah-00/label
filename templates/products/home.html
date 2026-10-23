@@ -1440,119 +1440,244 @@
         }
     </style>
 <style>
-/* TLG CURRENT HOMEPAGE RESPONSIVE FIX START */
+
+</style>
+<style id="tlg-homepage-layout-fix">
+/* THE LABEL GROUP — consolidated responsive homepage layout */
 :root {
     --tlg-navy: #0b1f3a;
-    --tlg-deep: #06152a;
+    --tlg-deep-navy: #06152a;
     --tlg-orange: #f47b20;
     --tlg-orange-dark: #d9620d;
-    --tlg-text: #18263a;
+    --tlg-text: #172033;
     --tlg-muted: #5d6878;
-    --tlg-border: #e2e7ed;
-    --tlg-soft: #f4f7fb;
+    --tlg-border: #e3e8ef;
+    --tlg-surface: #f5f7fa;
 }
 
 html {
     scroll-behavior: smooth;
-    scroll-padding-top: 130px;
+    scroll-padding-top: 115px;
 }
 
 body {
     margin: 0;
-    max-width: 100%;
-    overflow-x: hidden;
     color: var(--tlg-text);
-    background: #fff;
-    font-family: Arial, Helvetica, sans-serif;
-    line-height: 1.6;
-}
-
-*, *::before, *::after {
-    box-sizing: border-box;
+    overflow-wrap: break-word;
 }
 
 img {
     max-width: 100%;
 }
 
-button, input, select, textarea {
-    max-width: 100%;
-    font: inherit;
-}
-
 a {
     overflow-wrap: anywhere;
 }
 
-h1, h2, h3, h4 {
-    color: var(--tlg-navy);
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-}
-
-p {
-    line-height: 1.7;
-}
-
-section {
-    scroll-margin-top: 130px;
-}
-
-main {
+main,
+main > section,
+.homepage,
+.home-page,
+.home-content,
+.page-content {
     min-width: 0;
-    width: 100%;
-}
-
-main > section {
     max-width: 100%;
 }
 
-main img {
+main > section,
+.homepage > section,
+.home-page > section,
+.home-content > section {
+    box-sizing: border-box;
+}
+
+main img,
+.homepage img,
+.home-page img,
+.home-content img {
     height: auto;
 }
 
+main h1,
+.homepage h1,
+.home-page h1,
+.home-content h1 {
+    max-width: 900px;
+    margin-top: 0;
+    font-size: clamp(2rem, 4.2vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.035em;
+}
+
+main h2,
+.homepage h2,
+.home-page h2,
+.home-content h2 {
+    font-size: clamp(1.55rem, 2.7vw, 2.5rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+main p,
+.homepage p,
+.home-page p,
+.home-content p {
+    line-height: 1.7;
+}
+
 main a:focus-visible,
-main button:focus-visible,
-nav a:focus-visible {
+.homepage a:focus-visible,
+.home-page a:focus-visible,
+.home-content a:focus-visible {
     outline: 3px solid var(--tlg-orange);
     outline-offset: 3px;
 }
 
-@media (max-width: 900px) {
-    main {
-        width: 100%;
-        min-width: 0;
-    }
+/* Shared card/image behavior */
+.homepage img,
+.home-page img,
+.home-content img,
+main img {
+    object-fit: contain;
+}
 
-    main > section {
+.homepage article,
+.home-page article,
+.home-content article {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* Navigation stays usable without forcing page-wide overflow */
+header,
+nav,
+.site-header,
+.navbar {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+nav a,
+.navbar a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+}
+
+/* Forms and buttons */
+button,
+input,
+select,
+textarea {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+button,
+.button,
+.btn,
+a.button,
+a.btn {
+    min-height: 42px;
+}
+
+button,
+.button,
+.btn,
+a.button,
+a.btn {
+    transition: background-color .18s ease, border-color .18s ease,
+                color .18s ease, transform .18s ease;
+}
+
+/* Keep long product names and descriptions inside their cards */
+.product-card,
+.product-item,
+.catalogue-card,
+.catalog-card,
+.industry-card,
+.solution-card,
+.featured-product {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.product-card img,
+.product-item img,
+.catalogue-card img,
+.catalog-card img,
+.industry-card img,
+.solution-card img,
+.featured-product img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 900px) {
+    main > section,
+    .homepage > section,
+    .home-page > section,
+    .home-content > section {
         padding-left: clamp(16px, 4vw, 30px);
         padding-right: clamp(16px, 4vw, 30px);
     }
 
-    img {
-        max-width: 100%;
+    main h1,
+    .homepage h1,
+    .home-page h1,
+    .home-content h1 {
+        font-size: clamp(2rem, 6vw, 3.2rem);
     }
 }
 
 @media (max-width: 600px) {
-    h1 {
-        font-size: clamp(2rem, 8vw, 2.7rem);
+    html {
+        scroll-padding-top: 85px;
     }
 
-    h2 {
-        font-size: clamp(1.5rem, 6vw, 2rem);
+    body {
+        font-size: 15px;
     }
 
-    p {
-        overflow-wrap: anywhere;
+    main > section,
+    .homepage > section,
+    .home-page > section,
+    .home-content > section {
+        padding-left: 16px;
+        padding-right: 16px;
     }
 
-    main > section {
-        padding-top: 28px;
-        padding-bottom: 28px;
+    main h1,
+    .homepage h1,
+    .home-page h1,
+    .home-content h1 {
+        font-size: clamp(1.85rem, 8vw, 2.65rem);
+        line-height: 1.12;
+    }
+
+    main h2,
+    .homepage h2,
+    .home-page h2,
+    .home-content h2 {
+        font-size: clamp(1.45rem, 6vw, 2rem);
+    }
+
+    button,
+    .button,
+    .btn,
+    a.button,
+    a.btn {
+        max-width: 100%;
+        white-space: normal;
+    }
+
+    table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
     }
 }
-/* TLG CURRENT HOMEPAGE RESPONSIVE FIX END */
 </style>
 </head>
 
