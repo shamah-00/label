@@ -53,7 +53,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
 
     'staff.dashboard_repair.DashboardCountsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,9 +122,7 @@ TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 
 USE_TZ = True
-
-
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
 
 
 MEDIA_URL = '/media/'
