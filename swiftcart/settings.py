@@ -146,3 +146,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 
+
+# THE LABEL GROUP ROOT STATIC DIRECTORY FIX
+# Include project-level static assets in Django's static-file collection.
+_TLG_ROOT_STATIC = BASE_DIR / "static"
+_TLG_STATIC_DIRS = list(globals().get("STATICFILES_DIRS", []))
+if _TLG_ROOT_STATIC.is_dir() and _TLG_ROOT_STATIC not in _TLG_STATIC_DIRS:
+    _TLG_STATIC_DIRS.append(_TLG_ROOT_STATIC)
+STATICFILES_DIRS = _TLG_STATIC_DIRS
