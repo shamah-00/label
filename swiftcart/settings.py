@@ -53,7 +53,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
 
     'staff.dashboard_repair.DashboardCountsMiddleware',
-    'django.middleware.security.SecurityMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,9 +122,7 @@ TIME_ZONE = 'Africa/Nairobi'
 USE_I18N = True
 
 USE_TZ = True
-
-
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
 
 
 MEDIA_URL = '/media/'
@@ -146,3 +145,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 
+
+# THE LABEL GROUP ROOT STATIC DIRECTORY FIX
+# Include project-level static assets in Django's static-file collection.
+_TLG_ROOT_STATIC = BASE_DIR / "static"
+_TLG_STATIC_DIRS = list(globals().get("STATICFILES_DIRS", []))
+if _TLG_ROOT_STATIC.is_dir() and _TLG_ROOT_STATIC not in _TLG_STATIC_DIRS:
+    _TLG_STATIC_DIRS.append(_TLG_ROOT_STATIC)
+STATICFILES_DIRS = _TLG_STATIC_DIRS
