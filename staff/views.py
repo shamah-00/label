@@ -1,4 +1,4 @@
-﻿from django.contrib import messages
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -101,96 +101,130 @@ def boss_required(view_func):
 
 @staff_required
 def staff_dashboard(request):
-    """
-    Staff dashboard with robust defensive handling to prevent 500 errors.
-    Fails safely with default values if any optional table or query fails.
-    """
-    import logging
-    from products.models import Order, QuoteRequest
+    """Dashboard counts and recent records from the configured database."""
+    from django.db.models import Q, Count
+    from django.utils import timezone
     from .models import StaffProfile, StaffActivityLog
-
-    logger = logging.getLogger(__name__)
-
-    # Safe default values
-    orders_count = 0
-    quotes_count = 0
-    new_quotes_count = 0
-    reviewing_quotes_count = 0
-    quoted_count = 0
-    approved_quotes_count = 0
-    completed_quotes_count = 0
-    approved_staff_count = 0
-    pending_staff_count = 0
-    recent_quotes = []
-    recent_activity = []
+    from products.models import Product, Order, QuoteRequest
 
     profile = get_staff_profile(request.user)
 
-    # Safely fetch Order counts
+    # Count the actual records in the database configured for this deployment.
+    products_count = Product.objects.count()
     try:
-        orders_count = Order.objects.count()
+        available_products_count = Product.objects.filter(is_available=True).count()
     except Exception:
-        pass
+        available_products_count = products_count
 
-    # Safely fetch QuoteRequest counts and lists
-    try:
-        quotes = QuoteRequest.objects.all()
-        quotes_count = quotes.count()
-        try:
-            new_quotes_count = quotes.filter(status="new").count()
-            reviewing_quotes_count = quotes.filter(status="reviewing").count()
-            quoted_count = quotes.filter(status="quoted").count()
-            approved_quotes_count = quotes.filter(status="approved").count()
-            completed_quotes_count = quotes.filter(status="completed").count()
-        except Exception:
-            pass
+    orders_count = Order.objects.count()
+    quotes_count = QuoteRequest.objects.count()
 
-        try:
-            recent_quotes = list(QuoteRequest.objects.order_by("-created_at")[:8])
-        except Exception:
-            pass
-    except Exception:
-        pass
+    # Count approved profiles even if an older record has inconsistent status text.
+    approved_staff_count = StaffProfile.objects.filter(
+        Q(approved=True) | Q(status__iexact="approved")
+    ).distinct().count()
 
-    # Safely fetch Staff Profile counts
-    try:
-        approved_staff_count = StaffProfile.objects.filter(approved=True, status="approved").count()
-        pending_staff_count = StaffProfile.objects.filter(approved=False, status="pending").count()
-    except Exception:
-        pass
+    pending_staff_count = StaffProfile.objects.filter(
+        approved=False
+    ).exclude(status__iexact="rejected").count()
 
-    # Update staff last activity timestamp if profile exists
-    if profile:
-        try:
-            profile.save(update_fields=["last_activity"])
-        except Exception:
-            pass
+    # Derive quote status totals from the statuses actually stored in the database.
+    status_counts = {}
+    for row in QuoteRequest.objects.values("status").annotate(total=Count("pk")):
+        key = str(row["status"] or "").strip().casefold().replace("-", "_")
+        status_counts[key] = status_counts.get(key, 0) + row["total"]
 
-    # Safely fetch recent activity log
-    try:
-        recent_activity = list(
-            StaffActivityLog.objects.select_related("staff", "staff__user").order_by("-timestamp")[:10]
+    def status_total(*terms):
+        return sum(
+            count for status, count in status_counts.items()
+            if any(term in status for term in terms)
         )
-    except Exception:
-        pass
+
+    new_quotes_count = status_total("new", "pending", "submitted")
+    reviewing_quotes_count = status_total("review", "reviewing")
+    quoted_count = status_total("quoted", "prepared", "quote_sent", "sent")
+    approved_quotes_count = status_total("approved")
+    completed_quotes_count = status_total("completed", "complete")
+    production_quotes_count = status_total("production")
+
+    # Order by a real date field when available; otherwise use the primary key.
+    quote_fields = {field.name for field in QuoteRequest._meta.fields}
+    quote_order_field = (
+        "created_at" if "created_at" in quote_fields
+        else "pk"
+    )
+    recent_quotes = list(
+        QuoteRequest.objects.order_by("-" + quote_order_field)[:8]
+    )
+
+    activity_fields = {field.name for field in StaffActivityLog._meta.fields}
+    activity_order_field = next(
+        (name for name in ("timestamp", "created_at", "created") if name in activity_fields),
+        StaffActivityLog._meta.pk.name,
+    )
+    recent_activity = list(
+        StaffActivityLog.objects
+        .select_related("staff", "staff__user")
+        .order_by("-" + activity_order_field)[:10]
+    )
+
+    if profile and any(
+        field.name == "last_activity" for field in profile._meta.fields
+    ):
+        profile.last_activity = timezone.now()
+        profile.save(update_fields=["last_activity"])
 
     context = {
         "profile": profile,
+
+        # Common names used by existing dashboard template versions.
+        "products_count": products_count,
+        "product_count": products_count,
+        "total_products": products_count,
+        "total_product_count": products_count,
+        "available_products": available_products_count,
+        "available_products_count": available_products_count,
+
         "orders_count": orders_count,
+        "order_count": orders_count,
+        "total_orders": orders_count,
+        "total_order_count": orders_count,
+
         "quotes_count": quotes_count,
+        "quote_count": quotes_count,
+        "total_quotes": quotes_count,
+        "total_quote_count": quotes_count,
+        "total_quote_requests": quotes_count,
+
+        "approved_staff_count": approved_staff_count,
+        "staff_count": approved_staff_count,
+        "approved_staff": approved_staff_count,
+        "pending_staff_count": pending_staff_count,
+        "pending_staff": pending_staff_count,
+
         "new_quotes_count": new_quotes_count,
         "reviewing_quotes_count": reviewing_quotes_count,
+        "reviewing_quotes": reviewing_quotes_count,
         "quoted_count": quoted_count,
+        "quoted_quotes": quoted_count,
         "approved_quotes_count": approved_quotes_count,
+        "approved_quotes": approved_quotes_count,
         "completed_quotes_count": completed_quotes_count,
-        "approved_staff_count": approved_staff_count,
-        "pending_staff_count": pending_staff_count,
+
+        "new_quotes": new_quotes_count,
+        "under_review": reviewing_quotes_count,
+        "under_review_quotes": reviewing_quotes_count,
+        "prepared_quotes": quoted_count,
+        "quotes_prepared": quoted_count,
+        "production_quotes": production_quotes_count,
+        "in_production_quotes": production_quotes_count,
+        "completed_quotes": completed_quotes_count,
+
         "recent_quotes": recent_quotes,
         "recent_activity": recent_activity,
     }
-    
-    return render(request, "staff/dashboard.html", context)
 
+    return render(request, "staff/dashboard.html", context)
 
 @staff_required
 def staff_products(request):
