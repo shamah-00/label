@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en">
 <head>
@@ -216,18 +216,390 @@
 </style>
 ```
 
+<style id="tlg-shipping-premium-redesign">
+:root {
+    --tlg-navy: #0b1f3a;
+    --tlg-deep: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-orange-dark: #d9620d;
+    --tlg-ink: #172338;
+    --tlg-muted: #65748a;
+    --tlg-line: #e1e7ef;
+    --tlg-panel: #ffffff;
+    --tlg-page: #f3f6fa;
+    --tlg-radius: 16px;
+    --tlg-shadow: 0 8px 28px rgba(11,31,58,.07);
+}
+
+body {
+    color: var(--tlg-ink);
+}
+
+main {
+    color: var(--tlg-ink);
+}
+
+main h1,
+body > h1,
+.shipping-dashboard h1 {
+    color: var(--tlg-navy);
+    font-weight: 800;
+    letter-spacing: -.035em;
+    line-height: 1.15;
+}
+
+main h2,
+main h3,
+.shipping-section h2,
+.shipping-section h3 {
+    color: var(--tlg-navy);
+    font-weight: 750;
+    letter-spacing: -.02em;
+}
+
+main p,
+.shipping-help,
+.shipping-section p {
+    line-height: 1.7;
+}
+
+.shipping-section,
+.shipment-card,
+.shipping-card,
+.tracking-card,
+.order-card,
+.shipping-panel,
+main article,
+main .card {
+    min-width: 0;
+    background: var(--tlg-panel);
+    border: 1px solid var(--tlg-line);
+    border-radius: var(--tlg-radius);
+    box-shadow: var(--tlg-shadow);
+}
+
+.shipping-section {
+    margin: 20px 0;
+    padding: clamp(18px, 3vw, 28px);
+}
+
+.shipping-section > h2,
+.shipping-section > h3 {
+    margin-top: 0;
+    padding-bottom: 13px;
+    border-bottom: 1px solid var(--tlg-line);
+}
+
+.shipping-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.shipping-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.shipping-field label,
+main label {
+    color: var(--tlg-navy);
+    font-size: .88rem;
+    font-weight: 700;
+}
+
+.shipping-field input,
+.shipping-field select,
+.shipping-field textarea,
+main input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+main select,
+main textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    min-height: 46px;
+    padding: 11px 13px;
+    border: 1px solid #d4dce7;
+    border-radius: 10px;
+    background: #fff;
+    color: var(--tlg-ink);
+    font: inherit;
+    transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+.shipping-field textarea,
+main textarea {
+    min-height: 110px;
+}
+
+.shipping-field input:focus,
+.shipping-field select:focus,
+.shipping-field textarea:focus,
+main input:focus,
+main select:focus,
+main textarea:focus {
+    outline: none;
+    border-color: var(--tlg-orange);
+    box-shadow: 0 0 0 3px rgba(244,123,32,.14);
+}
+
+.shipping-button,
+main button,
+main input[type="submit"],
+main a.button,
+.shipping-section button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 11px 18px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-weight: 750;
+    line-height: 1.3;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.shipping-button:hover,
+main button:hover,
+main input[type="submit"]:hover,
+.shipping-section button:hover {
+    background: var(--tlg-deep);
+    box-shadow: 0 5px 14px rgba(6,21,42,.16);
+    transform: translateY(-1px);
+}
+
+.shipping-button.orange,
+.shipping-button.primary,
+main button[type="submit"],
+main input[type="submit"] {
+    background: var(--tlg-orange);
+    color: #fff;
+}
+
+.shipping-button.orange:hover,
+.shipping-button.primary:hover,
+main button[type="submit"]:hover,
+main input[type="submit"]:hover {
+    background: var(--tlg-orange-dark);
+}
+
+.shipping-help,
+.shipping-warning,
+.shipping-section .helptext {
+    color: var(--tlg-muted);
+    font-size: .93rem;
+}
+
+.shipping-warning {
+    padding: 13px 15px;
+    border: 1px solid #f4d7a0;
+    border-radius: 10px;
+    background: #fff8e9;
+    color: #80520b;
+}
+
+.messages,
+.message {
+    margin: 12px 0;
+    padding: 13px 16px;
+    border: 1px solid var(--tlg-line);
+    border-radius: 10px;
+    background: #fff;
+    line-height: 1.5;
+}
+
+.shipping-section table,
+main table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.shipping-section th,
+main th {
+    padding: 13px 14px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-size: .83rem;
+    font-weight: 750;
+    text-align: left;
+}
+
+.shipping-section td,
+main td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--tlg-line);
+    vertical-align: middle;
+}
+
+.shipping-section tr:last-child td,
+main tr:last-child td {
+    border-bottom: 0;
+}
+
+.shipping-section a,
+main a {
+    overflow-wrap: anywhere;
+}
+
+.shipping-section form,
+main form {
+    min-width: 0;
+}
+
+.shipping-section input[type="hidden"],
+main input[type="hidden"] {
+    display: none;
+}
+
+.shipping-section input[type="checkbox"],
+main input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--tlg-orange);
+}
+
+.shipping-section .status,
+.shipping-section .badge,
+main .status,
+main .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #dce5f0;
+    border-radius: 999px;
+    background: #edf3fa;
+    color: var(--tlg-navy);
+    font-size: .79rem;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+
+.shipping-section .status.delivered,
+main .status.delivered {
+    border-color: #b8e4cc;
+    background: #eaf8ef;
+    color: #17643a;
+}
+
+.shipping-section .status.pending,
+main .status.pending {
+    border-color: #f4d7a0;
+    background: #fff6e4;
+    color: #80520b;
+}
+
+.shipping-section .status.failed,
+main .status.failed {
+    border-color: #f0c3c3;
+    background: #fff0f0;
+    color: #9e2525;
+}
+
+.shipping-section .shipment-meta,
+.shipping-section .tracking-details,
+main .shipment-meta,
+main .tracking-details {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.shipping-section .shipment-meta > div,
+.shipping-section .tracking-details > div,
+main .shipment-meta > div,
+main .tracking-details > div {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--tlg-line);
+    border-radius: 11px;
+    background: #f8fafd;
+    overflow-wrap: anywhere;
+}
+
+.shipping-section a[href*="track"],
+main a[href*="track"],
+main a[href*="tracking"] {
+    font-weight: 750;
+}
+
+.shipping-section hr,
+main hr {
+    border: 0;
+    border-top: 1px solid var(--tlg-line);
+    margin: 22px 0;
+}
+
+@media (max-width: 760px) {
+    .shipping-form-grid,
+    .shipping-section .shipment-meta,
+    .shipping-section .tracking-details,
+    main .shipment-meta,
+    main .tracking-details {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .shipping-section {
+        margin: 14px 0;
+        padding: 17px;
+        border-radius: 13px;
+    }
+
+    .shipping-section form button,
+    .shipping-section form input[type="submit"],
+    main form button,
+    main form input[type="submit"] {
+        width: 100%;
+    }
+
+    .shipping-section table,
+    main table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .shipping-section th,
+    .shipping-section td,
+    main th,
+    main td {
+        padding: 11px;
+        white-space: normal;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .shipping-button,
+    main button,
+    main input[type="submit"] {
+        transition: none;
+    }
+}
+</style>
 </head>
 
 <body>
 
 ```
 <div class="top-bar">
-    THE LABEL GROUP • Durable Custom Printing • Built for Business
+    THE LABEL GROUP â€¢ Durable Custom Printing â€¢ Built for Business
 </div>
 
 <div class="container">
 
-    <a href="/" class="back-link">← Back to Home</a>
+    <a href="/" class="back-link">â† Back to Home</a>
 
     <section class="hero">
         <h1>Shipping & Delivery Information</h1>
@@ -273,7 +645,7 @@
                     decal shipments.
                 </p>
                 <p>
-                    <strong>Delivery:</strong> 3–5 business days
+                    <strong>Delivery:</strong> 3â€“5 business days
                 </p>
             </div>
 
@@ -284,7 +656,7 @@
                     and tight compliance deadlines.
                 </p>
                 <p>
-                    <strong>Delivery:</strong> 1–2 business days
+                    <strong>Delivery:</strong> 1â€“2 business days
                 </p>
             </div>
 
@@ -311,12 +683,12 @@
 
             <div class="fact">
                 <span class="fact-title">Standard Processing</span>
-                <span class="fact-value">2–4 Days</span>
+                <span class="fact-value">2â€“4 Days</span>
             </div>
 
             <div class="fact">
                 <span class="fact-title">Custom Orders</span>
-                <span class="fact-value">3–5 Days</span>
+                <span class="fact-value">3â€“5 Days</span>
             </div>
 
             <div class="fact">
@@ -335,9 +707,10 @@
 </div>
 
 <div class="footer">
-    © 2026 THE LABEL GROUP. All rights reserved.
+    Â© 2026 THE LABEL GROUP. All rights reserved.
 </div>
 ```
 
 </body>
 </html>
+
