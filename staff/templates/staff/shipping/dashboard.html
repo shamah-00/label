@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block extra_css %}
 <style>
@@ -235,6 +235,103 @@
     .shipping-actions .shipping-button {
         width: 100%;
     }
+}
+</style>
+
+<style id="tlg-professional-staff">
+:root {
+  --tlg-navy: #0b1f3a;
+  --tlg-deep-navy: #06152a;
+  --tlg-orange: #f47b20;
+  --tlg-orange-dark: #d9620d;
+  --tlg-page: #f4f7fb;
+  --tlg-border: #e2e8f0;
+  --tlg-text: #172538;
+  --tlg-muted: #64748b;
+}
+body {
+  color: var(--tlg-text);
+}
+.staff-dashboard, .staff-content, .dashboard-content, main {
+  min-width: 0;
+}
+.staff-dashboard h1, .staff-content h1, main h1 {
+  color: var(--tlg-navy);
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+.staff-dashboard h2, .staff-content h2, main h2 {
+  color: var(--tlg-navy);
+  font-weight: 750;
+}
+.staff-dashboard .card, .staff-content .card, main .card,
+.dashboard-card, .stat-card, .summary-card {
+  border: 1px solid var(--tlg-border);
+  border-radius: 14px;
+  box-shadow: 0 5px 20px rgba(11,31,58,.055);
+}
+.staff-dashboard table, .staff-content table, main table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.staff-dashboard th, .staff-content th, main th {
+  background: #f1f5f9;
+  color: var(--tlg-navy);
+  font-size: .8rem;
+  font-weight: 750;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.staff-dashboard th, .staff-dashboard td,
+.staff-content th, .staff-content td,
+main th, main td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--tlg-border);
+  text-align: left;
+  vertical-align: middle;
+}
+.staff-dashboard input, .staff-dashboard select, .staff-dashboard textarea,
+.staff-content input, .staff-content select, .staff-content textarea,
+main input, main select, main textarea {
+  max-width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 9px 11px;
+}
+.staff-dashboard button, .staff-dashboard .btn,
+.staff-content button, .staff-content .btn,
+main button, main .btn {
+  border-radius: 9px;
+  font-weight: 650;
+  transition: filter .15s ease, transform .15s ease;
+}
+.staff-dashboard button:hover, .staff-dashboard .btn:hover,
+.staff-content button:hover, .staff-content .btn:hover,
+main button:hover, main .btn:hover {
+  filter: brightness(.96);
+}
+.staff-dashboard a:focus-visible, .staff-dashboard button:focus-visible,
+.staff-content a:focus-visible, .staff-content button:focus-visible,
+main a:focus-visible, main button:focus-visible,
+main input:focus-visible, main select:focus-visible {
+  outline: 3px solid rgba(244,123,32,.35);
+  outline-offset: 2px;
+}
+@media (max-width: 768px) {
+  .staff-dashboard, .staff-content, main {
+    overflow-wrap: anywhere;
+  }
+  .staff-dashboard table, .staff-content table, main table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .staff-dashboard th, .staff-dashboard td,
+  .staff-content th, .staff-content td,
+  main th, main td {
+    padding: 10px;
+  }
 }
 </style>
 {% endblock %}
