@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 
 {% block extra_css %}
 <style>
@@ -402,6 +402,13 @@
                         <button class="shipping-button primary" type="submit">Save shipment details</button>
                     </div>
                 </form>
+                <div class="shipping-actions">
+                    {% if shipment.email_tracking_mailto %}
+                    <a class="shipping-button primary" href="{{ shipment.email_tracking_mailto }}">Email Tracking Details</a>
+                    {% else %}
+                    <p class="shipping-warning">No customer email is recorded for this order.</p>
+                    {% endif %}
+                </div>
             </section>
         </div>
     </article>

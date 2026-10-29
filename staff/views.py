@@ -1793,6 +1793,79 @@ def staff_shipping_dashboard(request):
                     # a purchased label as failed because of an order-status issue.
                     pass
 
+            # THE_LABEL_GROUP_TRACKING_EMAIL_NOTIFICATION
+            # Notify the customer only after Shippo confirms success and the
+            # shipment has already been saved. Email failure must not undo it.
+            try:
+                from django.conf import settings
+                from django.core.mail import send_mail
+
+                customer_email = str(
+                    getattr(order, "customer_email", "") or ""
+                ).strip()
+                customer_name = str(
+                    getattr(order, "customer_name", "") or "Customer"
+                ).strip()
+                saved_tracking_number = str(
+                    getattr(locked, "tracking_number", "") or ""
+                ).strip()
+                saved_tracking_url = str(
+                    getattr(locked, "tracking_url", "") or ""
+                ).strip()
+
+                if customer_email:
+                    email_lines = [
+                        "Hello " + customer_name + ",",
+                        "",
+                        "Your order from THE LABEL GROUP has been shipped.",
+                        "Order number: #" + str(locked.order_id),
+                    ]
+                    if saved_tracking_number:
+                        email_lines.append(
+                            "Tracking number: " + saved_tracking_number
+                        )
+                    if saved_tracking_url.startswith("https://"):
+                        email_lines.extend([
+                            "",
+                            "Track your shipment here:",
+                            saved_tracking_url,
+                        ])
+                    else:
+                        email_lines.extend([
+                            "",
+                            "Your tracking details will be available when "
+                            "the carrier provides them.",
+                        ])
+                    email_lines.extend([
+                        "",
+                        "Thank you for choosing THE LABEL GROUP.",
+                        "Industrial Prints & Decals",
+                    ])
+
+                    send_mail(
+                        subject="Your THE LABEL GROUP order has shipped",
+                        message="\n".join(email_lines),
+                        from_email=(
+                            getattr(settings, "DEFAULT_FROM_EMAIL", "") or None
+                        ),
+                        recipient_list=[customer_email],
+                        fail_silently=False,
+                    )
+                    tracking_email_sent = True
+                else:
+                    tracking_email_sent = False
+                    print(
+                        "Tracking email skipped: order has no customer_email."
+                    )
+            except Exception as email_error:
+                # Preserve the successfully purchased and saved label.
+                tracking_email_sent = False
+                print(
+                    "Tracking email failed for Order #"
+                    + str(getattr(locked, "order_id", "unknown"))
+                    + ": "
+                    + str(email_error)
+                )
             messages.success(
                 request,
                 "Shippo label purchased and saved for Order #"
@@ -1899,6 +1972,38 @@ def staff_shipping_dashboard(request):
     # Build a display-only address without repeating city, state or ZIP.
     # Original order address fields are not modified.
     for shipment in shipments:
+        # THE_LABEL_GROUP_MANUAL_TRACKING_DRAFT
+        from urllib.parse import quote, urlencode
+        order_for_email = shipment.order
+        customer_email = str(getattr(order_for_email, "customer_email", "") or "").strip()
+        shipment.email_tracking_mailto = ""
+        if customer_email:
+            customer_name = str(getattr(order_for_email, "customer_name", "") or "Customer").strip()
+            tracking_number = str(getattr(shipment, "tracking_number", "") or "").strip()
+            tracking_url = str(getattr(shipment, "tracking_url", "") or "").strip()
+            body_lines = [
+                "Hello " + customer_name + ",",
+                "",
+                "Your order from THE LABEL GROUP has been shipped.",
+                "Order number: #" + str(shipment.order_id),
+            ]
+            if tracking_number:
+                body_lines.append("Tracking number: " + tracking_number)
+            if tracking_url.startswith("https://"):
+                body_lines.extend(["", "Track your shipment here:", tracking_url])
+            body_lines.extend([
+                "",
+                "Thank you for choosing THE LABEL GROUP.",
+                "Industrial Prints & Decals",
+                "labelgroup@comcast.net",
+                "(413) 276-6427",
+            ])
+            email_subject = "Your THE LABEL GROUP order #" + str(shipment.order_id) + " tracking details"
+            shipment.email_tracking_mailto = (
+                "mailto:" + quote(customer_email, safe="@._+-") + "?"
+                + urlencode({"subject": email_subject, "body": "\n".join(body_lines)})
+            )
+
         order = shipment.order
         address_fields = [
             getattr(order, "shipping_address", ""),
