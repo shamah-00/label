@@ -1036,7 +1036,7 @@ class ShippingSystemSettings(models.Model):
 
 
 def _tlg_default_payment_methods():
-    return ["check", "ach", "wire"]
+    return ["square", "quickbooks", "check", "ach", "wire"]
 
 
 class PaymentSystemSettings(models.Model):
@@ -1076,6 +1076,26 @@ class PaymentSystemSettings(models.Model):
     wire_instructions = models.TextField(
         blank=True,
         default="Contact The Label Group for verified wire transfer instructions.",
+    )
+    square_payment_url = models.URLField(
+        blank=True,
+        max_length=500,
+        help_text="HTTPS Square payment link created by the business owner.",
+    )
+    square_instructions = models.TextField(
+        blank=True,
+        default="",
+        help_text="Customer-facing instructions for Square payments.",
+    )
+    quickbooks_payment_url = models.URLField(
+        blank=True,
+        max_length=500,
+        help_text="HTTPS QuickBooks payment link created by the business owner.",
+    )
+    quickbooks_instructions = models.TextField(
+        blank=True,
+        default="",
+        help_text="Customer-facing instructions for QuickBooks payments.",
     )
     updated_by = models.ForeignKey(
         django_conf_settings.AUTH_USER_MODEL,

@@ -1965,7 +1965,7 @@ def boss_payment_settings(request):
     from products.models import PaymentSystemSettings
 
     settings_obj = PaymentSystemSettings.get_settings()
-    allowed_methods = {"check", "ach", "wire"}
+    allowed_methods = {"square", "quickbooks", "check", "ach", "wire"}
     allowed_terms = {0, 30, 45, 60, 90}
     allowed_timing = {"upfront", "invoice_after_delivery"}
 
@@ -1991,6 +1991,30 @@ def boss_payment_settings(request):
         settings_obj.check_instructions = request.POST.get("check_instructions", "").strip()
         settings_obj.ach_instructions = request.POST.get("ach_instructions", "").strip()
         settings_obj.wire_instructions = request.POST.get("wire_instructions", "").strip()
+
+        # Only accept secure HTTPS payment links.
+        square_url = request.POST.get("square_payment_url", "").strip()
+        quickbooks_url = request.POST.get("quickbooks_payment_url", "").strip()
+
+        for field_name, url in (
+            ("Square", square_url),
+            ("QuickBooks", quickbooks_url),
+        ):
+            if url and not url.lower().startswith("https://"):
+                messages.error(
+                    request,
+                    f"{field_name} payment links must begin with https://",
+                )
+                return redirect("boss_payment_settings")
+
+        settings_obj.square_payment_url = square_url
+        settings_obj.square_instructions = request.POST.get(
+            "square_instructions", ""
+        ).strip()
+        settings_obj.quickbooks_payment_url = quickbooks_url
+        settings_obj.quickbooks_instructions = request.POST.get(
+            "quickbooks_instructions", ""
+        ).strip()
         settings_obj.updated_by = request.user
         settings_obj.save()
         messages.success(request, "Payment settings saved.")

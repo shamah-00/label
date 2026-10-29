@@ -1518,6 +1518,39 @@
             </div>
         </div>
 
+
+        <div class="tlg-instruction-card"
+             data-payment-instructions="square"
+             {% if payment_methods.0.0 != "square" %}hidden{% endif %}>
+            <h3>Square payment</h3>
+            <div class="tlg-instruction-copy">
+                {% if payment_settings.square_payment_url %}
+                    <p><a href="{{ payment_settings.square_payment_url }}" target="_blank" rel="noopener noreferrer">Continue to Square to pay</a></p>
+                {% else %}
+                    <p class="tlg-instruction-empty">The business has not added its Square payment link yet. Please contact The Label Group.</p>
+                {% endif %}
+                {% if payment_settings.square_instructions %}
+                    {{ payment_settings.square_instructions|linebreaks }}
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="tlg-instruction-card"
+             data-payment-instructions="quickbooks"
+             {% if payment_methods.0.0 != "quickbooks" %}hidden{% endif %}>
+            <h3>QuickBooks Payments</h3>
+            <div class="tlg-instruction-copy">
+                {% if payment_settings.quickbooks_payment_url %}
+                    <p><a href="{{ payment_settings.quickbooks_payment_url }}" target="_blank" rel="noopener noreferrer">Continue to QuickBooks to pay</a></p>
+                {% else %}
+                    <p class="tlg-instruction-empty">The business has not added its QuickBooks payment link yet. Please contact The Label Group.</p>
+                {% endif %}
+                {% if payment_settings.quickbooks_instructions %}
+                    {{ payment_settings.quickbooks_instructions|linebreaks }}
+                {% endif %}
+            </div>
+        </div>
+
         <script>
         (function () {
             "use strict";

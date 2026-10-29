@@ -700,6 +700,8 @@ def checkout(request):
     from .models import Product, Order, OrderItem, PaymentSystemSettings
     payment_settings = PaymentSystemSettings.get_settings()
     method_labels = {
+        "square": "Square",
+        "quickbooks": "QuickBooks Payments",
         "check": "Check / Invoice",
         "ach": "ACH Bank Transfer",
         "wire": "Wire Transfer",
