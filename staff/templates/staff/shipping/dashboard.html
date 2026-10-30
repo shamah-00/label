@@ -1,4 +1,137 @@
 {% extends "base.html" %}
+{% block extrahead %}
+<style id="tlg-compact-shipping-v2">
+/* THE-LABEL-GROUP-COMPACT-SHIPPING-V2 */
+body {
+    --tlg-navy: #0b1f3a;
+    --tlg-orange: #f47b20;
+}
+body:has(.tlg-shipping-page) {
+    color: #243247;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.tlg-shipping-page {
+    width: min(1180px, calc(100% - 32px));
+    margin: 22px auto 40px;
+}
+.tlg-shipping-page h1 {
+    color: var(--tlg-navy);
+    font-size: clamp(1.45rem, 2.4vw, 1.9rem);
+    line-height: 1.2;
+    margin: 0 0 5px;
+}
+.tlg-shipping-page h2 {
+    color: var(--tlg-navy);
+    font-size: 1.1rem;
+    line-height: 1.35;
+    margin: 0 0 12px;
+}
+.tlg-shipping-page h3 {
+    color: var(--tlg-navy);
+    font-size: .96rem;
+    margin: 14px 0 7px;
+}
+.tlg-shipping-page p {
+    margin: 5px 0 9px;
+}
+.tlg-shipping-page article,
+.tlg-shipping-page .shipment-card,
+.tlg-shipping-page .shipment,
+.tlg-shipping-page .card {
+    min-width: 0;
+}
+.tlg-shipping-page article,
+.tlg-shipping-page .shipment-card,
+.tlg-shipping-page .shipment {
+    background: #fff;
+    border: 1px solid #e1e7ee;
+    border-radius: 11px;
+    padding: 16px;
+    margin: 0 0 13px;
+    box-shadow: 0 3px 12px rgba(11,31,58,.045);
+}
+.tlg-shipping-page label {
+    display: block;
+    font-size: .82rem;
+    font-weight: 600;
+    margin: 8px 0 4px;
+    color: #34445a;
+}
+.tlg-shipping-page input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+.tlg-shipping-page select,
+.tlg-shipping-page textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 39px;
+    padding: 8px 10px;
+    border: 1px solid #cfd8e3;
+    border-radius: 7px;
+    background: #fff;
+    color: #243247;
+    font: inherit;
+}
+.tlg-shipping-page textarea {
+    min-height: 72px;
+}
+.tlg-shipping-page button,
+.tlg-shipping-page input[type=submit] {
+    min-height: 38px;
+    border-radius: 7px;
+    font: inherit;
+    font-weight: 600;
+}
+.tlg-shipping-page table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.tlg-shipping-page th,
+.tlg-shipping-page td {
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+.tlg-shipping-page code,
+.tlg-shipping-page a {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.tlg-shipping-page hr {
+    border: 0;
+    border-top: 1px solid #e5eaf0;
+    margin: 14px 0;
+}
+.tlg-shipping-page details {
+    border: 1px solid #e1e7ee;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin: 10px 0;
+}
+.tlg-shipping-page summary {
+    cursor: pointer;
+    color: var(--tlg-navy);
+    font-weight: 600;
+}
+@media (max-width: 640px) {
+    .tlg-shipping-page {
+        width: calc(100% - 20px);
+        margin: 14px auto 28px;
+    }
+    .tlg-shipping-page article,
+    .tlg-shipping-page .shipment-card,
+    .tlg-shipping-page .shipment {
+        padding: 12px;
+        border-radius: 9px;
+    }
+    .tlg-shipping-page th,
+    .tlg-shipping-page td {
+        padding: 6px;
+    }
+}
+</style>
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -337,6 +470,211 @@ main input:focus-visible, main select:focus-visible {
 {% endblock %}
 
 {% block content %}
+<div class="tlg-shipping-final-layout">
+
+<style id="tlg-shipping-final-layout">
+/* THE LABEL GROUP — compact professional shipping management */
+.tlg-shipping-final-layout {
+    --tlg-navy: #0b1f3a;
+    --tlg-deep: #06152a;
+    --tlg-orange: #f47b20;
+    --tlg-border: #e2e8f0;
+    --tlg-muted: #64748b;
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 18px 20px 38px;
+    color: #172033;
+    box-sizing: border-box;
+}
+.tlg-shipping-final-layout *,
+.tlg-shipping-final-layout *::before,
+.tlg-shipping-final-layout *::after {
+    box-sizing: border-box;
+}
+.tlg-shipping-final-layout h1,
+.tlg-shipping-final-layout h2,
+.tlg-shipping-final-layout h3 {
+    color: var(--tlg-navy);
+    line-height: 1.25;
+}
+.tlg-shipping-final-layout h1 {
+    font-size: clamp(1.55rem, 2.5vw, 2.15rem);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    margin: 0 0 8px;
+}
+.tlg-shipping-final-layout h2 {
+    font-size: 1.12rem;
+    font-weight: 750;
+    margin: 0 0 14px;
+}
+.tlg-shipping-final-layout h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+.tlg-shipping-final-layout p {
+    line-height: 1.55;
+}
+.tlg-shipping-final-layout .shipping-card,
+.tlg-shipping-final-layout .shipment-card,
+.tlg-shipping-final-layout .shipping-section,
+.tlg-shipping-final-layout .order-card {
+    min-width: 0;
+    background: #fff;
+    border: 1px solid var(--tlg-border);
+    border-radius: 13px;
+    padding: 18px;
+    margin: 0 0 16px;
+    box-shadow: 0 3px 14px rgba(15, 23, 42, .045);
+}
+.tlg-shipping-final-layout .shipping-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 9px;
+    margin-top: 13px;
+}
+.tlg-shipping-final-layout .shipping-button,
+.tlg-shipping-final-layout button,
+.tlg-shipping-final-layout input[type="submit"] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 9px 15px;
+    border: 1px solid var(--tlg-navy);
+    border-radius: 8px;
+    background: var(--tlg-navy);
+    color: #fff;
+    font-size: .9rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background .18s ease, transform .18s ease;
+}
+.tlg-shipping-final-layout .shipping-button:hover,
+.tlg-shipping-final-layout button:hover,
+.tlg-shipping-final-layout input[type="submit"]:hover {
+    background: var(--tlg-orange);
+    border-color: var(--tlg-orange);
+    color: #fff;
+}
+.tlg-shipping-final-layout .shipping-button.primary {
+    background: var(--tlg-orange);
+    border-color: var(--tlg-orange);
+    color: #fff;
+}
+.tlg-shipping-final-layout .shipping-warning {
+    padding: 11px 13px;
+    border: 1px solid #fed7aa;
+    border-radius: 8px;
+    background: #fff7ed;
+    color: #9a3412;
+    font-size: .9rem;
+}
+.tlg-shipping-final-layout input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.tlg-shipping-final-layout select,
+.tlg-shipping-final-layout textarea {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #fff;
+    color: #172033;
+    font: inherit;
+}
+.tlg-shipping-final-layout textarea {
+    min-height: 92px;
+    resize: vertical;
+}
+.tlg-shipping-final-layout input:focus,
+.tlg-shipping-final-layout select:focus,
+.tlg-shipping-final-layout textarea:focus {
+    outline: 3px solid rgba(244, 123, 32, .16);
+    border-color: var(--tlg-orange);
+}
+.tlg-shipping-final-layout label {
+    display: block;
+    margin: 0 0 6px;
+    color: #334155;
+    font-size: .88rem;
+    font-weight: 700;
+}
+.tlg-shipping-final-layout form p {
+    margin: 0 0 13px;
+}
+.tlg-shipping-final-layout details {
+    border: 1px solid var(--tlg-border);
+    border-radius: 11px;
+    background: #fff;
+    margin: 12px 0;
+}
+.tlg-shipping-final-layout details > summary {
+    padding: 13px 16px;
+    color: var(--tlg-navy);
+    font-weight: 750;
+    cursor: pointer;
+}
+.tlg-shipping-final-layout details[open] > summary {
+    border-bottom: 1px solid var(--tlg-border);
+}
+.tlg-shipping-final-layout details > :not(summary) {
+    margin-left: 15px;
+    margin-right: 15px;
+}
+.tlg-shipping-final-layout table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.tlg-shipping-final-layout th,
+.tlg-shipping-final-layout td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--tlg-border);
+    text-align: left;
+    vertical-align: top;
+}
+.tlg-shipping-final-layout th {
+    color: var(--tlg-navy);
+    background: #f8fafc;
+    font-weight: 750;
+}
+.tlg-shipping-final-layout a {
+    overflow-wrap: anywhere;
+}
+@media (min-width: 900px) {
+    .tlg-shipping-final-layout {
+        padding-left: 28px;
+        padding-right: 28px;
+    }
+}
+@media (max-width: 650px) {
+    .tlg-shipping-final-layout {
+        padding: 14px 12px 28px;
+    }
+    .tlg-shipping-final-layout .shipping-card,
+    .tlg-shipping-final-layout .shipment-card,
+    .tlg-shipping-final-layout .shipping-section,
+    .tlg-shipping-final-layout .order-card {
+        padding: 14px;
+    }
+    .tlg-shipping-final-layout .shipping-actions {
+        align-items: stretch;
+        flex-direction: column;
+    }
+    .tlg-shipping-final-layout .shipping-button,
+    .tlg-shipping-final-layout button,
+    .tlg-shipping-final-layout input[type="submit"] {
+        width: 100%;
+    }
+    .tlg-shipping-final-layout table {
+        display: block;
+        overflow-x: auto;
+    }
+}
+</style>
 <style id="tlg-shipping-premium-redesign">
 :root {
     --tlg-navy: #0b1f3a;
@@ -888,6 +1226,8 @@ main hr {
         <p>Shipments will appear here when they are linked to existing orders.</p>
     </div>
     {% endfor %}
+</div>
+
 </div>
 {% endblock %}
 
