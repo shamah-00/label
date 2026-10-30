@@ -1,4 +1,4 @@
-﻿{% load static %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -879,6 +879,49 @@
 }
 </style>
 
+
+<!-- tlg-home-image-visibility-live -->
+<style id="tlg-home-image-visibility-live">
+/* THE LABEL GROUP - larger original industry images */
+img[src*="truck"][src*="motor"],
+img[src*="waste"],
+img[src*="construction"],
+img[src*="pool"],
+img[src*="government"] {
+    display: block;
+    width: 100%;
+    height: clamp(230px, 25vw, 340px);
+    max-height: 340px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 12px;
+}
+
+/* Tighten spacing around the industry category section */
+.industry-grid,
+.industries-grid,
+.industry-categories,
+.industry-cards,
+.category-grid,
+.categories-grid {
+    gap: 14px !important;
+    row-gap: 14px !important;
+    column-gap: 14px !important;
+}
+
+/* Responsive image sizing */
+@media (max-width: 700px) {
+    img[src*="truck"][src*="motor"],
+    img[src*="waste"],
+    img[src*="construction"],
+    img[src*="pool"],
+    img[src*="government"] {
+        height: 230px;
+        max-height: 250px;
+    }
+}
+</style>
+<!-- /tlg-home-image-visibility-live -->
 </head>
 
 <body>
@@ -1351,7 +1394,3 @@
 
 </body>
 </html>
-
-
-
-
