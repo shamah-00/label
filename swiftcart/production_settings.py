@@ -1,4 +1,4 @@
-﻿from .settings import *
+from .settings import *
 """
 Production settings for The Label Group on Railway.
 """
@@ -63,4 +63,92 @@ for domain in ["thelabelgroup.us.com", "www.thelabelgroup.us.com"]:
         CSRF_TRUSTED_ORIGINS.append(origin)
 
 CSRF_TRUSTED_ORIGINS = list(dict.fromkeys(CSRF_TRUSTED_ORIGINS))
+
+# THE LABEL GROUP PRODUCT IMAGE DELIVERY
+# Make media/products discoverable as static/products during deployment.
+# This does not change MEDIA_ROOT or customer-uploaded media delivery.
+
+_label_product_media_root = BASE_DIR / "media"
+_label_product_directory = _label_product_media_root / "products"
+
+if not _label_product_directory.is_dir():
+    raise RuntimeError(
+        "Product image directory is missing: "
+        + str(_label_product_directory)
+    )
+
+_label_static_directories = list(
+    globals().get("STATICFILES_DIRS", [])
+)
+
+# Remove old mappings that point directly at media/products.
+# Use the parent media directory so Django discovers products/... reliably.
+_clean_static_directories = []
+
+for entry in _label_static_directories:
+    directory = (
+        entry[1]
+        if isinstance(entry, tuple) and len(entry) == 2
+        else entry
+    )
+
+    try:
+        resolved = Path(directory).resolve()
+    except (TypeError, OSError):
+        _clean_static_directories.append(entry)
+        continue
+
+    if resolved == _label_product_directory.resolve():
+        continue
+
+    _clean_static_directories.append(entry)
+
+_media_root_already_registered = False
+
+for entry in _clean_static_directories:
+    directory = (
+        entry[1]
+        if isinstance(entry, tuple) and len(entry) == 2
+        else entry
+    )
+
+    try:
+        if Path(directory).resolve() == _label_product_media_root.resolve():
+            _media_root_already_registered = True
+            break
+    except (TypeError, OSError):
+        pass
+
+if not _media_root_already_registered:
+    _clean_static_directories.append(_label_product_media_root)
+
+STATICFILES_DIRS = _clean_static_directories
+
+# Redirect only product images. Other media URLs remain unchanged.
+MIDDLEWARE = list(MIDDLEWARE)
+
+_label_product_middleware = (
+    "swiftcart.media_redirect.ProductMediaStaticRedirectMiddleware"
+)
+
+if _label_product_middleware not in MIDDLEWARE:
+    _whitenoise_index = next(
+        (
+            index for index, middleware in enumerate(MIDDLEWARE)
+            if middleware == "whitenoise.middleware.WhiteNoiseMiddleware"
+        ),
+        None
+    )
+
+    if _whitenoise_index is None:
+        raise RuntimeError(
+            "WhiteNoise middleware is missing from MIDDLEWARE."
+        )
+
+    MIDDLEWARE.insert(
+        _whitenoise_index,
+        _label_product_middleware
+    )
+
+# End THE LABEL GROUP PRODUCT IMAGE DELIVERY
 
