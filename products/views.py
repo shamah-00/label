@@ -216,7 +216,7 @@ def product_detail(request, product_id):
             "primary application": "application",
             "buyer's notes": "buyer_notes",
             "what to include / buyer's notes": "buyer_notes",
-            "what to include / buyerâ€™s notes": "buyer_notes",
+            "what to include / buyerÃ¢â‚¬â„¢s notes": "buyer_notes",
             "ideal material": "ideal_material",
             "finish": "finish",
             "adhesive": "adhesive",
@@ -1054,12 +1054,7 @@ def checkout(request):
 
             # The Label Group does not offer USPS services.
             carrier_text = provider.lower()
-            if (
-                "usps" in carrier_text
-                or "usps" in service.lower()
-                or "usps" in service_token
-            ):
-                continue
+            # Keep all valid carrier rates returned by Shippo.
 
             rate_id = str(rate.get("object_id") or "").strip()
             if not rate_id:
@@ -1458,6 +1453,23 @@ def checkout(request):
             ),
         )
 
+    # THE LABEL GROUP SHIPPO ORDER SYNC
+    # Creates a Shippo order record only. Never purchases a label.
+    try:
+        from .shippo_orders import sync_order_to_shippo
+        synced, sync_message = sync_order_to_shippo(order)
+
+        if not synced:
+            import logging
+            logging.getLogger(__name__).warning(
+                "Shippo sync pending for order %s: %s",
+                order.pk, sync_message
+            )
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception(
+            "Shippo sync error for order %s.", order.pk
+        )
     request.session["cart"] = {}
     request.session.pop(SESSION_RATES, None)
     request.session.pop(SESSION_SIGNATURE, None)
@@ -1587,8 +1599,3 @@ def track_order(request):
         "is_cancelled": is_cancelled,
     }
     return render(request, "track_order.html", context)
-
-
-
-
-
