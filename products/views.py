@@ -6,7 +6,9 @@ from .models import Product
 def home(request):
     from django.db.models import Q
     from django.shortcuts import render
-    from .models import Product
+    from .models import Product, BusinessContactDetail
+
+    business_contacts = BusinessContactDetail.objects.filter(is_active=True).order_by('sort_order', 'id')
 
     products = Product.objects.filter(is_available=True)
 
@@ -96,6 +98,7 @@ def home(request):
             "industry_filter": industry_filter,
             "selected_industry": industry_filter,
             "search_query": search,
+            "business_contacts": business_contacts,
             "product_count": products.count(),
         },
     )

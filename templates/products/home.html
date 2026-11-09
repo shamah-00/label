@@ -1401,33 +1401,34 @@ img[src*="government"] {
         <p>Have a printing or identification project in mind? Get in touch with our team.</p>
 
         <div class="tlg-contact-details">
+            {% for contact in business_contacts %}
             <div class="tlg-contact-item">
-                <span class="tlg-contact-icon">&#9742;</span>
+                <span class="tlg-contact-icon">
+                    {% if contact.contact_type == "phone" or contact.contact_type == "whatsapp" %}&#9742;
+                    {% elif contact.contact_type == "email" %}&#9993;
+                    {% elif contact.contact_type == "website" %}&#127760;
+                    {% else %}&#9679;{% endif %}
+                </span>
                 <div>
-                    <strong>Phone</strong>
-                    <a href="tel:+14132766427">(413) 276-6427</a>
+                    <strong>{{ contact.label|default:contact.get_contact_type_display }}</strong>
+                    {% if contact.contact_type == "phone" %}
+                        <a href="tel:{{ contact.value }}">{{ contact.value|linebreaksbr }}</a>
+                    {% elif contact.contact_type == "email" %}
+                        <a href="mailto:{{ contact.value }}">{{ contact.value|linebreaksbr }}</a>
+                    {% elif contact.contact_type == "address" %}
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ contact.value|urlencode }}" target="_blank" rel="noopener noreferrer">{{ contact.value|linebreaksbr }}</a>
+                    {% elif contact.contact_type == "whatsapp" %}
+                        <a href="https://wa.me/{{ contact.value|cut:'+'|cut:' '|cut:'-'|cut:'('|cut:')' }}" target="_blank" rel="noopener noreferrer">{{ contact.value|linebreaksbr }}</a>
+                    {% elif contact.contact_type == "website" %}
+                        <a href="{{ contact.value }}" target="_blank" rel="noopener noreferrer">{{ contact.value|linebreaksbr }}</a>
+                    {% else %}
+                        <span>{{ contact.value|linebreaksbr }}</span>
+                    {% endif %}
                 </div>
             </div>
-
-            <div class="tlg-contact-item">
-                <span class="tlg-contact-icon">&#9993;</span>
-                <div>
-                    <strong>Email</strong>
-                    <a href="mailto:labelgroup@comcast.net">labelgroup@comcast.net</a>
-                </div>
-            </div>
-
-            <div class="tlg-contact-item">
-                <span class="tlg-contact-icon">&#9679;</span>
-                <div>
-                    <strong>Address</strong>
-                    <a href="https://www.google.com/maps/search/?api=1&query=580+St+James+Avenue+Springfield+MA+01109"
-                       target="_blank" rel="noopener noreferrer">
-                        580 St. James Avenue,<br>
-                        Springfield, MA 01109, USA
-                    </a>
-                </div>
-            </div>
+            {% empty %}
+            <p>Contact information will be available soon.</p>
+            {% endfor %}
         </div>
     </div>
 </section>
