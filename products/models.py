@@ -1097,6 +1097,18 @@ class PaymentSystemSettings(models.Model):
         default="",
         help_text="Customer-facing instructions for QuickBooks payments.",
     )
+    # Staff-managed payment configuration.
+    card_payment_url = models.URLField(
+        blank=True,
+        max_length=500,
+        help_text="Verified HTTPS card payment link or processor checkout URL.",
+    )
+    card_instructions = models.TextField(blank=True, default="")
+    bank_account_name = models.CharField(max_length=200, blank=True, default="")
+    bank_account_number = models.CharField(max_length=100, blank=True, default="")
+    bank_name = models.CharField(max_length=200, blank=True, default="")
+    bank_routing_details = models.TextField(blank=True, default="")
+
     updated_by = models.ForeignKey(
         django_conf_settings.AUTH_USER_MODEL,
         null=True,
@@ -1122,3 +1134,28 @@ class PaymentSystemSettings(models.Model):
 
 # QuickBooks OAuth connection model.
 from .quickbooks_models import QuickBooksConnection
+
+
+class BusinessContactDetail(models.Model):
+    CONTACT_TYPES = [
+        ("phone", "Phone"),
+        ("email", "Email"),
+        ("address", "Physical address"),
+        ("whatsapp", "WhatsApp"),
+        ("website", "Website"),
+        ("other", "Other"),
+    ]
+
+    contact_type = models.CharField(max_length=20, choices=CONTACT_TYPES, default="phone")
+    label = models.CharField(max_length=120, blank=True, default="")
+    value = models.TextField()
+    is_active = models.BooleanField(default=True)
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.get_contact_type_display()}: {self.label or self.value[:60]}"

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact Details | THE LABEL GROUP</title>
+<style>
+:root{--navy:#0b1f3a;--dark:#06152a;--orange:#f47b20;--border:#dfe6ef}
+*{box-sizing:border-box}
+body{margin:0;background:#f4f7fb;color:var(--navy);font-family:Arial,sans-serif}
+header{background:var(--dark);color:white;padding:22px}
+main{max-width:1000px;margin:28px auto;padding:0 16px 40px}
+.card{background:white;border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:18px}
+label{display:block;font-weight:bold;margin:14px 0 7px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #bdc9d8;border-radius:8px;font:inherit}
+textarea{min-height:75px}
+button{background:var(--orange);border:0;border-radius:8px;padding:11px 17px;font-weight:bold;cursor:pointer}
+.delete{background:#fee2e2;color:#991b1b}
+.entry{padding:16px 0;border-bottom:1px solid var(--border)}
+.entry:last-child{border:0}
+a{color:var(--navy)}
+.msg{background:white;padding:12px;border-radius:8px;margin:10px 0}
+small{color:#64748b}
+</style>
+</head>
+<body>
+<header><strong>THE LABEL GROUP</strong><div>Staff contact management</div></header>
+<main>
+<h1>Business Contact Details</h1>
+<p>Add as many phone numbers, email addresses, locations, WhatsApp details, websites or other contact details as your business needs.</p>
+{% if messages %}{% for message in messages %}<div class="msg">{{ message }}</div>{% endfor %}{% endif %}
+<section class="card">
+<h2>{% if edit_contact %}Edit contact detail{% else %}Add a contact detail{% endif %}</h2>
+<form method="post">
+{% csrf_token %}
+<input type="hidden" name="contact_id" value="{{ edit_contact.pk|default:'' }}">
+<label>Contact type</label>
+<select name="contact_type" required>
+<option value="phone" {% if edit_contact.contact_type == "phone" %}selected{% endif %}>Phone</option>
+<option value="email" {% if edit_contact.contact_type == "email" %}selected{% endif %}>Email</option>
+<option value="address" {% if edit_contact.contact_type == "address" %}selected{% endif %}>Physical address</option>
+<option value="whatsapp" {% if edit_contact.contact_type == "whatsapp" %}selected{% endif %}>WhatsApp</option>
+<option value="website" {% if edit_contact.contact_type == "website" %}selected{% endif %}>Website</option>
+<option value="other" {% if edit_contact.contact_type == "other" %}selected{% endif %}>Other</option>
+</select>
+<label>Label (optional)</label>
+<input name="label" value="{{ edit_contact.label|default:'' }}" placeholder="For example: Main office, Sales, Warehouse">
+<label>Contact detail</label>
+<textarea name="value" required>{{ edit_contact.value|default:'' }}</textarea>
+<label>Display order</label>
+<input type="number" name="sort_order" value="{{ edit_contact.sort_order|default:0 }}">
+<label><input type="checkbox" name="is_active" style="width:auto" {% if not edit_contact or edit_contact.is_active %}checked{% endif %}> Active</label>
+<p><button type="submit">Save Contact Detail</button> {% if edit_contact %}<a href="{% url 'boss_contact_details' %}">Cancel edit</a>{% endif %}</p>
+</form>
+</section>
+<section class="card">
+<h2>Saved contact details</h2>
+{% for contact in contacts %}
+<div class="entry">
+<strong>{{ contact.get_contact_type_display }}{% if contact.label %} — {{ contact.label }}{% endif %}</strong>
+<p>{{ contact.value|linebreaksbr }}</p>
+<small>{% if contact.is_active %}Active{% else %}Inactive{% endif %} · Display order {{ contact.sort_order }}</small>
+<p><a href="?edit={{ contact.pk }}">Edit</a></p>
+<form method="post" onsubmit="return confirm('Delete this contact detail?');">
+{% csrf_token %}
+<input type="hidden" name="action" value="delete">
+<input type="hidden" name="contact_id" value="{{ contact.pk }}">
+<button class="delete" type="submit">Delete</button>
+</form>
+</div>
+{% empty %}
+<p>No additional contact details have been added yet.</p>
+{% endfor %}
+</section>
+<p><a href="{% url 'boss_payment_settings' %}">Payment settings</a> · <a href="{% url 'staff_dashboard' %}">Return to dashboard</a></p>
+</main>
+</body>
+</html>

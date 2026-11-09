@@ -1568,6 +1568,283 @@ def staff_shipping_dashboard(request):
             messages.error(request, "Shipment not found.")
             return redirect("staff_shipping_dashboard")
 
+
+        # THE_LABEL_GROUP_STAFF_SHIPPO_USA_RATES
+        if action in {"fetch_rates", "select_rate"}:
+            from decimal import Decimal, InvalidOperation
+            from django.db import transaction
+
+            if shipment.status in {"cancelled", "returned"} or shipment.order.status == "cancelled":
+                messages.error(request, "Cancelled shipments cannot be rated.")
+                return redirect("staff_shipping_dashboard")
+
+            if shipment.label_url or shipment.shippo_transaction_id:
+                messages.error(request, "A shipping label already exists for this order.")
+                return redirect("staff_shipping_dashboard")
+
+            if action == "select_rate":
+                selected_id = request.POST.get("shippo_rate_id", "").strip()
+                rate_store = request.session.get("staff_shippo_rates", {})
+                rate_entry = rate_store.get(str(shipment.pk), {})
+                available_rates = rate_entry.get("rates", [])
+
+                selected = next(
+                    (rate for rate in available_rates
+                     if str(rate.get("object_id", "")) == selected_id),
+                    None,
+                )
+
+                if not selected:
+                    messages.error(request, "That rate is unavailable. Fetch current rates again.")
+                    return redirect("staff_shipping_dashboard")
+
+                with transaction.atomic():
+                    locked = Shipment.objects.select_for_update().select_related("order").get(
+                        pk=shipment.pk
+                    )
+
+                    if locked.label_url or locked.shippo_transaction_id:
+                        messages.error(request, "A label already exists.")
+                        return redirect("staff_shipping_dashboard")
+
+                    if locked.status in {"cancelled", "returned"} or locked.order.status == "cancelled":
+                        messages.error(request, "This shipment cannot be changed.")
+                        return redirect("staff_shipping_dashboard")
+
+                    locked.shippo_rate_id = selected_id
+                    locked.carrier = str(selected.get("provider") or "Shippo carrier")[:100]
+                    locked.shipping_method = str(selected.get("service") or "Shipping service")[:100]
+                    locked.save(update_fields=[
+                        "shippo_rate_id",
+                        "carrier",
+                        "shipping_method",
+                        "updated_at",
+                    ])
+
+                messages.success(
+                    request,
+                    "Selected " + locked.carrier + " - " + locked.shipping_method
+                )
+                return redirect("staff_shipping_dashboard")
+
+            token = (
+                os.environ.get("SHIPPO_API_TOKEN", "").strip()
+                or os.environ.get("SHIPPO_API_KEY", "").strip()
+                or str(getattr(settings, "SHIPPO_API_TOKEN", "") or "").strip()
+                or str(getattr(settings, "SHIPPO_API_KEY", "") or "").strip()
+                or str(getattr(settings, "SHIPPO_TOKEN", "") or "").strip()
+                or os.environ.get("SHIPPO_TOKEN", "").strip()
+            )
+
+            if not token:
+                messages.error(request, "Shippo API token is not configured.")
+                return redirect("staff_shipping_dashboard")
+
+            order = shipment.order
+
+            country = str(order.shipping_country or "").strip().upper()
+            us_names = {
+                "US",
+                "USA",
+                "UNITED STATES",
+                "UNITED STATES OF AMERICA",
+            }
+
+            if country not in us_names:
+                messages.error(
+                    request,
+                    "THE LABEL GROUP ships within the United States only. This order must have a US destination."
+                )
+                return redirect("staff_shipping_dashboard")
+
+            items = list(order.items.select_related("product").all())
+
+            if not items:
+                messages.error(request, "This order has no products to ship.")
+                return redirect("staff_shipping_dashboard")
+
+            parcels = []
+            missing = []
+
+            for item in items:
+                product = item.product
+                raw_values = (
+                    getattr(product, "shipping_weight_lb", None),
+                    getattr(product, "shipping_length_in", None),
+                    getattr(product, "shipping_width_in", None),
+                    getattr(product, "shipping_height_in", None),
+                )
+
+                try:
+                    weight, length, width, height = [
+                        Decimal(str(value)) for value in raw_values
+                    ]
+
+                    if any(value <= 0 for value in (weight, length, width, height)):
+                        raise InvalidOperation
+
+                except (InvalidOperation, TypeError, ValueError):
+                    missing.append(str(getattr(product, "name", "Unnamed product")))
+                    continue
+
+                quantity = int(item.quantity or 1)
+
+                if quantity < 1 or len(parcels) + quantity > 100:
+                    messages.error(request, "Invalid product quantity or too many shipping parcels.")
+                    return redirect("staff_shipping_dashboard")
+
+                for _ in range(quantity):
+                    parcels.append({
+                        "length": str(length),
+                        "width": str(width),
+                        "height": str(height),
+                        "distance_unit": "in",
+                        "weight": str(weight),
+                        "mass_unit": "lb",
+                    })
+
+            if missing:
+                messages.error(
+                    request,
+                    "Enter actual shipping weight and dimensions for: "
+                    + ", ".join(sorted(set(missing)))
+                )
+                return redirect("staff_shipping_dashboard")
+
+            if not parcels:
+                messages.error(request, "No valid shipping parcels were created.")
+                return redirect("staff_shipping_dashboard")
+
+            recipient = {
+                "name": str(order.customer_name or "").strip(),
+                "street1": str(order.shipping_address or "").strip(),
+                "city": str(order.shipping_city or "").split(",")[0].strip(),
+                "state": str(order.shipping_state or "").strip(),
+                "zip": str(order.shipping_postal_code or "").strip(),
+                "country": "US",
+                "phone": str(order.customer_phone or "").strip(),
+                "email": str(order.customer_email or "").strip(),
+            }
+
+            required = ("name", "street1", "city", "state", "zip")
+
+            missing_address = [
+                field for field in required if not recipient.get(field)
+            ]
+
+            if missing_address:
+                messages.error(
+                    request,
+                    "Complete the customer's US shipping address: "
+                    + ", ".join(missing_address)
+                )
+                return redirect("staff_shipping_dashboard")
+
+            sender = {
+                "name": "The Label Group LLC",
+                "company": "The Label Group LLC",
+                "street1": "580 St. James Avenue",
+                "city": "Springfield",
+                "state": "MA",
+                "zip": "01109",
+                "country": "US",
+                "phone": "4137316700",
+                "email": "labelgroup@comcast.net",
+            }
+
+            payload = {
+                "address_from": sender,
+                "address_to": recipient,
+                "parcels": parcels,
+                "async": False,
+            }
+
+            try:
+                response = requests.post(
+                    "https://api.goshippo.com/shipments/",
+                    json=payload,
+                    headers={
+                        "Authorization": "ShippoToken " + token,
+                        "Content-Type": "application/json",
+                        "SHIPPO-API-VERSION": "2018-02-08",
+                    },
+                    timeout=45,
+                )
+
+                response.raise_for_status()
+                data = response.json()
+
+            except requests.RequestException as exc:
+                messages.error(
+                    request,
+                    "Shippo rate request failed. Check the connection and API configuration. "
+                    + str(exc)[:250]
+                )
+                return redirect("staff_shipping_dashboard")
+
+            except ValueError:
+                messages.error(request, "Shippo returned an invalid response.")
+                return redirect("staff_shipping_dashboard")
+
+            if data.get("status") == "ERROR":
+                messages.error(
+                    request,
+                    "Shippo error: " + str(data.get("messages") or data.get("detail") or "Unable to calculate rates.")[:400]
+                )
+                return redirect("staff_shipping_dashboard")
+
+            rates = []
+
+            for rate in data.get("rates", []):
+                try:
+                    rate_id = str(rate.get("object_id") or "").strip()
+                    amount = Decimal(str(rate.get("amount", "")))
+                    currency = str(rate.get("currency") or "").upper()
+
+                    if not rate_id or amount < 0 or currency != "USD":
+                        continue
+
+                except (InvalidOperation, TypeError, ValueError):
+                    continue
+
+                servicelevel = rate.get("servicelevel") or {}
+
+                rates.append({
+                    "object_id": rate_id,
+                    "provider": str(rate.get("provider") or "Shippo carrier"),
+                    "service": str(servicelevel.get("name") or "Shipping service"),
+                    "amount": format(amount.quantize(Decimal("0.01")), ".2f"),
+                    "currency": "USD",
+                    "estimated_days": rate.get("estimated_days"),
+                })
+
+            rates.sort(key=lambda item: Decimal(item["amount"]))
+
+            if not rates:
+                messages.error(
+                    request,
+                    "Shippo returned no usable US domestic USD rates for this order."
+                )
+                return redirect("staff_shipping_dashboard")
+
+            rate_store = request.session.get("staff_shippo_rates", {})
+
+            rate_store[str(shipment.pk)] = {
+                "shipment_id": str(data.get("object_id") or ""),
+                "rates": rates,
+            }
+
+            request.session["staff_shippo_rates"] = rate_store
+            request.session.modified = True
+
+            messages.success(
+                request,
+                "Shippo returned " + str(len(rates)) + " US shipping rates. Select a service below."
+            )
+
+            return redirect("staff_shipping_dashboard")
+
+
         if action == "purchase_label":
             # Live purchases require deliberate server-side authorization.
             import os
@@ -1972,6 +2249,12 @@ def staff_shipping_dashboard(request):
     # Build a display-only address without repeating city, state or ZIP.
     # Original order address fields are not modified.
     for shipment in shipments:
+        # Display rates fetched by the current staff session.
+        rate_store = request.session.get("staff_shippo_rates", {})
+        rate_entry = rate_store.get(str(shipment.pk), {})
+        shipment.staff_shippo_rates = rate_entry.get("rates", [])
+
+
         # THE_LABEL_GROUP_MANUAL_TRACKING_DRAFT
         from urllib.parse import quote, urlencode
         order_for_email = shipment.order
@@ -2070,7 +2353,7 @@ def boss_payment_settings(request):
     from products.models import PaymentSystemSettings
 
     settings_obj = PaymentSystemSettings.get_settings()
-    allowed_methods = {"square", "quickbooks", "check", "ach", "wire"}
+    allowed_methods = {"card", "square", "quickbooks", "check", "ach", "wire"}
     allowed_terms = {0, 30, 45, 60, 90}
     allowed_timing = {"upfront", "invoice_after_delivery"}
 
@@ -2112,6 +2395,18 @@ def boss_payment_settings(request):
                 )
                 return redirect("boss_payment_settings")
 
+        card_url = request.POST.get("card_payment_url", "").strip()
+        if card_url and not card_url.lower().startswith("https://"):
+            messages.error(request, "Card payment links must begin with https://")
+            return redirect("boss_payment_settings")
+
+        settings_obj.card_payment_url = card_url
+        settings_obj.card_instructions = request.POST.get("card_instructions", "").strip()
+        settings_obj.bank_account_name = request.POST.get("bank_account_name", "").strip()
+        settings_obj.bank_account_number = request.POST.get("bank_account_number", "").strip()
+        settings_obj.bank_name = request.POST.get("bank_name", "").strip()
+        settings_obj.bank_routing_details = request.POST.get("bank_routing_details", "").strip()
+
         settings_obj.square_payment_url = square_url
         settings_obj.square_instructions = request.POST.get(
             "square_instructions", ""
@@ -2131,3 +2426,62 @@ def boss_payment_settings(request):
         {"payment_settings": settings_obj},
     )
 
+
+
+# THE LABEL GROUP: superuser-only business contact management.
+@boss_required
+def boss_contact_details(request):
+    from products.models import BusinessContactDetail
+
+    if request.method == "POST":
+        action = request.POST.get("action", "").strip()
+
+        if action == "delete":
+            contact_id = request.POST.get("contact_id")
+            contact = get_object_or_404(BusinessContactDetail, pk=contact_id)
+            contact.delete()
+            messages.success(request, "Contact detail deleted.")
+            return redirect("boss_contact_details")
+
+        contact_id = request.POST.get("contact_id", "").strip()
+        contact_type = request.POST.get("contact_type", "other").strip()
+        label = request.POST.get("label", "").strip()
+        value = request.POST.get("value", "").strip()
+
+        valid_types = {choice[0] for choice in BusinessContactDetail.CONTACT_TYPES}
+        if contact_type not in valid_types or not value:
+            messages.error(request, "Choose a valid contact type and enter its details.")
+            return redirect("boss_contact_details")
+
+        if contact_id:
+            contact = get_object_or_404(BusinessContactDetail, pk=contact_id)
+        else:
+            contact = BusinessContactDetail()
+
+        contact.contact_type = contact_type
+        contact.label = label
+        contact.value = value
+        contact.is_active = request.POST.get("is_active") == "on"
+
+        try:
+            contact.sort_order = int(request.POST.get("sort_order", "0"))
+        except (TypeError, ValueError):
+            contact.sort_order = 0
+
+        contact.save()
+        messages.success(request, "Contact detail saved successfully.")
+        return redirect("boss_contact_details")
+
+    edit_id = request.GET.get("edit")
+    edit_contact = None
+    if edit_id:
+        edit_contact = get_object_or_404(BusinessContactDetail, pk=edit_id)
+
+    return render(
+        request,
+        "staff/contact_details.html",
+        {
+            "contacts": BusinessContactDetail.objects.all(),
+            "edit_contact": edit_contact,
+        },
+    )
