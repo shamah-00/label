@@ -1443,13 +1443,35 @@
             font-size: 12px;
             line-height: 1.8;
         }
-    </style>
+
+        .tlg-bank-details {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #0b1f3a;
+            border-radius: 12px;
+            background: #f8fafc;
+        }
+        .tlg-bank-details h3 { margin: 0 0 15px; color: #0b1f3a; }
+        .tlg-bank-row { display: flex; flex-direction: column; gap: 5px; padding: 11px 0; border-bottom: 1px solid #dce4ee; }
+        .tlg-bank-row span { color: #64748b; font-size: 11px; font-weight: 800; letter-spacing: .7px; }
+        .tlg-bank-row strong { color: #0b1f3a; font-size: 15px; overflow-wrap: anywhere; }
+        .tlg-bank-important { margin-top: 8px; padding: 15px; border: 1px solid #f47b20; border-radius: 9px; background: #fff7f0; }
+        .tlg-bank-important strong { font-size: 20px; }
+        .tlg-bank-routing { padding-top: 14px; color: #334155; font-size: 13px; line-height: 1.8; }
+        .tlg-payment-warning { margin: 18px 0; padding: 17px; border: 2px solid #f47b20; border-radius: 11px; background: #fff7f0; color: #0b1f3a; font-size: 13px; line-height: 1.8; }
+        .tlg-payment-warning strong { display: block; margin-bottom: 7px; font-size: 14px; }
+        .tlg-payment-warning p { margin: 0; }
+</style>
 
     <h2>Choose your payment method</h2>
     <p class="tlg-payment-intro">
         Select a method below to view The Label Group's payment instructions.
         Your order submission does not charge you automatically.
     </p>
+    <div class="tlg-payment-warning" role="alert">
+        <strong>IMPORTANT: PAYMENT BEFORE ORDER PLACEMENT</strong>
+        <p>Please review your products, delivery address and selected Shippo shipping service. Confirm the full order total, including shipping, and ensure that you complete payment using your selected payment method before placing your order. Your order will be submitted for processing after you click Place Order.</p>
+    </div>
 
     {% if payment_methods %}
         <div class="tlg-payment-options">
@@ -1470,6 +1492,18 @@
             {% endfor %}
         </div>
 
+        <div class="tlg-instruction-card"
+             data-payment-instructions="card"
+             hidden>
+            <h3>Card (Preferred) payment instructions</h3>
+            <div class="tlg-instruction-copy">
+                {% if payment_settings.card_instructions %}
+                    {{ payment_settings.card_instructions|linebreaks }}
+                {% else %}
+                    <p>Please contact The Label Group for card payment instructions.</p>
+                {% endif %}
+            </div>
+        </div>
         <div class="tlg-instruction-card"
              data-payment-instructions="check"
              {% if payment_methods.0.0 != "check" %}hidden{% endif %}>
@@ -1524,11 +1558,6 @@
              {% if payment_methods.0.0 != "square" %}hidden{% endif %}>
             <h3>Square payment</h3>
             <div class="tlg-instruction-copy">
-                {% if payment_settings.square_payment_url %}
-                    <p><a href="{{ payment_settings.square_payment_url }}" target="_blank" rel="noopener noreferrer">Continue to Square to pay</a></p>
-                {% else %}
-                    <p class="tlg-instruction-empty">The business has not added its Square payment link yet. Please contact The Label Group.</p>
-                {% endif %}
                 {% if payment_settings.square_instructions %}
                     {{ payment_settings.square_instructions|linebreaks }}
                 {% endif %}
@@ -1540,18 +1569,30 @@
              {% if payment_methods.0.0 != "quickbooks" %}hidden{% endif %}>
             <h3>QuickBooks Payments</h3>
             <div class="tlg-instruction-copy">
-                {% if payment_settings.quickbooks_payment_url %}
-                    <p><a href="{{ payment_settings.quickbooks_payment_url }}" target="_blank" rel="noopener noreferrer">Continue to QuickBooks to pay</a></p>
-                {% else %}
-                    <p class="tlg-instruction-empty">The business has not added its QuickBooks payment link yet. Please contact The Label Group.</p>
-                {% endif %}
                 {% if payment_settings.quickbooks_instructions %}
                     {{ payment_settings.quickbooks_instructions|linebreaks }}
                 {% endif %}
             </div>
         </div>
 
-        <script>
+                {% if payment_settings.bank_name or payment_settings.bank_account_name or payment_settings.bank_account_number or payment_settings.bank_routing_details %}
+        <div class="tlg-bank-details">
+            <h3>Bank transfer details</h3>
+            {% if payment_settings.bank_name %}
+            <div class="tlg-bank-row"><span>BANK NAME</span><strong>{{ payment_settings.bank_name }}</strong></div>
+            {% endif %}
+            {% if payment_settings.bank_account_name %}
+            <div class="tlg-bank-row tlg-bank-important"><span>ACCOUNT NAME</span><strong>{{ payment_settings.bank_account_name }}</strong></div>
+            {% endif %}
+            {% if payment_settings.bank_account_number %}
+            <div class="tlg-bank-row tlg-bank-important"><span>ACCOUNT NUMBER</span><strong>{{ payment_settings.bank_account_number }}</strong></div>
+            {% endif %}
+            {% if payment_settings.bank_routing_details %}
+            <div class="tlg-bank-routing"><strong>Additional bank transfer details</strong>{{ payment_settings.bank_routing_details|linebreaks }}</div>
+            {% endif %}
+        </div>
+        {% endif %}
+<script>
         (function () {
             "use strict";
             var panel = document.getElementById("tlg-payment-panel");
